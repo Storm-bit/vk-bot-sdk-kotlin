@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.regex.Pattern
+import kotlin.collections.ArrayList
 import kotlin.collections.HashMap
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
@@ -52,6 +53,11 @@ class Message {
     private var forwardedMessages: CopyOnWriteArrayList<String> = CopyOnWriteArrayList()
     private val photosToUpload = CopyOnWriteArrayList<String>()
     private val docsToUpload = CopyOnWriteArrayList<JSONObject>()
+
+    var stringPhotos = ArrayList<String>()
+    var stringDocs = ArrayList<String>()
+    var stringVideos = ArrayList<String>()
+    var stringAudios = ArrayList<String>()
 
     /**
      * Constructor for sent message
@@ -327,45 +333,33 @@ class Message {
      */
     fun messageType(): String {
         return when {
-            isVoiceMessage() -> {
-                "voiceMessage"
-            }
+            isVoiceMessage() -> "voiceMessage"
 
-            isStickerMessage() -> {
-                "stickerMessage"
-            }
 
-            isGifMessage() -> {
-                "gifMessage"
-            }
+            isStickerMessage() -> "stickerMessage"
 
-            isAudioMessage() -> {
-                "audioMessage"
-            }
 
-            isVideoMessage() -> {
-                "videoMessage"
-            }
+            isGifMessage() -> "gifMessage"
 
-            isDocMessage() -> {
-                "docMessage"
-            }
 
-            isWallMessage() -> {
-                "wallMessage"
-            }
+            isAudioMessage() -> "audioMessage"
 
-            isPhotoMessage() -> {
-                "photoMessage"
-            }
 
-            isLinkMessage() -> {
-                "linkMessage"
-            }
+            isVideoMessage() -> "videoMessage"
 
-            isSimpleTextMessage() -> {
-                "simpleTextMessage"
-            }
+
+            isDocMessage() -> "docMessage"
+
+
+            isWallMessage() -> "wallMessage"
+
+            isPhotoMessage() -> "photoMessage"
+
+            isLinkMessage() -> "linkMessage"
+
+
+            isSimpleTextMessage() -> "simpleTextMessage"
+
 
             else -> "error"
         }
@@ -420,9 +414,51 @@ class Message {
             client.messages.getById(listOf(messageId!!))
         }
 
+        val stringPhotos = ArrayList<String>()
+        val stringDocs = ArrayList<String>()
+        val stringVideos = ArrayList<String>()
+        val stringAudios = ArrayList<String>()
+
         if (response.has("response") && response.getJSONObject("response").getJSONArray("items").length() > 0) {
-            if (response.getJSONObject("response").getJSONArray("items").getJSONObject(0).has("attachments")) {
-                return response.getJSONObject("response").getJSONArray("items").getJSONObject(0).getJSONArray("attachments")
+            val items = response.getJSONObject("response").getJSONArray("items")
+
+            if (items.getJSONObject(0).has("attachments")) {
+                val attachs = items.getJSONObject(0).getJSONArray("attachments")
+
+                for (item in attachs) {
+                    if (item is JSONObject) {
+                        if (item.has("type")) {
+                            when (item.getString("type")) {
+                                "photo" -> {
+                                    val photo = item.getJSONObject("photo")
+                                    stringPhotos.add("photo${photo.getInt("owner_id")}_${photo.getInt("id")}")
+                                }
+
+                                "doc" -> {
+                                    val doc = item.getJSONObject("doc")
+                                    stringDocs.add("doc${doc.getInt("owner_id")}_${doc.getInt("id")}")
+                                }
+
+                                "video" -> {
+                                    val video = item.getJSONObject("video")
+                                    stringVideos.add("video${video.getInt("owner_id")}_${video.getInt("id")}")
+                                }
+
+                                "audio" -> {
+                                    val audio = item.getJSONObject("audio")
+                                    stringAudios.add("audio${audio.getInt("owner_id")}_${audio.getInt("id")}")
+                                }
+                            }
+                        }
+                    }
+                }
+
+                this.stringPhotos = stringPhotos
+                this.stringDocs = stringDocs
+                this.stringVideos = stringVideos
+                this.stringAudios = stringAudios
+
+                return attachs
             }
         }
 
@@ -432,41 +468,24 @@ class Message {
     /*
      * Priority: voice, sticker, gif, ... , simple text
      */
-    fun isPhotoMessage(): Boolean {
-        return getCountOfAttachmentsByType()["photo"]!! > 0
-    }
+    fun isPhotoMessage(): Boolean = getCountOfAttachmentsByType()["photo"]!! > 0
 
-    fun isSimpleTextMessage(): Boolean {
-        return getCountOfAttachmentsByType()["summary"] == 0
-    }
+    fun isSimpleTextMessage(): Boolean = getCountOfAttachmentsByType()["summary"] == 0
 
-    fun isVoiceMessage(): Boolean {
-        return getCountOfAttachmentsByType()["voice"]!! > 0
-    }
+    fun isVoiceMessage(): Boolean = getCountOfAttachmentsByType()["voice"]!! > 0
 
-    fun isAudioMessage(): Boolean {
-        return getCountOfAttachmentsByType()["audio"]!! > 0
-    }
+    fun isAudioMessage(): Boolean = getCountOfAttachmentsByType()["audio"]!! > 0
 
-    fun isVideoMessage(): Boolean {
-        return getCountOfAttachmentsByType()["video"]!! > 0
-    }
+    fun isVideoMessage(): Boolean = getCountOfAttachmentsByType()["video"]!! > 0
 
-    fun isDocMessage(): Boolean {
-        return getCountOfAttachmentsByType()["doc"]!! > 0
-    }
+    fun isDocMessage(): Boolean = getCountOfAttachmentsByType()["doc"]!! > 0
 
-    fun isWallMessage(): Boolean {
-        return getCountOfAttachmentsByType()["wall"]!! > 0
-    }
+    fun isWallMessage(): Boolean = getCountOfAttachmentsByType()["wall"]!! > 0
 
-    fun isStickerMessage(): Boolean {
-        return getCountOfAttachmentsByType()["sticker"]!! > 0
-    }
+    fun isStickerMessage(): Boolean = getCountOfAttachmentsByType()["sticker"]!! > 0
 
-    fun isLinkMessage(): Boolean {
-        return getCountOfAttachmentsByType()["link"]!! > 0
-    }
+    fun isLinkMessage(): Boolean = getCountOfAttachmentsByType()["link"]!! > 0
+
 
     fun isGifMessage(): Boolean {
         val attachments = getAttachments()
@@ -553,9 +572,8 @@ class Message {
     }
 
     /* Public getters */
-    fun authorId(): Int? {
-        return peerId
-    }
+    fun authorId(): Int? = peerId
+
 
     fun getPhotos(): JSONArray? {
         val attachments = getAttachments()
@@ -617,9 +635,8 @@ class Message {
         return chatId != null && chatId!! > 0 || chatIdLong != null && chatIdLong!! > 0
     }
 
-    fun chatId(): Int? {
-        return chatId
-    }
+    fun chatId(): Int? = chatId
+
 
     fun setChatId(chatId: Int) {
         this.chatId = chatId
@@ -630,25 +647,19 @@ class Message {
         attachmentsOfReceivedMessage = attachments
     }
 
-    fun getRandomId(): Int? {
-        return randomId
-    }
+    fun getRandomId(): Int = randomId
 
     private fun setRandomId(randomId: Int) {
         this.randomId = randomId
     }
 
-    fun getKeyboard(): Keyboard? {
-        return keyboard
-    }
+    fun getKeyboard(): Keyboard? = keyboard
 
     fun setKeyboard(keyboard: Keyboard) {
         this.keyboard = keyboard
     }
 
-    fun getPayload(): JSONObject {
-        return payload
-    }
+    fun getPayload(): JSONObject = payload
 
     fun setPayload(payload: JSONObject?) {
         if (payload == null) return
