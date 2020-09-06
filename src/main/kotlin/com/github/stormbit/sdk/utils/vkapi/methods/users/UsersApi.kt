@@ -31,11 +31,13 @@ class UsersApi(private val client: Client) {
     fun getName(
             userId: Int,
             nameCase: NameCase = NameCase.NOM
-    ): JSONObject = getById(
-            listOf(userId),
-            null,
-            nameCase
-    )
+    ): String {
+        val user = getById(listOf(userId), null, nameCase)
+
+        val response = user.getJSONArray("response").getJSONObject(0)
+
+        return "${response.getString("first_name")} ${response.getString("last_name")}"
+    }
 
     fun getFollowers(
             userId: Int?,
