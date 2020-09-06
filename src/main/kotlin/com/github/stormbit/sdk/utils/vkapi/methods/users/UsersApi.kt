@@ -20,12 +20,21 @@ class UsersApi(private val client: Client) {
 
     fun getById(
             userIds: List<Int>,
-            userFields: List<UserOptionalField>,
-            nameCase: NameCase
+            userFields: List<UserOptionalField>? = null,
+            nameCase: NameCase = NameCase.NOM
     ): JSONObject = get(
             userNames = userIds.map(Int::toString),
             userFields = userFields,
             nameCase = nameCase
+    )
+
+    fun getName(
+            userId: Int,
+            nameCase: NameCase = NameCase.NOM
+    ): JSONObject = getById(
+            listOf(userId),
+            null,
+            nameCase
     )
 
     fun getFollowers(
