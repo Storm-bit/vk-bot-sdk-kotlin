@@ -152,6 +152,7 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
                 peerId,
                 timestamp,
                 messageText,
+                " ... ",
                 attachments,
                 randomId,
                 payload

@@ -2,6 +2,8 @@ package com.github.stormbit.sdk.objects
 
 import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
+import com.github.stormbit.sdk.clients.Group
+import com.github.stormbit.sdk.clients.User
 import com.github.stormbit.sdk.utils.vkapi.API
 import com.github.stormbit.sdk.utils.vkapi.Upload
 import com.github.stormbit.sdk.utils.vkapi.docs.DocTypes
@@ -74,7 +76,7 @@ class Message {
      * @param attachments message attachments
      * @param randomId random id
      */
-    constructor(client: Client, messageId: Int, peerId: Int, timestamp: Int, text: String, attachments: JSONObject?, randomId: Int, payload: JSONObject?) {
+    constructor(client: Client, messageId: Int, peerId: Int, timestamp: Int, text: String, title: String, attachments: JSONObject?, randomId: Int, payload: JSONObject?) {
         setMessageId(messageId)
         setPeerId(peerId)
         setTimestamp(timestamp)
@@ -82,7 +84,7 @@ class Message {
         setAttachments(attachments)
         setRandomId(randomId)
         setPayload(payload)
-        setTitle(if (attachments != null && attachments.has("title")) attachments.getString("title") else " ... ")
+        setTitle(title)
         this.client = client
 
         api = client.api
@@ -525,26 +527,53 @@ class Message {
                 answer["summary"] = 1
                 return answer
             } else {
-                for (key in attachmentsOfReceivedMessage.keySet()) {
-                    if (key == "type") {
-                        when (val value = attachmentsOfReceivedMessage.getString(key)) {
-                            "photo" -> {
-                                answer[value] = ++photo
+                if (client is Group) {
+                    for (key in attachmentsOfReceivedMessage.keySet()) {
+                        if (key == "type") {
+                            when (val value = attachmentsOfReceivedMessage.getString(key)) {
+                                "photo" -> {
+                                    answer[value] = ++photo
+                                }
+                                "video" -> {
+                                    answer[value] = ++video
+                                }
+                                "audio" -> {
+                                    answer[value] = ++audio
+                                }
+                                "doc" -> {
+                                    answer[value] = ++doc
+                                }
+                                "wall" -> {
+                                    answer[value] = ++wall
+                                }
+                                "link" -> {
+                                    answer[value] = ++link
+                                }
                             }
-                            "video" -> {
-                                answer[value] = ++video
-                            }
-                            "audio" -> {
-                                answer[value] = ++audio
-                            }
-                            "doc" -> {
-                                answer[value] = ++doc
-                            }
-                            "wall" -> {
-                                answer[value] = ++wall
-                            }
-                            "link" -> {
-                                answer[value] = ++link
+                        }
+                    }
+                } else {
+                    for (key in attachmentsOfReceivedMessage.keySet()) {
+                        if (key.contains("type")) {
+                            when (val value = attachmentsOfReceivedMessage.getString(key)) {
+                                "photo" -> {
+                                    answer[value] = ++photo
+                                }
+                                "video" -> {
+                                    answer[value] = ++video
+                                }
+                                "audio" -> {
+                                    answer[value] = ++audio
+                                }
+                                "doc" -> {
+                                    answer[value] = ++doc
+                                }
+                                "wall" -> {
+                                    answer[value] = ++wall
+                                }
+                                "link" -> {
+                                    answer[value] = ++link
+                                }
                             }
                         }
                     }
