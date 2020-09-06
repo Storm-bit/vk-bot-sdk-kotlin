@@ -3,7 +3,6 @@ package com.github.stormbit.sdk.objects
 import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.clients.Group
-import com.github.stormbit.sdk.clients.User
 import com.github.stormbit.sdk.utils.vkapi.API
 import com.github.stormbit.sdk.utils.vkapi.Upload
 import com.github.stormbit.sdk.utils.vkapi.docs.DocTypes
@@ -11,7 +10,6 @@ import com.github.stormbit.sdk.utils.vkapi.keyboard.Keyboard
 import org.json.JSONArray
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
-import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.regex.Pattern
 import kotlin.collections.ArrayList
@@ -620,27 +618,6 @@ class Message {
 
     fun setChatIdLong(chatIdLong: Int) {
         this.chatIdLong = chatIdLong
-    }
-
-    /**
-     * @param photos JSONArray with photo objects
-     * @return URL of biggest image file
-     */
-    fun getBiggestPhotoUrl(photos: JSONArray): String {
-        val currentBiggestPhoto: String
-
-        val sizes: MutableMap<Int, String> = HashMap()
-
-        for (obj in photos) {
-            if (obj is JSONObject) {
-                val width = obj.getInt("width")
-                val url = obj.getString("url")
-                sizes[width] = url
-            }
-        }
-
-        currentBiggestPhoto = sizes.getValue(Collections.max(sizes.keys))
-        return currentBiggestPhoto
     }
 
     fun getVoiceMessage(): JSONObject? {

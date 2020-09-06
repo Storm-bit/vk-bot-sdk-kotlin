@@ -22,6 +22,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.net.URLConnection
 import java.net.URLEncoder
+import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.Map
@@ -65,6 +66,27 @@ class Utils {
             }
 
             return null
+        }
+
+        /**
+         * @param photos JSONArray with photo objects
+         * @return URL of biggest image file
+         */
+        fun getBiggestPhotoUrl(photos: JSONArray): String {
+            val currentBiggestPhoto: String
+
+            val sizes: MutableMap<Int, String> = HashMap()
+
+            for (obj in photos) {
+                if (obj is JSONObject) {
+                    val width = obj.getInt("width")
+                    val url = obj.getString("url")
+                    sizes[width] = url
+                }
+            }
+
+            currentBiggestPhoto = sizes.getValue(Collections.max(sizes.keys))
+            return currentBiggestPhoto
         }
 
         fun Boolean.asInt(): Int {
