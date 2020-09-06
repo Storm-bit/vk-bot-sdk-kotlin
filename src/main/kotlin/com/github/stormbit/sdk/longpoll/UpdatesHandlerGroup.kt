@@ -177,70 +177,70 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
         }
         if (!messageIsAlreadyHandled) {
             when (message.messageType()) {
-                "voiceMessage" -> {
+                Message.MessageType.VOICE -> {
                     if (callbacks.containsKey("OnVoiceMessageCallback")) {
                         callbacks["OnVoiceMessageCallback"]!!.onResult(message)
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
-                "stickerMessage" -> {
+                Message.MessageType.STICKER -> {
                     if (callbacks.containsKey("OnStickerMessageCallback")) {
                         callbacks["OnStickerMessageCallback"]!!.onResult(message)
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
-                "gifMessage" -> {
+                Message.MessageType.GIF -> {
                     if (callbacks.containsKey("OnGifMessageCallback")) {
                         callbacks["OnGifMessageCallback"]!!.onResult(message)
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
-                "audioMessage" -> {
+                Message.MessageType.AUDIO -> {
                     if (callbacks.containsKey("OnAudioMessageCallback")) {
                         callbacks["OnAudioMessageCallback"]!!.onResult(message)
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
-                "videoMessage" -> {
+                Message.MessageType.VIDEO -> {
                     if (callbacks.containsKey("OnVideoMessageCallback")) {
                         callbacks["OnVideoMessageCallback"]!!.onResult(message)
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
-                "docMessage" -> {
+                Message.MessageType.DOC -> {
                     if (callbacks.containsKey("OnDocMessageCallback")) {
                         callbacks["OnDocMessageCallback"]!!.onResult(message)
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
-                "wallMessage" -> {
+                Message.MessageType.WALL -> {
                     if (callbacks.containsKey("OnWallMessageCallback")) {
                         callbacks["OnWallMessageCallback"]!!.onResult(message)
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
-                "photoMessage" -> {
+                Message.MessageType.PHOTO -> {
                     if (callbacks.containsKey("OnPhotoMessageCallback")) {
                         callbacks["OnPhotoMessageCallback"]!!.onResult(message)
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
-                "linkMessage" -> {
+                Message.MessageType.LINK -> {
                     if (callbacks.containsKey("OnLinkMessageCallback")) {
                         callbacks["OnLinkMessageCallback"]!!.onResult(message)
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
-                "simpleTextMessage" -> {
+                Message.MessageType.SIMPLE_TEXT -> {
                     if (callbacks.containsKey("OnSimpleTextMessageCallback")) {
                         callbacks["OnSimpleTextMessageCallback"]!!.onResult(message)
                         messageIsAlreadyHandled = true
