@@ -331,37 +331,29 @@ class Message {
      * Get the type of message
      * @return type of message
      */
-    fun messageType(): String {
+    fun messageType(): MessageType? {
         return when {
-            isVoiceMessage() -> "voiceMessage"
+            isVoiceMessage() -> MessageType.VOICE
 
+            isStickerMessage() -> MessageType.STICKER
 
-            isStickerMessage() -> "stickerMessage"
+            isGifMessage() -> MessageType.GIF
 
+            isAudioMessage() -> MessageType.AUDIO
 
-            isGifMessage() -> "gifMessage"
+            isVideoMessage() -> MessageType.VIDEO
 
+            isDocMessage() -> MessageType.DOC
 
-            isAudioMessage() -> "audioMessage"
+            isWallMessage() -> MessageType.WALL
 
+            isPhotoMessage() -> MessageType.PHOTO
 
-            isVideoMessage() -> "videoMessage"
+            isLinkMessage() -> MessageType.PHOTO
 
+            isSimpleTextMessage() -> MessageType.SIMPLE_TEXT
 
-            isDocMessage() -> "docMessage"
-
-
-            isWallMessage() -> "wallMessage"
-
-            isPhotoMessage() -> "photoMessage"
-
-            isLinkMessage() -> "linkMessage"
-
-
-            isSimpleTextMessage() -> "simpleTextMessage"
-
-
-            else -> "error"
+            else -> null
         }
     }
 
@@ -691,5 +683,18 @@ class Message {
                 ",\"attachments\":" + attachmentsOfReceivedMessage.toString() +
                 ",\"payload\":" + payload.toString() +
                 '}'
+    }
+
+    enum class MessageType {
+        PHOTO,
+        AUDIO,
+        VIDEO,
+        VOICE,
+        STICKER,
+        DOC,
+        GIF,
+        WALL,
+        LINK,
+        SIMPLE_TEXT
     }
 }
