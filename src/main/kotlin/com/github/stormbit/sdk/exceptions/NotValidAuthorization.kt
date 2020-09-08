@@ -1,4 +1,3 @@
 package com.github.stormbit.sdk.exceptions
 
-class NotValidAuthorization(override val message: String?) : Exception(message) {
-}
+class NotValidAuthorization(override val message: String?) : Exception(message)

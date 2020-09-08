@@ -57,8 +57,8 @@ abstract class Client {
         val scheduler = Executors.newSingleThreadScheduledExecutor()
     }
 
-    constructor(login: String, password: String) {
-        this.auth = Auth(login, password)
+    constructor(login: String, password: String, saveCookie: Boolean = false, loadFromCookie: Boolean = false) {
+        this.auth = Auth(login, password, saveCookie, loadFromCookie)
         this.auth.auth()
 
         this.api = APIUser(this)
@@ -66,8 +66,8 @@ abstract class Client {
         this.longPoll = LongPoll(this)
     }
 
-    constructor(login: String, password: String, listener: Auth.Listener) {
-        this.auth = Auth(login, password, listener)
+    constructor(login: String, password: String, saveCookie: Boolean = false, loadFromCookie: Boolean = false, listener: Auth.Listener) {
+        this.auth = Auth(login, password, saveCookie, loadFromCookie, listener)
         this.auth.auth()
 
         this.api = APIUser(this)

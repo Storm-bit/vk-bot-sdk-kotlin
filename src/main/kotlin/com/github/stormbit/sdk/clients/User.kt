@@ -14,7 +14,7 @@ class User : Client {
      * @param login    Login of your VK bot
      * @param password Password of your VK bot
      */
-    constructor(login: String, password: String) : super(login, password)
+    constructor(login: String, password: String, saveCookie: Boolean = false, loadFromCookie: Boolean = false) : super(login, password, saveCookie, loadFromCookie)
 
     /**
      * Second constructor
@@ -23,5 +23,5 @@ class User : Client {
      * @param password Password of your VK bot
      * @param listener Listener for two factor
      */
-    constructor(login: String, password: String, listener: Auth.Listener) : super(login, password, listener)
+    constructor(login: String, password: String, saveCookie: Boolean = false, loadFromCookie: Boolean = false, listener: Auth.Listener) : super(login, password, saveCookie, loadFromCookie, listener)
 }
