@@ -1,7 +1,6 @@
 package com.github.stormbit.sdk.example
 
 import com.github.stormbit.sdk.clients.Group
-import com.github.stormbit.sdk.objects.Message
 import com.github.stormbit.sdk.utils.vkapi.keyboard.KeyboardBuilder
 import com.github.stormbit.sdk.utils.vkapi.keyboard.RowBuilder
 import org.apache.log4j.BasicConfigurator
@@ -18,18 +17,17 @@ class ExampleGroup {
             val client = Group(token, id)
 
             client.onMessage {
-                Message {
-                    from(client)
-                    to(it.authorId!!)
+                client.sendMessage {
+                    peerId = it.authorId
+                    text = it.text
 
-                    keyboard(KeyboardBuilder {
+                    keyboard = KeyboardBuilder {
                         buttonsRow(RowBuilder {
                             defaultButton("lol")
                         })
-                    }.build())
+                    }.build()
 
-                    text(it.text)
-                }.send()
+                }
             }
         }
     }
