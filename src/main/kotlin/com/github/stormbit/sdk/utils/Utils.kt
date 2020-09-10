@@ -25,13 +25,7 @@ import java.net.URLEncoder
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.collections.HashMap
-import kotlin.collections.Map
-import kotlin.collections.MutableMap
-import kotlin.collections.associateBy
-import kotlin.collections.getValue
-import kotlin.collections.listOf
 import kotlin.collections.set
-import kotlin.collections.toTypedArray
 import kotlin.contracts.ExperimentalContracts
 import kotlin.contracts.InvocationKind
 import kotlin.contracts.contract
@@ -295,17 +289,6 @@ abstract class EnumIntSerializer<E>(clazz: KClass<E>, cases: Array<E>) : KSerial
     override val descriptor: SerialDescriptor = EnumDescriptor(clazz, cases)
     override fun serialize(encoder: Encoder, value: E) = encoder.encodeInt(value.value)
     override fun deserialize(decoder: Decoder): E = caseByInt.getValue(decoder.decodeInt())
-}
-
-
-@OptIn(ExperimentalContracts::class)
-fun <T, R> T.with(block: T.() -> R): T {
-    contract {
-        callsInPlace(block, InvocationKind.EXACTLY_ONCE)
-    }
-    block()
-
-    return this
 }
 
 internal fun Address.Timetable.serialize(): String = json.encodeToString(Address.Timetable.serializer(), this)

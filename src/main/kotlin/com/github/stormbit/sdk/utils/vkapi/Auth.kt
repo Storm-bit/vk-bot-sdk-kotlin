@@ -6,11 +6,9 @@ import com.github.stormbit.sdk.utils.Utils
 import net.dongliu.requests.Cookie
 import net.dongliu.requests.Header
 import org.json.JSONObject
-import org.jsoup.Connection
 import org.jsoup.Jsoup
 import org.jsoup.nodes.FormElement
 import java.io.File
-import java.util.stream.Collector
 
 class Auth {
     private var login: String? = null
@@ -27,13 +25,15 @@ class Auth {
     private val FORM_ID = "quick_login_form"
 
     var session: Session = Session()
-    var listener: Listener? = null
+    private var listener: Listener? = null
 
     constructor(login: String, password: String, saveCookie: Boolean = false, loadFromCookie: Boolean = false) {
         this.login = login
         this.password = password
         this.isSaveCookie = saveCookie
         this.isLoadFromCookie = loadFromCookie
+
+        auth()
     }
 
     constructor(login: String, password: String, saveCookie: Boolean = false, loadFromCookie: Boolean = false, listener: Listener) {
@@ -42,11 +42,13 @@ class Auth {
         this.isSaveCookie = saveCookie
         this.isLoadFromCookie = loadFromCookie
         this.listener = listener
+
+        auth()
     }
 
     constructor()
 
-    fun auth() {
+    private fun auth() {
         if (login == null || password == null) return
 
         if (isLoadFromCookie && cookiesFile.exists()) {
@@ -70,13 +72,7 @@ class Auth {
 
         val formData = form.formData()
 
-        val eloquentCollector = Collector.of({ HashMap() }, { map: HashMap<String, String>, e: Connection.KeyVal -> putUnique(map, e.key(), e.value()) },
-                { m1: HashMap<String, String>, m2: HashMap<String, String> ->
-                    m2.forEach { (k: String, v: String) -> putUnique(m1, k, v) }
-                    m1
-                })
-
-        val params = formData.stream().collect(eloquentCollector)
+        val params = formData.map { it.key() to it.value() }.toMap()
 
         var response = session.post(form.attr("action"))
                 .headers(USER_AGENT)
@@ -99,14 +95,14 @@ class Auth {
     }
 
     private fun _pass_twofactor(response: String): String {
-        val pair = listener?.twoFactor()
+        val pair = listener?.twoFactor() ?: throw TwoFactorException("Two Factor Listener is not initialized")
 
         val authHash = Utils.regexSearch(AUTH_HASH, response, 1)!!
 
         val values = HashMap<String, Any>()
         values["act"] = "a_authcheck_code"
         values["al"] = "1"
-        values["code"] = pair!!.first
+        values["code"] = pair.first
         values["remember"] = if (pair.second) 1 else 0
         values["hash"] = authHash
 
@@ -123,12 +119,9 @@ class Auth {
                 val path = data.getJSONArray("payload").getJSONArray(1).getString(0).replace("[\\\\\"]".toRegex(), "")
                 return session.get("https://vk.com/$path").send().readToText()
             }
-            listOf(0, 4).contains(status) -> {
-                return _pass_twofactor(response)
-            }
-            status == 2 -> {
-                throw TwoFactorException("ReCaptcha required")
-            }
+            listOf(0, 4).contains(status) -> return _pass_twofactor(response)
+
+            status == 2 -> throw TwoFactorException("ReCaptcha required")
         }
 
         throw TwoFactorException("Two factor authentication failed")
@@ -146,13 +139,7 @@ class Auth {
                 .execute()
     }
 
-    private fun <K, V> putUnique(map: HashMap<K, V>, key: K, value: V) {
-        val value2: V? = map.putIfAbsent(key, value)
-
-        if (value2 != null) throw IllegalStateException("Duplicate key '$key' (attempted merging incoming value '$value' with existing '$value2')")
-    }
-
-    interface Listener {
+    fun interface Listener {
         fun twoFactor(): Pair<String, Boolean>
     }
 }

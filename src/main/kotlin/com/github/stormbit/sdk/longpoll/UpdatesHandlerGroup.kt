@@ -19,12 +19,12 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
             currentUpdate = queue.updatesGroup.shift()!!
         }
 
-        val updateType = Events[currentUpdate.getString("type")]
+        val updateType = Events[currentUpdate.getString("type")]!!
 
         val obj = currentUpdate.getJSONObject("object")
 
-        if (callbacks.containsKey(updateType.type)) {
-            callbacks[updateType.type]?.onResult(obj)
+        if (callbacks.containsKey(updateType.value)) {
+            callbacks[updateType.value]?.onResult(obj)
         }
 
         when (updateType) {
@@ -69,42 +69,42 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
                 "chat_create" -> {
                     val title = attachments.getString("source_text")
 
-                    if (chatCallbacks.containsKey("onChatCreatedCallback")) {
-                        (chatCallbacks["onChatCreatedCallback"] as CallbackTriple<String?, Int?, Int?>).onEvent(title, from, chatId)
+                    if (chatCallbacks.containsKey(Events.CHAT_CREATE.value)) {
+                        (chatCallbacks[Events.CHAT_CREATE.value] as CallbackTriple<String?, Int?, Int?>).onEvent(title, from, chatId)
                     }
                 }
                 "chat_title_update" -> {
                     val oldTitle = attachments.getString("source_old_text")
                     val newTitle = attachments.getString("source_text")
 
-                    if (chatCallbacks.containsKey("OnChatTitleChangedCallback")) {
-                        (chatCallbacks["OnChatTitleChangedCallback"] as CallbackFourth<String?, String?, Int?, Int?>).onEvent(oldTitle, newTitle, from, chatId)
+                    if (chatCallbacks.containsKey(Events.CHAT_TITLE_CHANGE.value)) {
+                        (chatCallbacks[Events.CHAT_TITLE_CHANGE.value] as CallbackFourth<String?, String?, Int?, Int?>).onEvent(oldTitle, newTitle, from, chatId)
                     }
                 }
                 "chat_photo_update" -> {
                     val photo = client.messages.getById(listOf(updateObject.getInt("conversation_message_id"))).getJSONObject("response").getJSONArray("items").getJSONObject(0).getJSONArray("attachments").getJSONObject(0).getJSONObject("photo")
 
-                    if (chatCallbacks.containsKey("onChatPhotoChangedCallback")) {
-                        (chatCallbacks["onChatPhotoChangedCallback"] as CallbackTriple<JSONObject?, Int?, Int?>).onEvent(photo, from, chatId)
+                    if (chatCallbacks.containsKey(Events.CHAT_PHOTO_UPDATE.value)) {
+                        (chatCallbacks[Events.CHAT_PHOTO_UPDATE.value] as CallbackTriple<JSONObject?, Int?, Int?>).onEvent(photo, from, chatId)
                     }
                 }
                 "chat_invite_user" -> {
                     val user = Integer.valueOf(attachments.getString("source_mid"))
 
-                    if (chatCallbacks.containsKey("OnChatJoinCallback")) {
-                        (chatCallbacks["OnChatJoinCallback"] as CallbackTriple<Int?, Int?, Int?>).onEvent(from, user, chatId)
+                    if (chatCallbacks.containsKey(Events.CHAT_JOIN.value)) {
+                        (chatCallbacks[Events.CHAT_JOIN.value] as CallbackTriple<Int?, Int?, Int?>).onEvent(from, user, chatId)
                     }
                 }
                 "chat_kick_user" -> {
                     val user = Integer.valueOf(attachments.getString("source_mid"))
 
-                    if (chatCallbacks.containsKey("OnChatLeaveCallback")) {
-                        (chatCallbacks["OnChatLeaveCallback"] as CallbackTriple<Int?, Int?, Int?>).onEvent(from, user, chatId)
+                    if (chatCallbacks.containsKey(Events.CHAT_LEAVE.value)) {
+                        (chatCallbacks[Events.CHAT_LEAVE.value] as CallbackTriple<Int?, Int?, Int?>).onEvent(from, user, chatId)
                     }
                 }
                 "chat_photo_remove" -> {
-                    if (chatCallbacks.containsKey("onChatPhotoRemovedCallback")) {
-                        (chatCallbacks["onChatPhotoRemovedCallback"] as CallbackDouble<Int?, Int?>).onEvent(from, chatId)
+                    if (chatCallbacks.containsKey(Events.CHAT_PHOTO_REMOVE.value)) {
+                        (chatCallbacks[Events.CHAT_PHOTO_REMOVE.value] as CallbackDouble<Int?, Int?>).onEvent(from, chatId)
                     }
                 }
             }
@@ -115,8 +115,8 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
      * Handle every longpoll event
      */
     private fun handleEveryLongPollUpdate(updateObject: JSONObject) {
-        if (callbacks.containsKey("OnEveryLongPollEventCallback")) {
-            callbacks["OnEveryLongPollEventCallback"]!!.onResult(updateObject)
+        if (callbacks.containsKey(Events.EVERY.value)) {
+            callbacks[Events.EVERY.value]!!.onResult(updateObject)
         }
     }
 
@@ -158,8 +158,8 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
                 payload
         )
         if (chatId > 0) {
-            message.setChatId(chatId)
-            message.setChatIdLong(Chat.CHAT_PREFIX + chatId)
+            message.chatId = chatId
+            message.chatIdLong = Chat.CHAT_PREFIX + chatId
 
             // chat events
             handleChatEvents(updateObject)
@@ -179,87 +179,76 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
         if (!messageIsAlreadyHandled) {
             when (message.messageType()) {
                 Message.MessageType.VOICE -> {
-                    if (callbacks.containsKey("OnVoiceMessageCallback")) {
-                        callbacks["OnVoiceMessageCallback"]!!.onResult(message)
+                    if (callbacks.containsKey(MessageEvents.VOICE_MESSAGE.value)) {
+                        callbacks[MessageEvents.VIDEO_MESSAGE.value]!!.onResult(message)
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
                 Message.MessageType.STICKER -> {
-                    if (callbacks.containsKey("OnStickerMessageCallback")) {
-                        callbacks["OnStickerMessageCallback"]!!.onResult(message)
-                        messageIsAlreadyHandled = true
-                        handleSendTyping(message)
-                    }
-                }
-                Message.MessageType.GIF -> {
-                    if (callbacks.containsKey("OnGifMessageCallback")) {
-                        callbacks["OnGifMessageCallback"]!!.onResult(message)
+                    if (callbacks.containsKey(MessageEvents.STICKER_MESSAGE.value)) {
+                        callbacks[MessageEvents.STICKER_MESSAGE.value]!!.onResult(message)
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
                 Message.MessageType.AUDIO -> {
-                    if (callbacks.containsKey("OnAudioMessageCallback")) {
-                        callbacks["OnAudioMessageCallback"]!!.onResult(message)
+                    if (callbacks.containsKey(MessageEvents.AUDIO_MESSAGE.value)) {
+                        callbacks[MessageEvents.AUDIO_MESSAGE.value]!!.onResult(message)
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
                 Message.MessageType.VIDEO -> {
-                    if (callbacks.containsKey("OnVideoMessageCallback")) {
-                        callbacks["OnVideoMessageCallback"]!!.onResult(message)
+                    if (callbacks.containsKey(MessageEvents.VIDEO_MESSAGE.value)) {
+                        callbacks[MessageEvents.VIDEO_MESSAGE.value]!!.onResult(message)
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
                 Message.MessageType.DOC -> {
-                    if (callbacks.containsKey("OnDocMessageCallback")) {
-                        callbacks["OnDocMessageCallback"]!!.onResult(message)
+                    if (callbacks.containsKey(MessageEvents.DOC_MESSAGE.value)) {
+                        callbacks[MessageEvents.DOC_MESSAGE.value]!!.onResult(message)
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
                 Message.MessageType.WALL -> {
-                    if (callbacks.containsKey("OnWallMessageCallback")) {
-                        callbacks["OnWallMessageCallback"]!!.onResult(message)
+                    if (callbacks.containsKey(MessageEvents.WALL_MESSAGE.value)) {
+                        callbacks[MessageEvents.WALL_MESSAGE.value]!!.onResult(message)
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
                 Message.MessageType.PHOTO -> {
-                    if (callbacks.containsKey("OnPhotoMessageCallback")) {
-                        callbacks["OnPhotoMessageCallback"]!!.onResult(message)
+                    if (callbacks.containsKey(MessageEvents.PHOTO_MESSAGE.value)) {
+                        callbacks[MessageEvents.PHOTO_MESSAGE.value]!!.onResult(message)
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
                 Message.MessageType.LINK -> {
-                    if (callbacks.containsKey("OnLinkMessageCallback")) {
-                        callbacks["OnLinkMessageCallback"]!!.onResult(message)
+                    if (callbacks.containsKey(MessageEvents.LINK_MESSAGE.value)) {
+                        callbacks[MessageEvents.LINK_MESSAGE.value]!!.onResult(message)
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
                 Message.MessageType.SIMPLE_TEXT -> {
-                    if (callbacks.containsKey("OnSimpleTextMessageCallback")) {
-                        callbacks["OnSimpleTextMessageCallback"]!!.onResult(message)
+                    if (callbacks.containsKey(MessageEvents.SIMPLE_TEXT_MESSAGE.value)) {
+                        callbacks[MessageEvents.SIMPLE_TEXT_MESSAGE.value]!!.onResult(message)
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
             }
         }
-        if (callbacks.containsKey("OnMessageCallback") && !messageIsAlreadyHandled) {
-            callbacks["OnMessageCallback"]!!.onResult(message)
+        if (callbacks.containsKey(MessageEvents.MESSAGE.value) && !messageIsAlreadyHandled) {
+            callbacks[MessageEvents.MESSAGE.value]!!.onResult(message)
             handleSendTyping(message)
         }
-        if (callbacks.containsKey("OnChatMessageCallback") && !messageIsAlreadyHandled) {
+        if (callbacks.containsKey(MessageEvents.CHAT_MESSAGE.value) && !messageIsAlreadyHandled) {
             callbacks["OnChatMessageCallback"]!!.onResult(message)
-        }
-        if (callbacks.containsKey("OnEveryMessageCallback")) {
-            callbacks["OnEveryMessageCallback"]!!.onResult(message)
-            handleSendTyping(message)
         }
     }
 
@@ -299,9 +288,9 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
         // Send typing
         if (sendTyping) {
             if (!message.isMessageFromChat()) {
-                client.messages.setActivity(message.authorId()!!, "typing")
+                client.messages.setActivity(message.authorId, "typing")
             } else {
-                client.messages.setActivity(message.chatIdLong!!, "typing")
+                client.messages.setActivity(message.chatIdLong, "typing")
             }
         }
     }

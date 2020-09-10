@@ -4,7 +4,9 @@ import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.callbacks.CallbackDouble
 import com.github.stormbit.sdk.callbacks.CallbackFourth
 import com.github.stormbit.sdk.callbacks.CallbackTriple
+import com.github.stormbit.sdk.longpoll.Events
 import com.github.stormbit.sdk.longpoll.LongPoll
+import com.github.stormbit.sdk.longpoll.MessageEvents
 import com.github.stormbit.sdk.objects.Chat
 import com.github.stormbit.sdk.objects.Message
 import com.github.stormbit.sdk.utils.Utils
@@ -59,7 +61,6 @@ abstract class Client {
 
     constructor(login: String, password: String, saveCookie: Boolean = false, loadFromCookie: Boolean = false) {
         this.auth = Auth(login, password, saveCookie, loadFromCookie)
-        this.auth.auth()
 
         this.api = APIUser(this)
         this.id = Utils.getId(this)
@@ -68,7 +69,6 @@ abstract class Client {
 
     constructor(login: String, password: String, saveCookie: Boolean = false, loadFromCookie: Boolean = false, listener: Auth.Listener) {
         this.auth = Auth(login, password, saveCookie, loadFromCookie, listener)
-        this.auth.auth()
 
         this.api = APIUser(this)
         this.id = Utils.getId(this)
@@ -84,6 +84,15 @@ abstract class Client {
         this.longPoll = LongPoll(this)
     }
 
+    fun sendMessage(block: Message.() -> Unit): JSONObject? {
+        val message = Message()
+        message.from(this)
+
+        block(message)
+
+        return message.sendAsync()
+    }
+
     /**
      * If the client need to start typing
      * after receiving message
@@ -93,77 +102,62 @@ abstract class Client {
      */
     fun enableTyping(enable: Boolean) = this.longPoll.enableTyping(enable)
 
-
     /* On every event */
-    fun onLongPollEvent(callback: Callback<JSONArray>) = this.longPoll.registerCallback("OnEveryLongPollEventCallback", callback)
-
+    fun onLongPollEvent(callback: Callback<JSONArray>) = this.longPoll.registerCallback(Events.EVERY.value, callback)
 
     /* Chats */
-    fun onChatJoin(callback: CallbackTriple<Int, Int, Int>) = this.longPoll.registerChatCallback("OnChatJoinCallback", callback)
+    fun onChatJoin(callback: CallbackTriple<Int, Int, Int>) = this.longPoll.registerChatCallback(Events.CHAT_JOIN.value, callback)
 
-    fun onChatLeave(callback: CallbackTriple<Int, Int, Int>) = this.longPoll.registerChatCallback("OnChatLeaveCallback", callback)
+    fun onChatLeave(callback: CallbackTriple<Int, Int, Int>) = this.longPoll.registerChatCallback(Events.CHAT_LEAVE.value, callback)
 
-    fun onChatTitleChanged(callback: CallbackFourth<String, String, Int, Int>) = this.longPoll.registerChatCallback("OnChatTitleChangedCallback", callback)
+    fun onChatTitleChanged(callback: CallbackFourth<String, String, Int, Int>) = this.longPoll.registerChatCallback(Events.CHAT_TITLE_CHANGE.value, callback)
 
-    fun onChatPhotoChanged(callback: CallbackTriple<JSONObject, Int, Int>) = this.longPoll.registerChatCallback("onChatPhotoChangedCallback", callback)
+    fun onChatPhotoChanged(callback: CallbackTriple<JSONObject, Int, Int>) = this.longPoll.registerChatCallback(Events.CHAT_PHOTO_UPDATE.value, callback)
 
-    fun onChatPhotoRemoved(callback: CallbackDouble<Int?, Int?>?) = this.longPoll.registerChatCallback("onChatPhotoRemovedCallback", callback)
+    fun onChatPhotoRemoved(callback: CallbackDouble<Int?, Int?>) = this.longPoll.registerChatCallback(Events.CHAT_PHOTO_REMOVE.value, callback)
 
-    fun onChatCreated(callback: CallbackTriple<String?, Int?, Int?>?) = this.longPoll.registerChatCallback("onChatCreatedCallback", callback)
+    fun onChatCreated(callback: CallbackTriple<String?, Int?, Int?>) = this.longPoll.registerChatCallback(Events.CHAT_CREATE.value, callback)
 
     /* Messages */
-    fun onChatMessage(callback: Callback<Message>) = this.longPoll.registerCallback("OnChatMessageCallback", callback)
+    fun onChatMessage(callback: Callback<Message>) = this.longPoll.registerCallback(MessageEvents.CHAT_MESSAGE.value, callback)
 
-    fun onEveryMessage(callback: Callback<Message>) = this.longPoll.registerCallback("OnEveryMessageCallback", callback)
+    fun onMessageWithFwds(callback: Callback<Message>) = this.longPoll.registerCallback(MessageEvents.MESSAGE_WITH_FORWARDS.value, callback)
 
-    fun onMessageWithFwds(callback: Callback<Message>) = this.longPoll.registerCallback("OnMessageWithFwdsCallback", callback)
+    fun onAudioMessage(callback: Callback<Message>) = this.longPoll.registerCallback(MessageEvents.AUDIO_MESSAGE.value, callback)
 
-    fun onAudioMessage(callback: Callback<Message>) = this.longPoll.registerCallback("OnAudioMessageCallback", callback)
+    fun onDocMessage(callback: Callback<Message>) = this.longPoll.registerCallback(MessageEvents.DOC_MESSAGE.value, callback)
 
-    fun onDocMessage(callback: Callback<Message>) = this.longPoll.registerCallback("OnDocMessageCallback", callback)
+    fun onLinkMessage(callback: Callback<Message>) = this.longPoll.registerCallback(MessageEvents.LINK_MESSAGE.value, callback)
 
-    fun onGifMessage(callback: Callback<Message>) = this.longPoll.registerCallback("OnGifMessageCallback", callback)
+    fun onMessage(callback: Callback<Message>) = this.longPoll.registerCallback(MessageEvents.MESSAGE.value, callback)
 
-    fun onLinkMessage(callback: Callback<Message>) = this.longPoll.registerCallback("OnLinkMessageCallback", callback)
+    fun onPhotoMessage(callback: Callback<Message>) = this.longPoll.registerCallback(MessageEvents.PHOTO_MESSAGE.value, callback)
 
-    fun onMessage(callback: Callback<Message>) = this.longPoll.registerCallback("OnMessageCallback", callback)
+    fun onSimpleTextMessage(callback: Callback<Message>) = this.longPoll.registerCallback(MessageEvents.SIMPLE_TEXT_MESSAGE.value, callback)
 
+    fun onStickerMessage(callback: Callback<Message>) = this.longPoll.registerCallback(MessageEvents.STICKER_MESSAGE.value, callback)
 
-    fun onPhotoMessage(callback: Callback<Message>) = this.longPoll.registerCallback("OnPhotoMessageCallback", callback)
+    fun onTyping(callback: Callback<Int>) = this.longPoll.registerCallback(Events.TYPING.value, callback)
 
+    fun onVideoMessage(callback: Callback<Message>) = this.longPoll.registerCallback(MessageEvents.VIDEO_MESSAGE.value, callback)
 
-    fun onSimpleTextMessage(callback: Callback<Message>) = this.longPoll.registerCallback("OnSimpleTextMessageCallback", callback)
+    fun onVoiceMessage(callback: Callback<Message>) = this.longPoll.registerCallback(MessageEvents.VOICE_MESSAGE.value, callback)
 
-
-    fun onStickerMessage(callback: Callback<Message>) = this.longPoll.registerCallback("OnStickerMessageCallback", callback)
-
-
-    fun onTyping(callback: Callback<Int>) = this.longPoll.registerCallback("OnTypingCallback", callback)
-
-
-    fun onVideoMessage(callback: Callback<Message>) = this.longPoll.registerCallback("OnVideoMessageCallback", callback)
-
-    fun onVoiceMessage(callback: Callback<Message>) = this.longPoll.registerCallback("OnVoiceMessageCallback", callback)
-
-    fun onWallMessage(callback: Callback<Message>) = this.longPoll.registerCallback("OnWallMessageCallback", callback)
+    fun onWallMessage(callback: Callback<Message>) = this.longPoll.registerCallback(MessageEvents.WALL_MESSAGE.value, callback)
 
     /* Other */
-    fun onFriendOnline(callback: CallbackDouble<Int, Int>) = this.longPoll.registerAbstractCallback("OnFriendOnlineCallback", callback)
+    fun onFriendOnline(callback: CallbackDouble<Int, Int>) = this.longPoll.registerAbstractCallback(Events.FRIEND_ONLINE.value, callback)
 
-    fun onFriendOffline(callback: CallbackDouble<Int, Int>) = this.longPoll.registerAbstractCallback("OnFriendOfflineCallback", callback)
+    fun onFriendOffline(callback: CallbackDouble<Int, Int>) = this.longPoll.registerAbstractCallback(Events.FRIEND_OFFLINE.value, callback)
 
     /* Commands */
     fun onCommand(command: Any, callback: Callback<Message>) = this.commands.add(Command(command, callback))
 
-
     fun onCommand(callback: Callback<Message>, vararg commands: Any?) = this.commands.add(Command(commands, callback))
-
 
     fun onCommand(commands: Array<Any>, callback: Callback<Message>) = this.commands.add(Command(commands, callback))
 
-
     fun onCommand(list: List<*>, callback: Callback<Message>) = this.commands.add(Command(list, callback))
-
 
 
     /**
@@ -192,13 +186,6 @@ abstract class Client {
             this.commands = command.toTypedArray()
             this.callback = callback
         }
-    }
-
-    // Getters and setters
-    fun getId(): Int? = id
-
-    fun setId(id: Int?) {
-        this.id = id!!
     }
 
     override fun toString(): String {

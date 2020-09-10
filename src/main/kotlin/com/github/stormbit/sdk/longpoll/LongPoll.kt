@@ -100,7 +100,7 @@ class LongPoll(private val client: Client) {
      * @param name     Callback name
      * @param callback Callback
      */
-    fun registerChatCallback(name: String?, callback: AbstractCallback?) = updatesHandler.registerChatCallback(name!!, callback!!)
+    fun registerChatCallback(name: String, callback: AbstractCallback) = updatesHandler.registerChatCallback(name, callback)
 
     private fun setData(): Boolean {
 

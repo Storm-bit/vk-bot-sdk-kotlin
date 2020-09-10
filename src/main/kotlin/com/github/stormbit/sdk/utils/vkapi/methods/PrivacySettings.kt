@@ -13,14 +13,19 @@ data class PrivacySettings(
     enum class Category(val value: String) {
         @SerialName("all")
         ALL("all"),
+
         @SerialName("friends")
         FRIENDS("friends"),
+
         @SerialName("friends_of_friends")
         FRIENDS_OF_FRIENDS("friends_of_friends"),
+
         @SerialName("friends_of_friends_only")
         FRIENDS_OF_FRIENDS_ONLY("friends_of_friends_only"),
+
         @SerialName("only_me")
         ONLY_ME("only_me"),
+
         @SerialName("nobody")
         NOBODY("nobody")
     }

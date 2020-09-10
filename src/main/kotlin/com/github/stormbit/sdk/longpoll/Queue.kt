@@ -15,6 +15,7 @@ class Queue {
      */
     @Volatile
     var updatesUser = CopyOnWriteArrayList<JSONArray>()
+
     @Volatile
     var updatesGroup = CopyOnWriteArrayList<JSONObject>()
 

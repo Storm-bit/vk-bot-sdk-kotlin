@@ -24,12 +24,16 @@ data class Address(
     enum class WorkInfoStatus(val value: String) {
         @SerialName("no_information")
         NO_INFORMATION("no_information"),
+
         @SerialName("temporarily_closed")
         TEMPORARILY_CLOSED("temporarily_closed"),
+
         @SerialName("timetable")
         TIMETABLE("timetable"),
+
         @SerialName("always_opened")
         ALWAYS_OPENED("always_opened"),
+
         @SerialName("forever_closed")
         FOREVER_CLOSED("forever_closed")
     }

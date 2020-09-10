@@ -166,10 +166,10 @@ class Upload(private val client: Client) {
      * @param peerId peer id
      * @param callback callback
      */
-    fun uploadDocAsync(doc: JSONObject, peerId: Int, callback: Callback<String?>) {
+    fun uploadDocAsync(doc: String, peerId: Int, callback: Callback<String?>) {
         var type: String? = null
         val fileNameField: String
-        val docFile = File(doc.getString("doc"))
+        val docFile = File(doc)
 
         if (docFile.exists()) {
             type = "fromFile"
@@ -179,7 +179,7 @@ class Upload(private val client: Client) {
 
         if (type == null) {
             try {
-                docUrl = URL(doc.getString("doc"))
+                docUrl = URL(doc)
                 type = "fromUrl"
             } catch (ignored: MalformedURLException) {
                 log.error("Error when trying add doc to message: file not found, or url is bad. Your param: {}", doc)
@@ -750,7 +750,7 @@ class Upload(private val client: Client) {
      * @param typeOfDoc Type of doc, 'audio_message' or 'graffiti' ('doc' as default)
      * @return attachment
      */
-    fun uploadDoc(doc: String, peerId: Int, typeOfDoc: DocTypes): String? {
+    fun uploadDoc(doc: String, peerId: Int, typeOfDoc: DocTypes = DocTypes.DOC): String? {
         var type: String? = null
 
         val docFile = File(doc)
@@ -816,7 +816,7 @@ class Upload(private val client: Client) {
      * @param fileNameField file name field
      * @return attachment
      */
-    fun uploadDoc(docBytes: ByteArray?, peerId: Int, typeOfDoc: DocTypes, fileNameField: String?): String? {
+    fun uploadDoc(docBytes: ByteArray?, peerId: Int, typeOfDoc: DocTypes = DocTypes.DOC, fileNameField: String?): String? {
         if (docBytes != null) {
 
             // Getting of server for uploading the photo

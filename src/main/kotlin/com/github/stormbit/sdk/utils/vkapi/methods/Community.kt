@@ -90,6 +90,7 @@ data class Community(
     enum class DeactivationType(val value: String) {
         @SerialName("deleted")
         DELETED("deleted"),
+
         @SerialName("banned")
         BANNED("banned")
     }
@@ -108,8 +109,10 @@ data class Community(
     enum class Type(val value: String) {
         @SerialName("group")
         GROUP("group"),
+
         @SerialName("page")
         PAGE("page"),
+
         @SerialName("event")
         EVENT("event")
     }
@@ -134,6 +137,7 @@ data class Community(
         enum class Type(val value: String) {
             @SerialName("group")
             GROUP("group"),
+
             @SerialName("profile")
             PROFILE("profile")
         }
@@ -284,16 +288,22 @@ data class Community(
         enum class ActionType(val value: String) {
             @SerialName("")
             NONE(""),
+
             @SerialName("send_email")
             SEND_EMAIL("send_email"),
+
             @SerialName("call_phone")
             CALL_PHONE("call_phone"),
+
             @SerialName("call_vk")
             CALL_VK("call_vk"),
+
             @SerialName("open_url")
             OPEN_URL("open_url"),
+
             @SerialName("open_app")
             OPEN_APP("open_app"),
+
             @SerialName("open_group_app")
             OPEN_GROUP_APP("open_group_app")
         }

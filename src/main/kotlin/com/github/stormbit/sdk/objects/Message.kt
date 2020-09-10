@@ -12,29 +12,35 @@ import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.regex.Pattern
-import kotlin.collections.ArrayList
-import kotlin.collections.HashMap
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 class Message {
     private val log = LoggerFactory.getLogger(Message::class.java)
 
     var messageId: Int? = null
-    val authorId get() = peerId
-    var timestamp: Int? = null
-    var chatId: Int? = null
-    var chatIdLong: Int? = null
+        private set
+    var authorId = 0
+        get() = peerId
+        private set
 
-    private var peerId: Int? = null
-    private var randomId: Int = 0
-    private var stickerId: Int? = null
-    private var keyboard: Keyboard? = null
-    private var payload = JSONObject()
+    var timestamp: Int = 0
+        private set
+
+    var chatId: Int = 0
+    var chatIdLong: Int = 0
+
+    var peerId: Int = 0
+    var randomId: Int = 0
+    var stickerId: Int = 0
+
+    var keyboard: Keyboard? = null
+    private var payload: JSONObject? = JSONObject()
+        private set(value) {
+            field = value ?: JSONObject()
+        }
 
     var text: String = ""
-        private set
     var title: String = ""
-        private set
 
     private lateinit var api: API
     private lateinit var upload: Upload
@@ -42,9 +48,13 @@ class Message {
 
     /**
      * Attachments in format of received event from longpoll server
+     *
      * More: [link](https://vk.com/dev/using_longpoll_2)
      */
-    private var attachmentsOfReceivedMessage = JSONObject()
+    private var attachmentsOfReceivedMessage: JSONObject? = JSONObject()
+        private set(value) {
+            field = value ?: JSONObject()
+        }
 
     /**
      * Attachments in format [photo62802565_456241137, photo111_111, doc100_500]
@@ -66,6 +76,7 @@ class Message {
 
     /**
      * Constructor for received message
+     *
      * @param client client
      * @param messageId message id
      * @param peerId peer id
@@ -75,18 +86,18 @@ class Message {
      * @param randomId random id
      */
     constructor(client: Client, messageId: Int, peerId: Int, timestamp: Int, text: String, title: String, attachments: JSONObject?, randomId: Int, payload: JSONObject?) {
-        setMessageId(messageId)
-        setPeerId(peerId)
-        setTimestamp(timestamp)
-        setText(text)
-        setAttachments(attachments)
-        setRandomId(randomId)
-        setPayload(payload)
-        setTitle(title)
+        this.messageId = messageId
+        this.peerId = peerId
+        this.timestamp = timestamp
+        this.text = text
+        this.attachmentsOfReceivedMessage = attachments
+        this.randomId = randomId
+        this.payload = payload
+        this.title = title
         this.client = client
 
-        api = client.api
-        upload = Upload(client)
+        this.api = client.api
+        this.upload = Upload(client)
     }
 
     constructor(block: Message.() -> Message) {
@@ -95,6 +106,7 @@ class Message {
 
     /**
      * Your client with id
+     *
      * @param client client
      * @return this
      */
@@ -107,6 +119,7 @@ class Message {
 
     /**
      * ID of target dialog
+     *
      * @param peerId target
      * @return this
      */
@@ -117,6 +130,7 @@ class Message {
 
     /**
      * ID of sticker
+     *
      * @param id sticker id
      * @return this
      */
@@ -127,6 +141,7 @@ class Message {
 
     /**
      * IDs of forwarded messages
+     *
      * @param ids message ids
      * @return this
      */
@@ -140,6 +155,7 @@ class Message {
 
     /**
      * Message text
+     *
      * @param text message content
      * @return this
      */
@@ -150,6 +166,7 @@ class Message {
 
     /**
      * Message title (bold text)
+     *
      * @param title message title
      * @return this
      */
@@ -158,6 +175,12 @@ class Message {
         return this
     }
 
+    /**
+     * Message keyboard
+     *
+     * @param keyboard keyboard
+     * @return this
+     */
     fun keyboard(keyboard: Keyboard): Message {
         this.keyboard = keyboard
         return this
@@ -179,11 +202,23 @@ class Message {
 
     /**
      * Message random_id
-     * @param randomId random
+     *
+     * @param randomId random_id
      * @return this
      */
-    fun randomId(randomId: Int): Message? {
+    fun randomId(randomId: Int): Message {
         this.randomId = randomId
+        return this
+    }
+
+    /**
+     * Message sticker_id
+     *
+     * @param stickerId sticker_id
+     * @return this
+     */
+    fun stickerId(stickerId: Int): Message {
+        this.stickerId = stickerId
         return this
     }
 
@@ -197,7 +232,7 @@ class Message {
             return this
         }
 
-        attachments.add(upload.uploadPhoto(photo, peerId!!))
+        attachments.add(upload.uploadPhoto(photo, peerId))
         return this
     }
 
@@ -208,7 +243,7 @@ class Message {
      * @return this
      */
     fun doc(doc: String?): Message {
-        val docAsAttach = upload.uploadDoc(doc!!, peerId!!, DocTypes.DOC)
+        val docAsAttach = upload.uploadDoc(doc!!, peerId, DocTypes.DOC)
         if (docAsAttach != null) attachments.add(docAsAttach)
         return this
     }
@@ -272,7 +307,7 @@ class Message {
      * @param callback response will returns to callback
      */
     fun sendVoiceMessage(doc: String, callback: Callback<JSONObject>?) {
-        val docAsAttach = upload.uploadDoc(doc, peerId!!, DocTypes.AUDIO_MESSAGE)
+        val docAsAttach = upload.uploadDoc(doc, peerId, DocTypes.AUDIO_MESSAGE)
         if (docAsAttach != null) attachments.add(docAsAttach)
         send(callback)
     }
@@ -280,14 +315,50 @@ class Message {
     /**
      * Send the message
      *
-     * @param callback will be called with response object
      */
+    fun sendAsync(): JSONObject? {
+        if (photosToUpload.size > 0) {
+            val photo = photosToUpload[0]
+            photosToUpload.removeAt(0)
+
+            val response = upload.uploadPhoto(photo, peerId)
+            if (response != null) {
+                attachments.addIfAbsent(response.toString())
+                sendAsync()
+            } else log.error("Some error occurred when uploading photo.")
+
+            return null
+        }
+
+        if (docsToUpload.size > 0) {
+            val doc = docsToUpload[0]
+            docsToUpload.removeAt(0)
+
+            val response = upload.uploadDoc(doc.getString("doc"), peerId)
+            if (response != null) {
+                attachments.addIfAbsent(response.toString())
+                sendAsync()
+            } else log.error("Some error occurred when uploading photo.")
+
+            return null
+        }
+
+        return client.messages.send(
+                peerId = peerId,
+                randomId = randomId,
+                text = text,
+                stickerId = stickerId,
+                payload = payload.toString(),
+                attachments = attachments,
+                keyboard = keyboard)
+    }
+
     fun send(callback: Callback<JSONObject>? = null) {
         if (photosToUpload.size > 0) {
             val photo = photosToUpload[0]
             photosToUpload.removeAt(0)
 
-            upload.uploadPhotoAsync(photo, peerId!!) { response: Any? ->
+            upload.uploadPhotoAsync(photo, peerId) { response: Any? ->
                 if (response != null) {
                     attachments.addIfAbsent(response.toString())
                     send(callback)
@@ -303,7 +374,7 @@ class Message {
             val doc = docsToUpload[0]
             docsToUpload.removeAt(0)
 
-            upload.uploadDocAsync(doc, peerId!!) { response ->
+            upload.uploadDocAsync(doc.getString("doc"), peerId) { response ->
                 if (response != null) {
                     attachments.addIfAbsent(response.toString())
                     send(callback)
@@ -316,7 +387,7 @@ class Message {
         }
 
         val response = client.messages.send(
-                peerId = peerId!!,
+                peerId = peerId,
                 randomId = randomId,
                 text = text,
                 stickerId = stickerId,
@@ -336,8 +407,6 @@ class Message {
             isVoiceMessage() -> MessageType.VOICE
 
             isStickerMessage() -> MessageType.STICKER
-
-            isGifMessage() -> MessageType.GIF
 
             isAudioMessage() -> MessageType.AUDIO
 
@@ -362,7 +431,7 @@ class Message {
      */
     fun hasFwds(): Boolean {
         var answer = false
-        if (attachmentsOfReceivedMessage.has("fwd")) answer = true
+        if (attachmentsOfReceivedMessage!!.has("fwd")) answer = true
         return answer
     }
 
@@ -401,7 +470,7 @@ class Message {
      */
     fun getAttachments(): JSONArray {
         val response: JSONObject = if (isMessageFromChat()) {
-            client.messages.getByConversationMessageId(chatIdLong!!, listOf(messageId!!), groupId = client.id)
+            client.messages.getByConversationMessageId(chatIdLong, listOf(messageId!!), groupId = client.id)
         } else {
             client.messages.getById(listOf(messageId!!))
         }
@@ -478,17 +547,6 @@ class Message {
 
     fun isLinkMessage(): Boolean = getCountOfAttachmentsByType()["link"]!! > 0
 
-
-    fun isGifMessage(): Boolean {
-        val attachments = getAttachments()
-        for (attachment in attachments) {
-            if (attachment is JSONObject) {
-                if (attachment.has("type") && attachment.getJSONObject(attachment.getString("type")).has("type") && attachment.getJSONObject(attachment.getString("type")).getInt("type") == 3) return true
-            }
-        }
-        return false
-    }
-
     // Getters and setters for handling new message
     /**
      * Method helps to identify kind of message
@@ -526,9 +584,9 @@ class Message {
                 return answer
             } else {
                 if (client is Group) {
-                    for (key in attachmentsOfReceivedMessage.keySet()) {
+                    for (key in attachmentsOfReceivedMessage!!.keySet()) {
                         if (key == "type") {
-                            when (val value = attachmentsOfReceivedMessage.getString(key)) {
+                            when (val value = attachmentsOfReceivedMessage!!.getString(key)) {
                                 "photo" -> {
                                     answer[value] = ++photo
                                 }
@@ -551,9 +609,9 @@ class Message {
                         }
                     }
                 } else {
-                    for (key in attachmentsOfReceivedMessage.keySet()) {
+                    for (key in attachmentsOfReceivedMessage!!.keySet()) {
                         if (key.contains("type")) {
-                            when (val value = attachmentsOfReceivedMessage.getString(key)) {
+                            when (val value = attachmentsOfReceivedMessage!!.getString(key)) {
                                 "photo" -> {
                                     answer[value] = ++photo
                                 }
@@ -591,8 +649,6 @@ class Message {
     }
 
     /* Public getters */
-    fun authorId(): Int? = peerId
-
 
     fun getPhotos(): JSONArray? {
         val attachments = getAttachments()
@@ -604,21 +660,6 @@ class Message {
     }
 
     /* Private setters */
-    private fun setMessageId(messageId: Int) {
-        this.messageId = messageId
-    }
-
-    private fun setPeerId(peerId: Int) {
-        this.peerId = peerId
-    }
-
-    private fun setTimestamp(timestamp: Int) {
-        this.timestamp = timestamp
-    }
-
-    fun setChatIdLong(chatIdLong: Int) {
-        this.chatIdLong = chatIdLong
-    }
 
     fun getVoiceMessage(): JSONObject? {
         val attachments = getAttachments()
@@ -630,14 +671,7 @@ class Message {
     }
 
     fun isMessageFromChat(): Boolean {
-        return chatId != null && chatId!! > 0 || chatIdLong != null && chatIdLong!! > 0
-    }
-
-    fun chatId(): Int? = chatId
-
-
-    fun setChatId(chatId: Int) {
-        this.chatId = chatId
+        return chatId > 0 || chatIdLong > 0
     }
 
     private fun setAttachments(attachments: JSONObject?) {
@@ -645,37 +679,9 @@ class Message {
         attachmentsOfReceivedMessage = attachments
     }
 
-    fun getRandomId(): Int = randomId
-
-    private fun setRandomId(randomId: Int) {
-        this.randomId = randomId
-    }
-
-    fun getKeyboard(): Keyboard? = keyboard
-
-    fun setKeyboard(keyboard: Keyboard) {
-        this.keyboard = keyboard
-    }
-
-    fun getPayload(): JSONObject = payload
-
-    fun setPayload(payload: JSONObject?) {
-        if (payload == null) return
-
-        this.payload = payload
-    }
-
-    fun setText(text: String) {
-        this.text = text
-    }
-
-    fun setTitle(title: String) {
-        this.title = title
-    }
-
     private fun getForwardedMessagesIds(): Array<String?>? {
-        return if (attachmentsOfReceivedMessage.has("fwd")) {
-            attachmentsOfReceivedMessage.getString("fwd").split(",".toRegex()).toTypedArray()
+        return if (attachmentsOfReceivedMessage!!.has("fwd")) {
+            attachmentsOfReceivedMessage!!.getString("fwd").split(",".toRegex()).toTypedArray()
         } else arrayOf()
     }
 
@@ -698,7 +704,6 @@ class Message {
         VOICE,
         STICKER,
         DOC,
-        GIF,
         WALL,
         LINK,
         SIMPLE_TEXT

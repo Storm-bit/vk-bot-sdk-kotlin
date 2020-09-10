@@ -1,19 +1,24 @@
 package com.github.stormbit.sdk.longpoll
 
-import java.util.*
-
 /**
  * Created by Storm-bit
  *
  * LongPoll events enum
  */
-enum class Events(val type: String) {
+enum class Events(val value: String) {
     MESSAGE_NEW("message_new"),
     MESSAGE_REPLY("message_reply"),
     MESSAGE_EDIT("message_edit"),
     MESSAGE_TYPING_STATE("message_typing_state"),
     MESSAGE_ALLOW("message_allow"),
     MESSAGE_DENY("message_deny"),
+
+    CHAT_CREATE("chat_create"),
+    CHAT_PHOTO_UPDATE("chat_photo_change"),
+    CHAT_PHOTO_REMOVE("chat_photo_remove"),
+    CHAT_TITLE_CHANGE("chat_title_change"),
+    CHAT_JOIN("chat_join"),
+    CHAT_LEAVE("chat_leave"),
 
     PHOTO_NEW("photo_new"),
     PHOTO_COMMENT_NEW("photo_comment_new"),
@@ -58,18 +63,21 @@ enum class Events(val type: String) {
     GROUP_CHANGE_SETTINGS("group_change_settings"),
     GROUP_CHANGE_PHOTO("group_change_photo"),
 
-    VKPAY_TRANSACTION("vkpay_transaction");
+    VKPAY_TRANSACTION("vkpay_transaction"),
+
+    TYPING("on_typing"),
+    FRIEND_ONLINE("on_friend_online"),
+    FRIEND_OFFLINE("on_friend_offline"),
+    EVERY("every_event");
 
     companion object {
-        private val values: MutableMap<String, Events> = HashMap()
-        operator fun get(value: String): Events {
-            return values.getValue(value)
-        }
 
-        init {
-            for (event in values()) {
-                values[event.type] = event
+        operator fun get(value: String): Events? {
+            for (v in values()) {
+                if (v.value == value) return v
             }
+
+            return null
         }
     }
 
