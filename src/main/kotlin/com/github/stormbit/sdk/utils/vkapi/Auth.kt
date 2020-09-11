@@ -2,15 +2,21 @@ package com.github.stormbit.sdk.utils.vkapi
 
 import com.github.stormbit.sdk.exceptions.NotValidAuthorization
 import com.github.stormbit.sdk.exceptions.TwoFactorException
+import com.github.stormbit.sdk.objects.Captcha
 import com.github.stormbit.sdk.utils.Utils
+import com.github.stormbit.sdk.utils.Utils.Companion.AUTH_HASH
+import com.github.stormbit.sdk.utils.Utils.Companion.RE_CAPTCHAID
 import net.dongliu.requests.Cookie
 import net.dongliu.requests.Header
 import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.FormElement
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.File
 
 class Auth {
+    private val log: Logger = LoggerFactory.getLogger(Auth::class.java)
     private var login: String? = null
     private var password: String? = null
 
@@ -21,34 +27,26 @@ class Auth {
 
     private val STRING_USER_AGENT = "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36"
     private val USER_AGENT = Header("User-Agent", STRING_USER_AGENT)
-    private val AUTH_HASH = Regex("\\{.*?act: 'a_authcheck_code'.+?hash: '([a-z_0-9]+)'.*?}")
     private val FORM_ID = "quick_login_form"
 
     var session: Session = Session()
-    private var listener: Listener? = null
+    private var twoFactorListener: TwoFactorListener? = null
+    private var captchaListener: CaptchaListener? = null
 
-    constructor(login: String, password: String, saveCookie: Boolean = false, loadFromCookie: Boolean = false) {
+    constructor(login: String, password: String, saveCookie: Boolean = false, loadFromCookie: Boolean = false, twoFactorListener: TwoFactorListener? = null, captchaListener: CaptchaListener? = null) {
         this.login = login
         this.password = password
         this.isSaveCookie = saveCookie
         this.isLoadFromCookie = loadFromCookie
-
-        auth()
-    }
-
-    constructor(login: String, password: String, saveCookie: Boolean = false, loadFromCookie: Boolean = false, listener: Listener) {
-        this.login = login
-        this.password = password
-        this.isSaveCookie = saveCookie
-        this.isLoadFromCookie = loadFromCookie
-        this.listener = listener
+        this.twoFactorListener = twoFactorListener
+        this.captchaListener = captchaListener
 
         auth()
     }
 
     constructor()
 
-    private fun auth() {
+    private fun auth(parameters: Map<String, String> = HashMap()) {
         if (login == null || password == null) return
 
         if (isLoadFromCookie && cookiesFile.exists()) {
@@ -72,18 +70,39 @@ class Auth {
 
         val formData = form.formData()
 
-        val params = formData.map { it.key() to it.value() }.toMap()
+        val params = formData.map { it.key() to it.value() }.toMap() as HashMap<String, String>
+
+        params.putAll(parameters)
 
         var response = session.post(form.attr("action"))
                 .headers(USER_AGENT)
                 .body(params)
                 .send().readToText()
 
-        if (response.contains("act=authcheck")) {
-            response = session.get("https://vk.com/login?act=authcheck").send().readToText()
-            _pass_twofactor(response)
-        } else if (!response.contains("onLoginDone")) {
-            throw NotValidAuthorization("Incorrect login or password")
+        when {
+            response.contains("act=authcheck") -> {
+                log.info("Two Factor is required")
+
+                response = session.get("https://vk.com/login?act=authcheck").send().readToText()
+                passTwoFactor(response)
+            }
+            response.contains("onLoginCaptcha(") -> {
+                log.info("Captcha code is required")
+
+                val captchaSid = Utils.regexSearch(RE_CAPTCHAID, response)
+                val captcha = Captcha(session, captchaSid!!, func = { prms -> auth(prms) })
+
+                captchaListener?.onCaptcha(captcha)
+            }
+            response.contains("onLoginReCaptcha(") -> {
+                log.info("Captcha code is required (recaptcha)")
+
+                val captchaSid = System.currentTimeMillis().toString()
+                val captcha = Captcha(session, captchaSid, func = { prms -> auth(prms) })
+
+                captchaListener?.onCaptcha(captcha)
+            }
+            response.contains("onLoginFailed(4") -> throw NotValidAuthorization("Incorrect login or password")
         }
 
         if (isSaveCookie) {
@@ -94,8 +113,8 @@ class Auth {
         }
     }
 
-    private fun _pass_twofactor(response: String): String {
-        val pair = listener?.twoFactor() ?: throw TwoFactorException("Two Factor Listener is not initialized")
+    private fun passTwoFactor(response: String): String {
+        val pair = twoFactorListener?.twoFactor() ?: throw TwoFactorException("Two Factor Listener is not initialized")
 
         val authHash = Utils.regexSearch(AUTH_HASH, response, 1)!!
 
@@ -119,7 +138,7 @@ class Auth {
                 val path = data.getJSONArray("payload").getJSONArray(1).getString(0).replace("[\\\\\"]".toRegex(), "")
                 return session.get("https://vk.com/$path").send().readToText()
             }
-            listOf(0, 4).contains(status) -> return _pass_twofactor(response)
+            listOf(0, 8).contains(status) -> return passTwoFactor(response)
 
             status == 2 -> throw TwoFactorException("ReCaptcha required")
         }
@@ -139,7 +158,11 @@ class Auth {
                 .execute()
     }
 
-    fun interface Listener {
+    fun interface TwoFactorListener {
         fun twoFactor(): Pair<String, Boolean>
+    }
+
+    fun interface CaptchaListener {
+        fun onCaptcha(captcha: Captcha)
     }
 }

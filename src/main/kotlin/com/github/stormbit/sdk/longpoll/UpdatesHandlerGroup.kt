@@ -170,8 +170,8 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
             messageIsAlreadyHandled = handleCommands(message)
         }
         if (message.hasFwds()) {
-            if (callbacks.containsKey("OnMessageWithFwdsCallback")) {
-                callbacks["OnMessageWithFwdsCallback"]!!.onResult(message)
+            if (callbacks.containsKey(MessageEvents.MESSAGE_WITH_FORWARDS.value)) {
+                callbacks[MessageEvents.MESSAGE_WITH_FORWARDS.value]!!.onResult(message)
                 messageIsAlreadyHandled = true
                 handleSendTyping(message)
             }
@@ -248,7 +248,7 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
             handleSendTyping(message)
         }
         if (callbacks.containsKey(MessageEvents.CHAT_MESSAGE.value) && !messageIsAlreadyHandled) {
-            callbacks["OnChatMessageCallback"]!!.onResult(message)
+            callbacks[MessageEvents.CHAT_MESSAGE.value]!!.onResult(message)
         }
     }
 
@@ -267,17 +267,19 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
      * @param message received message
      */
     private fun handleCommands(message: Message): Boolean {
-        var `is` = false
+        var done = false
+
         for (command in client.commands) {
-            for (i in 0 until command.commands.size) {
-                if (message.text.toLowerCase().contains(command.commands[i].toString().toLowerCase())) {
+            for (element in command.commands) {
+                if (message.text.split(" ")[0].toLowerCase().contains(element.toLowerCase())) {
                     command.callback.onResult(message)
-                    `is` = true
+                    done = true
                     handleSendTyping(message)
                 }
             }
         }
-        return `is`
+
+        return done
     }
 
     /**
@@ -288,7 +290,7 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
         // Send typing
         if (sendTyping) {
             if (!message.isMessageFromChat()) {
-                client.messages.setActivity(message.authorId, "typing")
+                client.messages.setActivity(message.peerId, "typing")
             } else {
                 client.messages.setActivity(message.chatIdLong, "typing")
             }

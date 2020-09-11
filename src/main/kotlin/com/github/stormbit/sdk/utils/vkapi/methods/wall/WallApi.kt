@@ -22,12 +22,12 @@ class WallApi(private val client: Client) {
     fun createComment(
             postId: Int,
             ownerId: Int?,
-            fromGroup: Int,
+            fromGroup: Int = 0,
             message: String?,
-            replyToCommentId: Int?,
-            attachments: List<CommentAttachment>?,
-            stickerId: Int?,
-            guid: String?
+            replyToCommentId: Int? = null,
+            attachments: List<CommentAttachment>? = null,
+            stickerId: Int? = null,
+            guid: String? = null
     ): JSONObject = Methods.createComment.callSync(client, JSONObject()
             .put("post_id", postId)
             .put("owner_id", ownerId)

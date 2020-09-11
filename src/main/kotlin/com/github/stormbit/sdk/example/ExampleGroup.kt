@@ -18,7 +18,7 @@ class ExampleGroup {
 
             client.onMessage {
                 client.sendMessage {
-                    peerId = it.authorId
+                    peerId = it.peerId
                     text = it.text
 
                     keyboard = KeyboardBuilder {

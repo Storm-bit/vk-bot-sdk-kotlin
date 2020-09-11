@@ -26,9 +26,6 @@ import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.set
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.InvocationKind
-import kotlin.contracts.contract
 import kotlin.reflect.KClass
 
 internal val json = Json {
@@ -46,6 +43,9 @@ class Utils {
         val hashes = JSONObject()
         const val version = 5.122
         const val userApiUrl = "https://vk.com/dev"
+
+        val RE_CAPTCHAID = Regex("onLoginCaptcha\\('(\\d+)'")
+        val AUTH_HASH = Regex("\\{.*?act: 'a_authcheck_code'.+?hash: '([a-z_0-9]+)'.*?}")
 
         /**
          * Analog method of 'shift()' method from javascript
@@ -141,11 +141,11 @@ class Utils {
             hashes.put(method, hash_0)
         }
 
-        fun regexSearch(pattern: Regex, string: String, group: Int): String? {
+        fun regexSearch(pattern: Regex, string: String, group: Int = 0): String? {
             return pattern.find(string)?.groups?.get(group)?.value
         }
 
-        fun regexSearch(pattern: String, string: String, group: Int): String? {
+        fun regexSearch(pattern: String, string: String, group: Int = 0): String? {
             return Regex(pattern).find(string)?.groups?.get(group)?.value
         }
 

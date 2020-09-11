@@ -1,6 +1,7 @@
 package com.github.stormbit.sdk.example
 
 import com.github.stormbit.sdk.clients.User
+import com.github.stormbit.sdk.objects.Captcha
 import org.apache.log4j.BasicConfigurator
 
 /**
@@ -15,12 +16,21 @@ class ExampleUser {
         fun main(args: Array<String>) {
             BasicConfigurator.configure()
 
-            val client = User(login, password)
+            // Captcha handler
+            val captchaHandler = { it: Captcha -> println(it.getUrl()) }
+
+            // Two Factor handler
+            val twoFactorHandler = {
+                print("Код: ")
+                Pair(readLine() ?: "", true)
+            }
+
+            val client = User(login, password, twoFactorListener = twoFactorHandler, captchaListener = captchaHandler)
 
             client.onMessage {
                 client.sendMessage {
                     text = it.text
-                    peerId = it.authorId
+                    peerId = it.peerId
                 }
             }
         }

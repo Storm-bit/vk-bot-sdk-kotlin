@@ -4,11 +4,12 @@ import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.utils.vkapi.calls.Call
 import com.github.stormbit.sdk.utils.vkapi.calls.CallAsync
 import com.github.stormbit.sdk.utils.vkapi.calls.CallSync
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
 abstract class Executor(protected val auth: Auth) {
-    val log = LoggerFactory.getLogger(Executor::class.java)
+    val log: Logger = LoggerFactory.getLogger(Executor::class.java)
 
     @Volatile
     protected var queue = ArrayList<CallAsync>()

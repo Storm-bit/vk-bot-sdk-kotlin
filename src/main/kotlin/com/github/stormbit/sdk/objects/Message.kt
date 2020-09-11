@@ -19,9 +19,6 @@ class Message {
 
     var messageId: Int? = null
         private set
-    var authorId = 0
-        get() = peerId
-        private set
 
     var timestamp: Int = 0
         private set
@@ -34,12 +31,25 @@ class Message {
     var stickerId: Int = 0
 
     var keyboard: Keyboard? = null
+
     private var payload: JSONObject? = JSONObject()
         private set(value) {
             field = value ?: JSONObject()
         }
 
     var text: String = ""
+
+    var textWithoutCommand: String = text
+        get() {
+            val words = text.split(" ")
+            return if (words.size > 1) {
+                words.subList(1, words.size).joinToString(" ")
+            } else {
+                ""
+            }
+        }
+        private set
+
     var title: String = ""
 
     private lateinit var api: API
@@ -547,13 +557,12 @@ class Message {
 
     fun isLinkMessage(): Boolean = getCountOfAttachmentsByType()["link"]!! > 0
 
-    // Getters and setters for handling new message
     /**
      * Method helps to identify kind of message
      *
      * @return Map: key=type of attachment, value=count of attachments, key=summary - value=count of all attachments.
      */
-    fun getCountOfAttachmentsByType(): Map<String, Int> {
+    fun getCountOfAttachmentsByType(): HashMap<String, Int> {
         var photo = 0
         var video = 0
         var audio = 0

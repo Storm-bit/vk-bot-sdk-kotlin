@@ -218,9 +218,7 @@ class LongPoll(private val client: Client) {
                 continue
             }
 
-            if (logUpdates) {
-                log.info("Response of getting updates: \n{}\n", response)
-            }
+            if (logUpdates) log.info("Response of getting updates: \n{}\n", response)
 
             if (response.has("failed")) {
                 val code = response.getInt("failed")

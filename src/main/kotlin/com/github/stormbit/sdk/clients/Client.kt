@@ -12,21 +12,22 @@ import com.github.stormbit.sdk.objects.Message
 import com.github.stormbit.sdk.utils.Utils
 import com.github.stormbit.sdk.utils.vkapi.API
 import com.github.stormbit.sdk.utils.vkapi.Auth
+import com.github.stormbit.sdk.utils.vkapi.Session
 import com.github.stormbit.sdk.utils.vkapi.apis.APIGroup
 import com.github.stormbit.sdk.utils.vkapi.apis.APIUser
+import com.github.stormbit.sdk.utils.vkapi.methods.likes.LikesApi
 import com.github.stormbit.sdk.utils.vkapi.methods.docs.DocsApi
 import com.github.stormbit.sdk.utils.vkapi.methods.friends.FriendsApi
 import com.github.stormbit.sdk.utils.vkapi.methods.groups.GroupsApi
 import com.github.stormbit.sdk.utils.vkapi.methods.messages.MessagesApi
 import com.github.stormbit.sdk.utils.vkapi.methods.photos.PhotosApi
 import com.github.stormbit.sdk.utils.vkapi.methods.users.UsersApi
+import com.github.stormbit.sdk.utils.vkapi.methods.video.VideoApi
 import org.json.JSONArray
 import org.json.JSONObject
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.CopyOnWriteArrayList
-import java.util.concurrent.Executors
+import java.util.concurrent.*
 
-@Suppress("unused")
+@Suppress("unused", "LeakingThis")
 abstract class Client {
 
     /**
@@ -34,6 +35,7 @@ abstract class Client {
      */
     var id: Int
     val api: API
+    val http: Session
     val longPoll: LongPoll
     val auth: Auth
     var token: String? = null
@@ -48,27 +50,22 @@ abstract class Client {
     val groups = GroupsApi(this)
     val users = UsersApi(this)
     val photos = PhotosApi(this)
+    val videos = VideoApi(this)
     val docs = DocsApi(this)
     val friends = FriendsApi(this)
+    val likes = LikesApi(this)
 
     companion object {
         /**
          * Executor services for threadsafing and fast work
          */
-        val service = Executors.newCachedThreadPool()
-        val scheduler = Executors.newSingleThreadScheduledExecutor()
+        val service: ExecutorService = Executors.newCachedThreadPool()
+        val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
     }
 
-    constructor(login: String, password: String, saveCookie: Boolean = false, loadFromCookie: Boolean = false) {
-        this.auth = Auth(login, password, saveCookie, loadFromCookie)
-
-        this.api = APIUser(this)
-        this.id = Utils.getId(this)
-        this.longPoll = LongPoll(this)
-    }
-
-    constructor(login: String, password: String, saveCookie: Boolean = false, loadFromCookie: Boolean = false, listener: Auth.Listener) {
-        this.auth = Auth(login, password, saveCookie, loadFromCookie, listener)
+    constructor(login: String, password: String, saveCookie: Boolean = false, loadFromCookie: Boolean = false, twoFactorListener: Auth.TwoFactorListener? = null, captchaListener: Auth.CaptchaListener? = null) {
+        this.auth = Auth(login, password, saveCookie, loadFromCookie, twoFactorListener, captchaListener)
+        this.http = this.auth.session
 
         this.api = APIUser(this)
         this.id = Utils.getId(this)
@@ -77,10 +74,11 @@ abstract class Client {
 
     constructor(accessToken: String, id: Int) {
         this.auth = Auth()
+        this.http = this.auth.session
+
         this.id = id
         this.token = accessToken
         this.api = APIGroup(this)
-
         this.longPoll = LongPoll(this)
     }
 
@@ -151,13 +149,11 @@ abstract class Client {
     fun onFriendOffline(callback: CallbackDouble<Int, Int>) = this.longPoll.registerAbstractCallback(Events.FRIEND_OFFLINE.value, callback)
 
     /* Commands */
-    fun onCommand(command: Any, callback: Callback<Message>) = this.commands.add(Command(command, callback))
+    fun onCommand(command: String, callback: Callback<Message>) = this.commands.add(Command(command, callback))
 
-    fun onCommand(callback: Callback<Message>, vararg commands: Any?) = this.commands.add(Command(commands, callback))
+    fun onCommand(vararg commands: String, callback: Callback<Message>) = this.commands.add(Command(commands.toList(), callback))
 
-    fun onCommand(commands: Array<Any>, callback: Callback<Message>) = this.commands.add(Command(commands, callback))
-
-    fun onCommand(list: List<*>, callback: Callback<Message>) = this.commands.add(Command(list, callback))
+    fun onCommand(list: List<String>, callback: Callback<Message>) = this.commands.add(Command(list, callback))
 
 
     /**
@@ -169,20 +165,20 @@ abstract class Client {
     fun enableLoggingUpdates(enable: Boolean) = this.longPoll.enableLoggingUpdates(enable)
 
     class Command {
-        val commands: Array<Any>
+        val commands: Array<String>
         val callback: Callback<Message>
 
-        constructor(commands: Array<Any>, callback: Callback<Message>) {
+        constructor(commands: Array<String>, callback: Callback<Message>) {
             this.commands = commands
             this.callback = callback
         }
 
-        constructor(command: Any, callback: Callback<Message>) {
+        constructor(command: String, callback: Callback<Message>) {
             this.commands = arrayOf(command)
             this.callback = callback
         }
 
-        constructor(command: List<Any>, callback: Callback<Message>) {
+        constructor(command: List<String>, callback: Callback<Message>) {
             this.commands = command.toTypedArray()
             this.callback = callback
         }

@@ -9,19 +9,12 @@ import com.github.stormbit.sdk.utils.vkapi.Auth
  */
 class User : Client {
     /**
-     * Default constructor
+     * Constructor
      *
      * @param login    Login of your VK bot
      * @param password Password of your VK bot
+     * @param twoFactorListener Listener for 2fa
+     * @param captchaListener Listener for captcha
      */
-    constructor(login: String, password: String, saveCookie: Boolean = false, loadFromCookie: Boolean = false) : super(login, password, saveCookie, loadFromCookie)
-
-    /**
-     * Second constructor
-     *
-     * @param login    Login of your VK bot
-     * @param password Password of your VK bot
-     * @param listener Listener for two factor
-     */
-    constructor(login: String, password: String, saveCookie: Boolean = false, loadFromCookie: Boolean = false, listener: Auth.Listener) : super(login, password, saveCookie, loadFromCookie, listener)
+    constructor(login: String, password: String, saveCookie: Boolean = false, loadFromCookie: Boolean = false, twoFactorListener: Auth.TwoFactorListener? = null, captchaListener: Auth.CaptchaListener? = null) : super(login, password, saveCookie, loadFromCookie, twoFactorListener,  captchaListener)
 }

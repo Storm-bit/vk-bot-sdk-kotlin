@@ -279,8 +279,8 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
      * Handle dialog with typing user
      */
     private fun handleTypingUpdate(updateObject: JSONArray) {
-        if (callbacks.containsKey("OnTypingCallback")) {
-            callbacks["OnTypingCallback"]!!.onResult(updateObject.getInt(1))
+        if (callbacks.containsKey(Events.TYPING.value)) {
+            callbacks[Events.TYPING.value]!!.onResult(updateObject.getInt(1))
         }
     }
 
@@ -294,7 +294,7 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
 
         for (command in client.commands) {
             for (element in command.commands) {
-                if (message.text.toLowerCase().contains(element.toString().toLowerCase())) {
+                if (message.text.split(" ")[0].toLowerCase().contains(element.toLowerCase())) {
                     command.callback.onResult(message)
                     done = true
                     handleSendTyping(message)
@@ -313,7 +313,7 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
         // Send typing
         if (sendTyping) {
             if (!message.isMessageFromChat()) {
-                client.messages.setActivity(message.authorId, "typing")
+                client.messages.setActivity(message.peerId, "typing")
             } else {
                 client.messages.setActivity(message.chatIdLong, "typing")
             }
