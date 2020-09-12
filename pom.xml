@@ -18,15 +18,7 @@
         <kotlin.version>1.4.0</kotlin.version>
         <serialization.version>1.0.0-RC</serialization.version>
         <dokka.version>1.4.0-rc</dokka.version>
-        <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
     </properties>
-
-    <repositories>
-        <repository>
-            <id>jcenter</id>
-            <url>https://jcenter.bintray.com</url>
-        </repository>
-    </repositories>
 
     <pluginRepositories>
         <pluginRepository>
@@ -196,27 +188,6 @@
                         <version>${kotlin.version}</version>
                     </dependency>
                 </dependencies>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.1</version>
-                <configuration>
-                    <target>11</target>
-                    <source>11</source>
-                    <compilerArgs>
-                        <arg>-Xmulti-platform</arg>
-                    </compilerArgs>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>compile</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
