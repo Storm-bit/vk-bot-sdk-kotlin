@@ -6,7 +6,7 @@ import com.github.stormbit.sdk.utils.Utils
 import com.github.stormbit.sdk.utils.Utils.Companion.map
 import com.github.stormbit.sdk.utils.vkapi.API
 import com.github.stormbit.sdk.utils.vkapi.calls.CallAsync
-import com.github.stormbit.sdk.utils.vkapi.executors.ExecutorGroup
+import com.github.stormbit.sdk.utils.vkapi.executors.ExecutorUser
 import org.json.JSONObject
 import java.util.*
 
@@ -15,8 +15,7 @@ import java.util.*
  *
  * API for users
  */
-class APIUser(private val client: Client) : API(ExecutorGroup(client, client.auth)) {
-
+class APIUser(private val client: Client) : API(ExecutorUser(client.auth)) {
 
     override fun call(method: String, params: Any?, callback: Callback<JSONObject?>) {
         try {

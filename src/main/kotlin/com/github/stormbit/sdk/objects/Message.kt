@@ -3,6 +3,9 @@ package com.github.stormbit.sdk.objects
 import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.clients.Group
+import com.github.stormbit.sdk.utils.isChatPeerId
+import com.github.stormbit.sdk.utils.isGroupId
+import com.github.stormbit.sdk.utils.isUserPeerId
 import com.github.stormbit.sdk.utils.vkapi.API
 import com.github.stormbit.sdk.utils.vkapi.Upload
 import com.github.stormbit.sdk.utils.vkapi.docs.DocTypes
@@ -19,6 +22,11 @@ class Message {
 
     var messageId: Int? = null
         private set
+
+    val from: MessageFrom?
+        get() {
+            return getSenderType(peerId)
+        }
 
     var timestamp: Int = 0
         private set
@@ -156,10 +164,7 @@ class Message {
      * @return this
      */
     fun forwardedMessages(vararg ids: String): Message {
-        for (id in ids) {
-            forwardedMessages.add(id)
-        }
-
+        forwardedMessages.addAllAbsent(ids.toList())
         return this
     }
 
@@ -237,7 +242,7 @@ class Message {
      * @return this
      */
     fun photo(photo: String): Message {
-        if (Pattern.matches("[htps:/vk.com]?photo-?\\d+_\\d+", photo)) {
+        if (Regex("[https://vk.com]?photo-?\\d+_\\d+").matches(photo)) {
             attachments.add(photo.substring(photo.lastIndexOf("photo")))
             return this
         }
@@ -252,8 +257,8 @@ class Message {
      * @param doc String URL, link to vk doc or path to file
      * @return this
      */
-    fun doc(doc: String?): Message {
-        val docAsAttach = upload.uploadDoc(doc!!, peerId, DocTypes.DOC)
+    fun doc(doc: String): Message {
+        val docAsAttach = upload.uploadDoc(doc, peerId, DocTypes.DOC)
         if (docAsAttach != null) attachments.add(docAsAttach)
         return this
     }
@@ -694,6 +699,15 @@ class Message {
         } else arrayOf()
     }
 
+    private fun getSenderType(peerId: Int): MessageFrom? {
+        return when {
+            peerId.isGroupId -> MessageFrom.GROUP
+            peerId.isUserPeerId -> MessageFrom.USER
+            peerId.isChatPeerId -> MessageFrom.CHAT
+            else -> null
+        }
+    }
+
     override fun toString(): String {
         return '{'.toString() +
                 "\"message_id\":" + messageId +
@@ -716,5 +730,11 @@ class Message {
         WALL,
         LINK,
         SIMPLE_TEXT
+    }
+
+    enum class MessageFrom {
+        USER,
+        GROUP,
+        CHAT
     }
 }

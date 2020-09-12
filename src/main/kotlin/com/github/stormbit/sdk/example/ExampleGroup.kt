@@ -2,7 +2,6 @@ package com.github.stormbit.sdk.example
 
 import com.github.stormbit.sdk.clients.Group
 import com.github.stormbit.sdk.utils.vkapi.keyboard.KeyboardBuilder
-import com.github.stormbit.sdk.utils.vkapi.keyboard.RowBuilder
 import org.apache.log4j.BasicConfigurator
 
 class ExampleGroup {
@@ -22,9 +21,9 @@ class ExampleGroup {
                     text = it.text
 
                     keyboard = KeyboardBuilder {
-                        buttonsRow(RowBuilder {
-                            defaultButton("lol")
-                        })
+                        buttonsRow {
+                            defaultButton("Press me!")
+                        }
                     }.build()
 
                 }

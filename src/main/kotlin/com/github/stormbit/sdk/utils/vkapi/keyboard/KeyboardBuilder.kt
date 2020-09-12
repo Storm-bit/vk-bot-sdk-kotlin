@@ -5,21 +5,19 @@ import java.io.Serializable
 import java.util.*
 
 @Suppress("unused")
-class KeyboardBuilder(built: KeyboardBuilder.() -> KeyboardBuilder) : Serializable {
-    private var oneTime = false
+class KeyboardBuilder(buildd: KeyboardBuilder.() -> Unit) : Serializable {
+    var isOneTime = false
     private val rows = ArrayList<List<Keyboard.Button>>()
 
     init {
-        built()
+        buildd()
     }
 
-    fun isOneTime(isOneTime: Boolean): KeyboardBuilder? {
-        oneTime = isOneTime
-        return this
-    }
+    fun buttonsRow(block: RowBuilder.() -> Unit): KeyboardBuilder {
+        val rowBuilder = RowBuilder()
+        block(rowBuilder)
 
-    fun buttonsRow(builder: RowBuilder): KeyboardBuilder {
-        rows.add(builder.getButtons())
+        rows.add(rowBuilder.getButtons())
         return this
     }
 
@@ -38,12 +36,12 @@ class KeyboardBuilder(built: KeyboardBuilder.() -> KeyboardBuilder) : Serializab
         return this
     }
 
-    fun openLinkButton(label: String, link: String, payload: JSONObject): KeyboardBuilder? {
+    fun openLinkButton(label: String, link: String, payload: JSONObject): KeyboardBuilder {
         rows.add(listOf(Keyboard.Button(Keyboard.Button.Action(Keyboard.Button.Action.Type.LOCATION, label, link, payload))))
         return this
     }
 
     fun build(): Keyboard {
-        return Keyboard(oneTime, rows)
+        return Keyboard(isOneTime, rows)
     }
 }

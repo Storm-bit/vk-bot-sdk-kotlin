@@ -21,7 +21,7 @@ class ExampleUser {
 
             // Two Factor handler
             val twoFactorHandler = {
-                print("Код: ")
+                print("Code: ")
                 Pair(readLine() ?: "", true)
             }
 

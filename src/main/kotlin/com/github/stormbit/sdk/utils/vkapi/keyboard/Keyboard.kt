@@ -7,16 +7,16 @@ import java.util.*
 @Suppress("unused")
 @Serializable
 class Keyboard {
-    private var one_time = false
+    private var isOneTime = false
     private var buttons: List<List<Button>> = ArrayList()
 
     constructor(isOneTime: Boolean, buttons: List<List<Button>>) {
-        one_time = isOneTime
+        this.isOneTime = isOneTime
         this.buttons = buttons
     }
 
     constructor(isOneTime: Boolean) {
-        one_time = isOneTime
+        this.isOneTime = isOneTime
     }
 
     constructor(buttons: List<List<Button>>) {
@@ -24,11 +24,11 @@ class Keyboard {
     }
 
     fun isOne_time(): Boolean {
-        return one_time
+        return this.isOneTime
     }
 
     fun setOne_time(one_time: Boolean) {
-        this.one_time = one_time
+        this.isOneTime = one_time
     }
 
     fun getButtons(): List<List<Button>> {

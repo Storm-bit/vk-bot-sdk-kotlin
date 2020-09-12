@@ -6,10 +6,12 @@ import java.io.Serializable
 import java.util.*
 
 @Suppress("unused")
-class RowBuilder(build: RowBuilder.() -> RowBuilder) : Serializable {
+class RowBuilder : Serializable {
     private var buttons = ArrayList<Keyboard.Button>()
 
-    init {
+    constructor()
+
+    constructor(build: RowBuilder.() -> RowBuilder) {
         build()
     }
 

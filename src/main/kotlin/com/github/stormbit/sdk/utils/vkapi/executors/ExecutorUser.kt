@@ -1,14 +1,15 @@
 package com.github.stormbit.sdk.utils.vkapi.executors
 
-import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.utils.Utils
 import com.github.stormbit.sdk.utils.vkapi.Auth
 import com.github.stormbit.sdk.utils.vkapi.Executor
 import com.github.stormbit.sdk.utils.vkapi.calls.CallAsync
 import org.json.JSONException
 import org.json.JSONObject
+import kotlin.collections.ArrayList
 
-class ExecutorGroup(private val client: Client, auth: Auth) : Executor(auth) {
+class ExecutorUser(auth: Auth) : Executor(auth) {
+
     override fun executing() {
         val tmpQueue = ArrayList<CallAsync>()
         var count = 0
@@ -24,31 +25,39 @@ class ExecutorGroup(private val client: Client, auth: Auth) : Executor(auth) {
                 val method = item.methodName
                 val params = item.params
 
+                if (!Utils.hashes.has(method)) {
+                    Utils.getHash(auth, method)
+                }
+
                 queue.removeAll(tmpQueue)
 
                 val data = JSONObject()
-                data.put("v", Utils.version)
-                data.put("access_token", client.token)
+                data.put("act", "a_run_method")
+                data.put("al", 1)
+                data.put("hash", Utils.hashes.get(method))
+                data.put("method", method)
+                data.put("param_v", Utils.version)
 
                 for (key in params.keySet()) {
-                    data.put(key, params[key])
+                    data.put("param_$key", params[key])
                 }
 
+                // Execute
                 if (count > 0) {
-                    val responseString = auth.session.post("https://api.vk.com/method/$method")
+                    val responseString: String = auth.session.post(Utils.userApiUrl)
                             .body(data.toMap())
-                            .send().readToText().replace("[<!>]".toRegex(), "")
+                            .send().readToText().replace("[<!>]", "").substring(2)
 
                     if (LOG_REQUESTS) {
-                        log.info("New executing request response: {}", responseString)
+                        log.error("New executing request response: {}", responseString)
                     }
 
                     var response: JSONObject
 
                     try {
-                        response = JSONObject(responseString)
+                        response = JSONObject(JSONObject(responseString).getJSONArray("payload").getJSONArray(1).getString(0))
                     } catch (e: JSONException) {
-                        tmpQueue.forEach { it.callback.onResult(null) }
+                        tmpQueue.forEach { call: CallAsync -> call.callback.onResult(null) }
                         log.error("Bad response from executing: {}, params: {}", responseString, data.toString())
                         return
                     }
@@ -56,13 +65,12 @@ class ExecutorGroup(private val client: Client, auth: Auth) : Executor(auth) {
                     if (!response.has("response")) {
                         log.error("No 'response' object when executing code, VK response: {}", response)
                         tmpQueue.forEach { call: CallAsync -> call.callback.onResult(null) }
-
                         return
                     }
 
                     val responses = response.getJSONObject("response")
 
-                    (0..count).forEach { tmpQueue[it].callback.onResult(responses) }
+                    (0..count).forEach { i: Int -> tmpQueue[i].callback.onResult(responses) }
                 }
             }
         }

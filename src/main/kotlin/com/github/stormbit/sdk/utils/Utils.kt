@@ -1,6 +1,9 @@
+@file:Suppress("unused")
+
 package com.github.stormbit.sdk.utils
 
 import com.github.stormbit.sdk.clients.Client
+import com.github.stormbit.sdk.objects.Chat
 import com.github.stormbit.sdk.utils.Utils.Companion.EnumDescriptor
 import com.github.stormbit.sdk.utils.vkapi.Auth
 import com.github.stormbit.sdk.utils.vkapi.methods.Address
@@ -108,10 +111,7 @@ class Utils {
         fun explodeQuery(query: String): JSONObject {
             var query = query
 
-            try {
-                query = URLEncoder.encode(query, "UTF-8")
-            } catch (ignored: UnsupportedEncodingException) {
-            }
+            query = URLEncoder.encode(query, "UTF-8")
 
             val map: MutableMap<String?, Any?> = HashMap()
 
@@ -305,3 +305,14 @@ inline val Attachment.attachmentString: String
         append(typeAttachment.value)
         append(mediaString)
     }
+
+inline val Int.peerIdToGroupId: Int get() = -this
+inline val Int.peerIdToChatId: Int get() = this - Chat.CHAT_PREFIX
+
+inline val Int.groupIdToPeerId: Int get() = -this
+inline val Int.chatIdToPeerId: Int get() = this + Chat.CHAT_PREFIX
+
+inline val Int.isGroupId: Boolean get() = this < 0
+inline val Int.isChatPeerId: Boolean get() = this > Chat.CHAT_PREFIX
+inline val Int.isEmailPeerId: Boolean get() = this < 0 && (-this).isChatPeerId
+inline val Int.isUserPeerId: Boolean get() = !isGroupId && !isChatPeerId && !isEmailPeerId
