@@ -277,7 +277,7 @@ class MessagesApi(private val client: Client) {
             peerId: Int,
             offset: Int,
             count: Int,
-            startMessageId: Int?,
+            startMessageId: Int? = null,
             reverse: Boolean,
             extended: Boolean,
             fields: List<ObjectField>,
@@ -295,12 +295,12 @@ class MessagesApi(private val client: Client) {
 
     fun getHistory(
             peerId: Int,
-            offset: Int,
-            count: Int,
-            startMessageId: Int?,
-            reverse: Boolean,
-            extended: Boolean,
-            fields: List<ObjectField>
+            offset: Int = 0,
+            count: Int = 1,
+            startMessageId: Int? = null,
+            reverse: Boolean = false,
+            extended: Boolean = false,
+            fields: List<ObjectField> = ArrayList()
     ): JSONObject =
             getHistory(
                     peerId = peerId,
@@ -433,6 +433,11 @@ class MessagesApi(private val client: Client) {
             .put("lp_version", longPollVersion)
             .put("group_id", groupId)
     )
+
+
+    fun getMessagesCount(
+            peerId: Int
+    ): Int = getHistory(peerId, count = 0).getJSONObject("response").getInt("count")
 
     fun getLongPollHistory(
             ts: Long,
