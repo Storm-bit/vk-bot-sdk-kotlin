@@ -48,7 +48,7 @@ class Utils {
         const val userApiUrl = "https://vk.com/dev"
 
         val RE_CAPTCHAID = Regex("onLoginCaptcha\\('(\\d+)'")
-        val AUTH_HASH = Regex("\\{.*?act: 'a_authcheck_code'.+?hash: '([a-z_0-9]+)'.*?}")
+        val AUTH_HASH = Regex("\\{.*?act: 'a_authcheck_code'.+?hash: '([a-z_0-9]+)'.*\\}")
 
         /**
          * Analog method of 'shift()' method from javascript
