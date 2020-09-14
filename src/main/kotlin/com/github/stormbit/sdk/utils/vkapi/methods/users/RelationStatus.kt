@@ -5,6 +5,7 @@ import com.github.stormbit.sdk.utils.Utils
 import kotlinx.serialization.Serializable
 
 @Serializable(with = RelationStatus.Companion::class)
+@Suppress("unused")
 enum class RelationStatus(override val value: Int) : Utils.Companion.IntEnum {
     SINGLE(1),
     RELATIONSHIP(2),

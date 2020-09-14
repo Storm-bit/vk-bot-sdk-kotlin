@@ -1,4 +1,4 @@
-@file:Suppress("unused")
+@file:Suppress("unused", "UNCHECKED_CAST", "RegExpRedundantEscape")
 
 package com.github.stormbit.sdk.utils
 

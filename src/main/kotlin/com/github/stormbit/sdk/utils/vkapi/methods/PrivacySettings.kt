@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package com.github.stormbit.sdk.utils.vkapi.methods
 
 import kotlinx.serialization.SerialName
