@@ -1,10 +1,12 @@
 package com.github.stormbit.sdk.utils.vkapi
 
 import com.github.stormbit.sdk.callbacks.Callback
+import com.github.stormbit.sdk.utils.gson
+import com.github.stormbit.sdk.utils.put
 import com.github.stormbit.sdk.utils.vkapi.calls.CallAsync
 import com.github.stormbit.sdk.utils.vkapi.calls.CallSync
-import org.json.JSONArray
-import org.json.JSONObject
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.io.UnsupportedEncodingException
@@ -20,12 +22,12 @@ abstract class API(protected val executor: Executor) {
         if (!executionStarted) executionStarted = true
     }
 
-    abstract fun call(method: String, params: Any?, callback: Callback<JSONObject?>)
+    abstract fun call(method: String, params: Any?, callback: Callback<JsonObject?>)
 
-    abstract fun call(method: String, callback: Callback<JSONObject?>, vararg params: Any?)
+    abstract fun call(method: String, callback: Callback<JsonObject?>, vararg params: Any?)
 
-    fun execute(code: String): JSONObject {
-        return JSONObject(callSync("execute", JSONObject().put("code", code)))
+    fun execute(code: String): JsonObject {
+        return gson.toJsonTree(callSync("execute", JsonObject().put("code", code))).asJsonObject
     }
 
     fun execute(vararg calls: CallAsync) {
@@ -43,7 +45,7 @@ abstract class API(protected val executor: Executor) {
         }
     }
 
-    fun execute(vararg calls: CallSync): JSONArray {
+    fun execute(vararg calls: CallSync): JsonArray {
         val code = StringBuilder("return [")
         for (i in calls.indices) {
             val codeTmp: String = executor.codeForExecute(calls[i])
@@ -54,14 +56,14 @@ abstract class API(protected val executor: Executor) {
         }
         code.append("];")
 
-        var response: JSONObject? = null
+        var response: JsonObject? = null
 
         try {
-            response = JSONObject(callSync("execute", JSONObject().put("code", URLEncoder.encode(code.toString(), "UTF-8"))))
+            response = gson.toJsonTree(callSync("execute", JsonObject().put("code", URLEncoder.encode(code.toString(), "UTF-8")))).asJsonObject
         } catch (ignored: UnsupportedEncodingException) {
         }
 
-        return response!!.getJSONArray("response")
+        return response!!.getAsJsonArray("response")
     }
 
     /**
@@ -71,7 +73,7 @@ abstract class API(protected val executor: Executor) {
      * @param params Params as string, JSONObject or Map
      * @return JSONObject response of VK answer
      */
-    abstract fun callSync(method: String, params: Any?): JSONObject
+    abstract fun callSync(method: String, params: Any?): JsonObject
 
     /**
      * Call to VK API
@@ -80,5 +82,5 @@ abstract class API(protected val executor: Executor) {
      * @param params Floating count of params
      * @return JSONObject response of VK answer
      */
-    abstract fun callSync(method: String, vararg params: Any?): JSONObject
+    abstract fun callSync(method: String, vararg params: Any?): JsonObject
 }

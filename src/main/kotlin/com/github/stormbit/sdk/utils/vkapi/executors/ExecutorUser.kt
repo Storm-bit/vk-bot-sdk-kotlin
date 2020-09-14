@@ -1,12 +1,13 @@
 package com.github.stormbit.sdk.utils.vkapi.executors
 
-import com.github.stormbit.sdk.utils.Utils
+import com.github.stormbit.sdk.utils.*
 import com.github.stormbit.sdk.utils.Utils.Companion.map
+import com.github.stormbit.sdk.utils.Utils.Companion.toJsonObject
 import com.github.stormbit.sdk.utils.vkapi.Auth
 import com.github.stormbit.sdk.utils.vkapi.Executor
 import com.github.stormbit.sdk.utils.vkapi.calls.CallAsync
-import org.json.JSONException
-import org.json.JSONObject
+import com.google.gson.JsonObject
+import com.google.gson.JsonParseException
 import kotlin.collections.ArrayList
 
 class ExecutorUser(auth: Auth) : Executor(auth) {
@@ -32,7 +33,7 @@ class ExecutorUser(auth: Auth) : Executor(auth) {
 
                 queue.removeAll(tmpQueue)
 
-                val data = JSONObject()
+                val data = JsonObject()
                 data.put("act", "a_run_method")
                 data.put("al", 1)
                 data.put("hash", Utils.hashes.get(method))
@@ -53,11 +54,11 @@ class ExecutorUser(auth: Auth) : Executor(auth) {
                         log.error("New executing request response: {}", responseString)
                     }
 
-                    var response: JSONObject
+                    var response: JsonObject
 
                     try {
-                        response = JSONObject(JSONObject(responseString).getJSONArray("payload").getJSONArray(1).getString(0))
-                    } catch (e: JSONException) {
+                        response = toJsonObject(toJsonObject(responseString).asJsonObject.getAsJsonArray("payload").getJsonArray(1).getString(0))
+                    } catch (e: JsonParseException) {
                         tmpQueue.forEach { call: CallAsync -> call.callback.onResult(null) }
                         log.error("Bad response from executing: {}, params: {}", responseString, data.toString())
                         return

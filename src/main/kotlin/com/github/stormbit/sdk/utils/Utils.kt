@@ -10,6 +10,12 @@ import com.github.stormbit.sdk.utils.vkapi.Auth
 import com.github.stormbit.sdk.utils.vkapi.methods.Address
 import com.github.stormbit.sdk.utils.vkapi.methods.Attachment
 import com.github.stormbit.sdk.utils.vkapi.methods.Media
+import com.google.gson.*
+import com.google.gson.internal.LinkedTreeMap
+import com.google.gson.reflect.TypeToken
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonToken
+import com.google.gson.stream.JsonWriter
 import io.ktor.util.date.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
@@ -19,8 +25,6 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
-import org.json.JSONArray
-import org.json.JSONObject
 import java.io.*
 import java.net.HttpURLConnection
 import java.net.URL
@@ -32,6 +36,69 @@ import kotlin.collections.HashMap
 import kotlin.collections.set
 import kotlin.reflect.KClass
 
+internal class CustomizedObjectTypeAdapter : TypeAdapter<Any?>() {
+    private val delegate = Gson().getAdapter(Any::class.java)
+
+    @Throws(IOException::class)
+    override fun write(out: JsonWriter, value: Any?) {
+        delegate.write(out, value)
+    }
+
+    companion object {
+        val FACTORY = object : TypeAdapterFactory {
+            override fun <T : Any?> create(gson: Gson, type: TypeToken<T>): TypeAdapter<T>? {
+                return if (MutableMap::class.java.isAssignableFrom(type.rawType)) {
+                    (CustomizedObjectTypeAdapter() as TypeAdapter<T>)
+                } else null
+            }
+        }
+    }
+
+    @Throws(IOException::class)
+    override fun read(reader: JsonReader): Any? {
+        return when (reader.peek()) {
+            JsonToken.BEGIN_ARRAY -> {
+                val list: MutableList<Any?> = ArrayList()
+                reader.beginArray()
+                while (reader.hasNext()) {
+                    list.add(read(reader))
+                }
+                reader.endArray()
+                list
+            }
+
+            JsonToken.BEGIN_OBJECT -> {
+                val map: MutableMap<String, Any?> = LinkedTreeMap()
+                reader.beginObject()
+                while (reader.hasNext()) {
+                    map[reader.nextName()] = read(reader)
+                }
+                reader.endObject()
+                map
+            }
+
+            JsonToken.STRING -> reader.nextString()
+
+            JsonToken.NUMBER -> {
+                //return in.nextDouble();
+                val n = reader.nextString()
+                if (n.indexOf('.') != -1) {
+                    n.toDouble()
+                } else n.toLong()
+            }
+
+            JsonToken.BOOLEAN -> reader.nextBoolean()
+
+            JsonToken.NULL -> {
+                reader.nextNull()
+                null
+            }
+
+            else -> throw IllegalStateException()
+        }
+    }
+}
+
 internal val json = Json {
     encodeDefaults = false
     ignoreUnknownKeys = true
@@ -39,12 +106,18 @@ internal val json = Json {
     allowStructuredMapKeys = true
     prettyPrint = false
     useArrayPolymorphism = false
-
 }
+
+private val adapter = CustomizedObjectTypeAdapter()
+
+val gson = GsonBuilder()
+        .serializeNulls()
+        .registerTypeAdapterFactory(CustomizedObjectTypeAdapter.FACTORY)
+        .setPrettyPrinting().create()
 
 class Utils {
     companion object {
-        val hashes = JSONObject()
+        val hashes = JsonObject()
         const val version = 5.122
         const val userApiUrl = "https://vk.com/dev"
 
@@ -70,13 +143,13 @@ class Utils {
          * @param photos JSONArray with photo objects
          * @return URL of biggest image file
          */
-        fun getBiggestPhotoUrl(photos: JSONArray): String {
+        fun getBiggestPhotoUrl(photos: JsonArray): String {
             val currentBiggestPhoto: String
 
             val sizes: MutableMap<Int, String> = HashMap()
 
             for (obj in photos) {
-                if (obj is JSONObject) {
+                if (obj is JsonObject) {
                     val width = obj.getInt("width")
                     val url = obj.getString("url")
                     sizes[width] = url
@@ -91,19 +164,21 @@ class Utils {
             return if (this) 1 else 0
         }
 
-        fun String.callSync(client: Client, params: JSONObject?): JSONObject = client.api.callSync(this, params)
+        fun toJsonObject(string: String): JsonObject = gson.fromJson(string, JsonObject::class.java)
 
-        fun String.call(client: Client, params: JSONObject?, callback: Callback<JSONObject?>) = client.api.call(this, params, callback)
-        fun String.call(client: Client, callback: Callback<JSONObject?>, vararg params: Any?) = client.api.call(this, callback, *params)
+        fun toJsonObject(map: Map<String, Any>?): JsonObject = gson.toJsonTree(map).asJsonObject
 
-        fun JSONObject.map(): Map<String, Any> {
-            val map = HashMap<String, Any>()
+        fun String.callSync(client: Client, params: JsonObject?): JsonObject = client.api.callSync(this, params)
 
-            for (key in this.keySet()) {
-                map[key] = this.get(key)
-            }
+        fun String.call(client: Client, params: JsonObject?, callback: Callback<JsonObject?>) = client.api.call(this, params, callback)
+        fun String.call(client: Client, callback: Callback<JsonObject?>, vararg params: Any?) = client.api.call(this, callback, *params)
 
-            return map
+        fun JsonObject.map(): Map<String, Any> {
+            val type = object : TypeToken<Map<String, Any?>>() {}.type
+            val result = gson.fromJson<Map<String, Any?>>(this, type).filter {
+                it.value != null
+            } as Map<String, Any>
+            return result
         }
 
         /**
@@ -112,28 +187,28 @@ class Utils {
          * @param query query
          * @return JSONObject query
          */
-        fun explodeQuery(query: String): JSONObject {
+        fun explodeQuery(query: String): JsonObject {
             var query = query
 
             query = URLEncoder.encode(query, "UTF-8")
 
-            val map: MutableMap<String?, Any?> = HashMap()
+            val map: MutableMap<String, Any> = HashMap()
 
             val arr = query.split("&".toRegex()).toTypedArray()
 
             for (param in arr) {
                 val tmp_arr = param.split("=".toRegex())
-                val key = tmp_arr[0];
+                val key = tmp_arr[0]
                 val value = tmp_arr[1]
 
                 if (tmp_arr[1].contains(",")) {
-                    map[key] = JSONArray(listOf(*value.split(",".toRegex()).toTypedArray()))
+                    map[key] = gson.toJsonTree(listOf(*value.split(",".toRegex()).toTypedArray())).asJsonArray
                 } else {
                     map[key] = value
                 }
             }
 
-            return JSONObject(map)
+            return toJsonObject(map)
         }
 
         fun getHash(auth: Auth, method: String) {
@@ -142,7 +217,7 @@ class Utils {
 
             check(hash_0!!.isNotEmpty()) { "Method is not valid" }
 
-            hashes.put(method, hash_0)
+            hashes.addProperty(method, hash_0)
         }
 
         fun regexSearch(pattern: Regex, string: String, group: Int = 0): String? {
@@ -154,7 +229,7 @@ class Utils {
         }
 
         fun getId(client: Client): Int {
-            val response: JSONObject = client.users.get().getJSONArray("response").getJSONObject(0)
+            val response: JsonObject = client.users.get().getAsJsonArray("response").getJsonObject(0)
 
             return response.getInt("id")
         }
@@ -309,6 +384,42 @@ inline val Attachment.attachmentString: String
         append(typeAttachment.value)
         append(mediaString)
     }
+
+fun JsonObject.getString(key: String): String = this[key].asString
+fun JsonObject.getInt(key: String): Int = this[key].asInt
+fun JsonObject.getLong(key: String): Long = this[key].asLong
+fun JsonObject.getBoolean(key: String): Boolean = this[key].asBoolean
+
+fun JsonArray.getString(index: Int): String = this[index].asString
+fun JsonArray.getInt(index: Int): Int = this[index].asInt
+fun JsonArray.getJsonArray(index: Int): JsonArray = this[index].asJsonArray
+fun JsonArray.getJsonObject(index: Int): JsonObject = this[index].asJsonObject
+
+
+fun JsonObject.put(key: String, value: String?): JsonObject {
+    this.addProperty(key, value)
+    return this
+}
+
+fun JsonObject.put(key: String, value: Number?): JsonObject {
+    this.addProperty(key, value)
+    return this
+}
+
+fun JsonObject.put(key: String, value: Char?): JsonObject {
+    this.addProperty(key, value)
+    return this
+}
+
+fun JsonObject.put(key: String, value: Boolean?): JsonObject {
+    this.addProperty(key, value)
+    return this
+}
+
+fun JsonObject.put(key: String, value: JsonElement?): JsonObject {
+    this.add(key, value)
+    return this
+}
 
 inline val Int.peerIdToGroupId: Int get() = -this
 inline val Int.peerIdToChatId: Int get() = this - Chat.CHAT_PREFIX

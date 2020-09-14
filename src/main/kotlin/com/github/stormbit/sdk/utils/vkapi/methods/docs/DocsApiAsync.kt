@@ -1,8 +1,9 @@
 package com.github.stormbit.sdk.utils.vkapi.methods.docs
 
+import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.utils.Utils.Companion.asInt
-import com.github.stormbit.sdk.utils.Utils.Companion.callSync
+import com.github.stormbit.sdk.utils.Utils.Companion.call
 import com.github.stormbit.sdk.utils.mediaString
 import com.github.stormbit.sdk.utils.put
 import com.github.stormbit.sdk.utils.vkapi.docs.DocTypes
@@ -11,12 +12,13 @@ import com.github.stormbit.sdk.utils.vkapi.methods.Media
 import com.google.gson.JsonObject
 
 @Suppress("unused")
-class DocsApi(private val client: Client) {
+class DocsApiAsync(private val client: Client) {
     fun add(
             ownerId: Int,
             docId: Int,
-            accessKey: String?
-    ): JsonObject = Methods.add.callSync(client, JsonObject()
+            accessKey: String?,
+            callback: Callback<JsonObject?>
+    ) = Methods.add.call(client, callback, JsonObject()
             .put("owner_id", ownerId)
             .put("doc_id", docId)
             .put("access_key", accessKey)
@@ -24,8 +26,9 @@ class DocsApi(private val client: Client) {
 
     fun delete(
             ownerId: Int,
-            docId: Int
-    ): JsonObject = Methods.delete.callSync(client, JsonObject()
+            docId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.delete.call(client, callback, callback, JsonObject()
             .put("owner_id", ownerId)
             .put("doc_id", docId)
     )
@@ -34,8 +37,9 @@ class DocsApi(private val client: Client) {
             docId: Int,
             title: String,
             ownerId: Int?,
-            tags: List<String>?
-    ): JsonObject = Methods.edit.callSync(client, JsonObject()
+            tags: List<String>?,
+            callback: Callback<JsonObject?>
+    ) = Methods.edit.call(client, callback, JsonObject()
             .put("doc_id", docId)
             .put("title", title)
             .put("owner_id", ownerId)
@@ -46,8 +50,9 @@ class DocsApi(private val client: Client) {
             ownerId: Int?,
             count: Int,
             offset: Int,
-            type: Document.Type?
-    ): JsonObject = Methods.get.callSync(client, JsonObject()
+            type: Document.Type?,
+            callback: Callback<JsonObject?>
+    ) = Methods.get.call(client, callback, JsonObject()
             .put("owner_id", ownerId)
             .put("count", count)
             .put("offset", offset)
@@ -56,8 +61,9 @@ class DocsApi(private val client: Client) {
 
     fun getById(
             docs: List<Media>,
-            returnTags: Boolean
-    ): JsonObject = Methods.getById.callSync(client, JsonObject()
+            returnTags: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.getById.call(client, callback, JsonObject()
             .put("docs", docs.joinToString(",", transform = Media::mediaString))
             .put("return_tags", returnTags.asInt())
     )
@@ -65,35 +71,40 @@ class DocsApi(private val client: Client) {
     fun getMessagesUploadServer(
             peerId: Int,
             type: DocTypes? = DocTypes.DOC,
-            forAudioMessage: Boolean = false
-    ): JsonObject = Methods.getMessagesUploadServer.callSync(client, JsonObject()
+            forAudioMessage: Boolean = false,
+            callback: Callback<JsonObject?>
+    ) = Methods.getMessagesUploadServer.call(client, callback, JsonObject()
             .put("peer_id", peerId)
             .put("type", if (forAudioMessage) "audio_message" else type?.type ?: "doc")
     )
 
     fun getTypes(
-            ownerId: Int?
-    ): JsonObject = Methods.getTypes.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.getTypes.call(client, callback, JsonObject()
             .put("owner_id", ownerId)
     )
 
     fun getUploadServer(
-            groupId: Int?
-    ): JsonObject = Methods.getUploadServer.callSync(client, JsonObject()
+            groupId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.getUploadServer.call(client, callback, JsonObject()
             .put("group_id", groupId)
     )
 
     fun getWallUploadServer(
-            groupId: Int?
-    ): JsonObject = Methods.getWallUploadServer.callSync(client, JsonObject()
+            groupId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.getWallUploadServer.call(client, callback, JsonObject()
             .put("group_id", groupId)
     )
 
     fun save(
             file: String,
             title: String? = null,
-            tags: List<String>? = null
-    ): JsonObject = Methods.save.callSync(client, JsonObject()
+            tags: List<String>? = null,
+            callback: Callback<JsonObject?>
+    ) = Methods.save.call(client, callback, JsonObject()
             .put("file", file)
             .put("title", title)
             .put("tags", tags?.joinToString(","))
@@ -103,8 +114,9 @@ class DocsApi(private val client: Client) {
             query: String,
             withOwn: Boolean,
             count: Int,
-            offset: Int
-    ): JsonObject = Methods.search.callSync(client, JsonObject()
+            offset: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.search.call(client, callback, JsonObject()
             .put("q", query)
             .put("search_own", withOwn.asInt())
             .put("count", count)

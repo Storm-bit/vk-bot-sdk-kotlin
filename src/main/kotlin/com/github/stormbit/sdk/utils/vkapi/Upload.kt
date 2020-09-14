@@ -3,12 +3,16 @@ package com.github.stormbit.sdk.utils.vkapi
 import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.utils.Utils
+import com.github.stormbit.sdk.utils.Utils.Companion.toJsonObject
+import com.github.stormbit.sdk.utils.gson
+import com.github.stormbit.sdk.utils.getInt
+import com.github.stormbit.sdk.utils.getJsonObject
+import com.github.stormbit.sdk.utils.getString
 import com.github.stormbit.sdk.utils.vkapi.docs.DocTypes
+import com.google.gson.JsonObject
+import com.google.gson.JsonParseException
 import net.dongliu.requests.Requests
 import net.dongliu.requests.body.Part
-import org.json.JSONArray
-import org.json.JSONException
-import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.IOException
@@ -99,7 +103,7 @@ class Upload(private val client: Client) {
                 return
             }
 
-            val uploadUrl = JSONObject(response.toString()).getString("upload_url")
+            val uploadUrl = toJsonObject(response.toString()).getString("upload_url")
 
             val mimeType: String
 
@@ -122,11 +126,11 @@ class Upload(private val client: Client) {
                 return
             }
 
-            val getPhotoStringResponse: JSONObject
+            val getPhotoStringResponse: JsonObject
 
             getPhotoStringResponse = try {
-                JSONObject(uploadFileResponse)
-            } catch (ignored: JSONException) {
+                toJsonObject(uploadFileResponse)
+            } catch (ignored: JsonParseException) {
                 log.error("Bad response of uploading photo: {}", uploadFileResponse)
                 callback.onResult(null)
                 return
@@ -150,7 +154,7 @@ class Upload(private val client: Client) {
                 return
             }
 
-            val saveMessagesPhotoResponse = JSONArray(response1.toString()).getJSONObject(0)
+            val saveMessagesPhotoResponse = gson.toJsonTree(response1.toString()).asJsonArray.getJsonObject(0)
 
             val ownerId = saveMessagesPhotoResponse.getInt("owner_id")
             val id = saveMessagesPhotoResponse.getInt("id")
@@ -233,7 +237,7 @@ class Upload(private val client: Client) {
                 return
             }
 
-            val uploadUrl = JSONObject(response.toString()).getString("upload_url")
+            val uploadUrl = toJsonObject(response.toString()).getString("upload_url")
 
             val uploadFileResponse = Requests
                     .post(uploadUrl)
@@ -246,11 +250,11 @@ class Upload(private val client: Client) {
                 return
             }
 
-            val getFileStringResponse: JSONObject
+            val getFileStringResponse: JsonObject
 
             getFileStringResponse = try {
-                JSONObject(uploadFileResponse)
-            } catch (ignored: JSONException) {
+                toJsonObject(uploadFileResponse)
+            } catch (ignored: JsonParseException) {
                 log.error("Bad response of uploading file: {}", uploadFileResponse)
                 callback.onResult(null)
                 return
@@ -272,7 +276,7 @@ class Upload(private val client: Client) {
                 return
             }
 
-            val saveMessagesPhotoResponse = JSONArray(response1.toString()).getJSONObject(0)
+            val saveMessagesPhotoResponse = gson.toJsonTree(response1.toString()).asJsonArray.getJsonObject(0)
 
             val ownerId = saveMessagesPhotoResponse.getInt("owner_id")
             val id = saveMessagesPhotoResponse.getInt("id")
@@ -289,7 +293,7 @@ class Upload(private val client: Client) {
      * @param chatId chat id
      * @param callback callback
      */
-    fun uploadPhotoChatAsync(photo: String, chatId: Int, callback: Callback<JSONObject?>) {
+    fun uploadPhotoChatAsync(photo: String, chatId: Int, callback: Callback<JsonObject?>) {
         var type: String? = null
 
         val photoFile = File(photo)
@@ -349,7 +353,7 @@ class Upload(private val client: Client) {
      * @param chatId chat id
      * @param callback callback
      */
-    fun uploadPhotoChatAsync(photoBytes: ByteArray?, chatId: Int, callback: Callback<JSONObject?>) {
+    fun uploadPhotoChatAsync(photoBytes: ByteArray?, chatId: Int, callback: Callback<JsonObject?>) {
         if (photoBytes != null) {
 
             val response = client.photos.getChatUploadServer(chatId)
@@ -360,7 +364,7 @@ class Upload(private val client: Client) {
                 return
             }
 
-            val uploadUrl = JSONObject(response.toString()).getString("upload_url")
+            val uploadUrl = toJsonObject(response.toString()).getString("upload_url")
 
             val mimeType: String
 
@@ -383,11 +387,11 @@ class Upload(private val client: Client) {
                 return
             }
 
-            val getPhotoStringResponse: JSONObject
+            val getPhotoStringResponse: JsonObject
 
             getPhotoStringResponse = try {
-                JSONObject(responseUploadFileString)
-            } catch (ignored: JSONException) {
+                toJsonObject(responseUploadFileString)
+            } catch (ignored: JsonParseException) {
                 log.error("Bad response of uploading photo: {}", responseUploadFileString)
                 callback.onResult(null)
                 return
@@ -420,7 +424,7 @@ class Upload(private val client: Client) {
      * @param groupId group id
      * @param callback callback
      */
-    fun uploadCoverGroupAsync(cover: String, groupId: Int, callback: Callback<JSONObject?>?) {
+    fun uploadCoverGroupAsync(cover: String, groupId: Int, callback: Callback<JsonObject?>?) {
         if (groupId == 0) {
             log.error("Please, provide group_id when initialising the client, because it's impossible to upload cover to group not knowing it id.")
             return
@@ -458,11 +462,11 @@ class Upload(private val client: Client) {
      * @param groupId  group id
      * @param callback response will return to callback
      */
-    fun uploadCoverGroupAsync(bytes: ByteArray, groupId: Int, callback: Callback<JSONObject?>?) {
+    fun uploadCoverGroupAsync(bytes: ByteArray, groupId: Int, callback: Callback<JsonObject?>?) {
 
         val response = client.photos.getOwnerCoverPhotoUploadServer(groupId, 0, 0, 1590, 400)
 
-        val uploadUrl = JSONObject(response.toString()).getString("upload_url")
+        val uploadUrl = toJsonObject(response.toString()).getString("upload_url")
 
         val mimeType: String
 
@@ -481,7 +485,7 @@ class Upload(private val client: Client) {
 
         coverUploadedResponseString = if (coverUploadedResponseString != null && coverUploadedResponseString.length > 2) coverUploadedResponseString else "{}"
 
-        val coverUploadedResponse = JSONObject(coverUploadedResponseString)
+        val coverUploadedResponse = toJsonObject(coverUploadedResponseString)
 
         if (coverUploadedResponse.has("hash") && coverUploadedResponse.has("photo")) {
             val hashField = coverUploadedResponse.getString("hash")
@@ -558,7 +562,7 @@ class Upload(private val client: Client) {
                 return null
             }
 
-            val uploadUrl = JSONObject(response.toString()).getString("upload_url")
+            val uploadUrl = toJsonObject(response.toString()).getString("upload_url")
 
             val mimeType: String
 
@@ -580,11 +584,11 @@ class Upload(private val client: Client) {
                 return null
             }
 
-            val getPhotoStringResponse: JSONObject
+            val getPhotoStringResponse: JsonObject
 
             getPhotoStringResponse = try {
-                JSONObject(uploadFileStringResponse)
-            } catch (ignored: JSONException) {
+                toJsonObject(uploadFileStringResponse)
+            } catch (ignored: JsonParseException) {
                 log.error("Bad response of uploading photo: {}", uploadFileStringResponse)
                 return null
             }
@@ -605,7 +609,7 @@ class Upload(private val client: Client) {
                 return null
             }
 
-            val saveMessagesPhotoResponse = JSONArray(response1.toString()).getJSONObject(0)
+            val saveMessagesPhotoResponse = gson.toJsonTree(response1.toString()).asJsonArray.getJsonObject(0)
 
             val ownerId = saveMessagesPhotoResponse.getInt("owner_id")
             val id = saveMessagesPhotoResponse.getInt("id")
@@ -708,11 +712,11 @@ class Upload(private val client: Client) {
                 return null
             }
 
-            val getPhotoStringResponse: JSONObject
+            val getPhotoStringResponse: JsonObject
 
             getPhotoStringResponse = try {
-                JSONObject(uploadFileStringResponse)
-            } catch (ignored: JSONException) {
+                toJsonObject(uploadFileStringResponse)
+            } catch (ignored: JsonParseException) {
                 log.error("Bad response of uploading photo: {}", uploadFileStringResponse)
                 return null
             }
@@ -733,7 +737,7 @@ class Upload(private val client: Client) {
                 return null
             }
 
-            val saveMessagesPhotoResponse = response1.getJSONObject(0)
+            val saveMessagesPhotoResponse = response1.getJsonObject(0)
             val ownerId = saveMessagesPhotoResponse.getInt("owner_id")
             val id = saveMessagesPhotoResponse.getInt("id")
 
@@ -821,7 +825,7 @@ class Upload(private val client: Client) {
 
             // Getting of server for uploading the photo
             val getUploadServerResponse = client.docs.getMessagesUploadServer(peerId, typeOfDoc)
-            val uploadUrl = if (getUploadServerResponse.has("response")) if (getUploadServerResponse.getJSONObject("response").has("upload_url")) getUploadServerResponse.getJSONObject("response").getString("upload_url") else null else null
+            val uploadUrl = if (getUploadServerResponse.has("response")) if (getUploadServerResponse.getAsJsonObject("response").has("upload_url")) getUploadServerResponse.getAsJsonObject("response").getString("upload_url") else null else null
 
             // Some error
             if (uploadUrl == null) {
@@ -835,11 +839,11 @@ class Upload(private val client: Client) {
                     .multiPartBody(Part.file("file", fileNameField, docBytes))
                     .send().readToText()
 
-            val uploadingOfDocResponse: JSONObject
+            val uploadingOfDocResponse: JsonObject
 
             uploadingOfDocResponse = try {
-                JSONObject(uploadingOfDocResponseString)
-            } catch (e: JSONException) {
+                toJsonObject(uploadingOfDocResponseString)
+            } catch (e: JsonParseException) {
                 log.error("Bad response of uploading doc: {}, error: {}", uploadingOfDocResponseString, e.toString())
                 return null
             }
@@ -857,7 +861,7 @@ class Upload(private val client: Client) {
             // Saving the photo
             val saveMessagesDocResponse = client.docs.save(file)
 
-            return if (saveMessagesDocResponse.has("response")) "doc" + saveMessagesDocResponse.getJSONArray("response").getJSONObject(0).getInt("owner_id") + "_" + saveMessagesDocResponse.getJSONArray("response").getJSONObject(0).getInt("id") else ""
+            return if (saveMessagesDocResponse.has("response")) "doc" + saveMessagesDocResponse.getAsJsonArray("response").getJsonObject(0).getInt("owner_id") + "_" + saveMessagesDocResponse.getAsJsonArray("response").getJsonObject(0).getInt("id") else ""
         } else {
             log.error("Got file or url of doc to be uploaded, but some error occurred and read 0 bytes.")
         }

@@ -3,12 +3,13 @@ package com.github.stormbit.sdk.utils.vkapi
 import com.github.stormbit.sdk.exceptions.NotValidAuthorization
 import com.github.stormbit.sdk.exceptions.TwoFactorException
 import com.github.stormbit.sdk.objects.Captcha
-import com.github.stormbit.sdk.utils.Utils
+import com.github.stormbit.sdk.utils.*
 import com.github.stormbit.sdk.utils.Utils.Companion.AUTH_HASH
 import com.github.stormbit.sdk.utils.Utils.Companion.RE_CAPTCHAID
+import com.github.stormbit.sdk.utils.Utils.Companion.toJsonObject
+import com.google.gson.JsonObject
 import net.dongliu.requests.Cookie
 import net.dongliu.requests.Header
-import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.FormElement
 import org.slf4j.Logger
@@ -50,9 +51,9 @@ class Auth {
         if (login == null || password == null) return
 
         if (isLoadFromCookie && cookiesFile.exists()) {
-            val json = JSONObject(cookiesFile.readText())
-            val cookieList = json.getJSONArray("cookies").map {
-                (it as JSONObject)
+            val json = toJsonObject(cookiesFile.readText())
+            val cookieList = json.getAsJsonArray("cookies").map {
+                (it as JsonObject)
                 Cookie(it.getString("domain"), it.getString("path"), it.getString("name"), it.getString("value"), it.getLong("expiry"), it.getBoolean("secure"), it.getBoolean("hostOnly"))
             }.toTypedArray()
 
@@ -109,7 +110,7 @@ class Auth {
             if (!cookiesFile.exists()) cookiesFile.createNewFile()
 
             cookiesMap["cookies"] = session.sessionCookies()
-            cookiesFile.writeText(JSONObject(cookiesMap).toString(4))
+            cookiesFile.writeText(toJsonObject(cookiesMap).toString())
         }
     }
 
@@ -130,12 +131,12 @@ class Auth {
                 .body(values)
                 .send().readToText()
 
-        val data = JSONObject(resp.replace("[<!>-]".toRegex(), ""))
-        val status = data.getJSONArray("payload").getInt(0)
+        val data = toJsonObject(resp.replace("[<!>-]".toRegex(), ""))
+        val status = data.getAsJsonArray("payload").getInt(0)
 
         when {
             status == 4 -> {
-                val path = data.getJSONArray("payload").getJSONArray(1).getString(0).replace("[\\\\\"]".toRegex(), "")
+                val path = data.getAsJsonArray("payload").getJsonArray(1).getString(0).replace("[\\\\\"]".toRegex(), "")
                 return session.get("https://vk.com/$path").send().readToText()
             }
             listOf(0, 8).contains(status) -> return passTwoFactor(response)

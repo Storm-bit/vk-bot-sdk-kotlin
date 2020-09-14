@@ -1,8 +1,9 @@
 package com.github.stormbit.sdk.utils.vkapi.methods.video
 
+import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.utils.Utils.Companion.asInt
-import com.github.stormbit.sdk.utils.Utils.Companion.callSync
+import com.github.stormbit.sdk.utils.Utils.Companion.call
 import com.github.stormbit.sdk.utils.attachmentString
 import com.github.stormbit.sdk.utils.mediaString
 import com.github.stormbit.sdk.utils.put
@@ -10,12 +11,13 @@ import com.github.stormbit.sdk.utils.vkapi.methods.*
 import com.google.gson.JsonObject
 
 @Suppress("unused")
-class VideoApi(private val client: Client) {
+class VideoApiAsync(private val client: Client) {
     fun add(
             videoId: Int,
             ownerId: Int,
-            targetId: Int?
-    ): JsonObject = Methods.add.callSync(client, JsonObject()
+            targetId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.add.call(client, callback, JsonObject()
             .put("video_id", videoId)
             .put("owner_id", ownerId)
             .put("target_id", targetId)
@@ -24,8 +26,9 @@ class VideoApi(private val client: Client) {
     fun addAlbum(
             title: String,
             privacy: PrivacySettings,
-            groupId: Int?
-    ): JsonObject = Methods.addAlbum.callSync(client, JsonObject()
+            groupId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.addAlbum.call(client, callback, JsonObject()
             .put("title", title)
             .put("privacy", privacy.toRequestString())
             .put("group_id", groupId)
@@ -35,8 +38,9 @@ class VideoApi(private val client: Client) {
             videoId: Int,
             ownerId: Int,
             albumIds: List<VideoAlbumType>,
-            targetId: Int?
-    ): JsonObject = Methods.addToAlbum.callSync(client, JsonObject()
+            targetId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.addToAlbum.call(client, callback, JsonObject()
             .put("video_id", videoId)
             .put("owner_id", ownerId)
             .put("album_ids", albumIds.joinToString(",") { it.value.toString() })
@@ -50,8 +54,9 @@ class VideoApi(private val client: Client) {
             attachments: List<CommentAttachment>?,
             stickerId: Int?,
             fromGroup: Boolean,
-            guid: String?
-    ): JsonObject = Methods.createComment.callSync(client, JsonObject()
+            guid: String?,
+            callback: Callback<JsonObject?>
+    ) = Methods.createComment.call(client, callback, JsonObject()
             .put("video_id", videoId)
             .put("owner_id", ownerId)
             .put("message", message)
@@ -64,8 +69,9 @@ class VideoApi(private val client: Client) {
     fun delete(
             videoId: Int,
             ownerId: Int?,
-            targetId: Int?
-    ): JsonObject = Methods.delete.callSync(client, JsonObject()
+            targetId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.delete.call(client, callback, JsonObject()
             .put("video_id", videoId)
             .put("owner_id", ownerId)
             .put("target_id", targetId)
@@ -73,16 +79,18 @@ class VideoApi(private val client: Client) {
 
     fun deleteAlbum(
             albumId: Int,
-            groupId: Int?
-    ): JsonObject = Methods.deleteAlbum.callSync(client, JsonObject()
+            groupId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.deleteAlbum.call(client, callback, JsonObject()
             .put("album_id", albumId)
             .put("group_id", groupId)
     )
 
     fun deleteComment(
             commentId: Int,
-            ownerId: Int?
-    ): JsonObject = Methods.deleteComment.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.deleteComment.call(client, callback, JsonObject()
             .put("comment_id", commentId)
             .put("owner_id", ownerId)
     )
@@ -95,8 +103,9 @@ class VideoApi(private val client: Client) {
             privacyView: PrivacySettings?,
             privacyComment: PrivacySettings?,
             disableComments: Boolean?,
-            enableRepeat: Boolean?
-    ): JsonObject = Methods.edit.callSync(client, JsonObject()
+            enableRepeat: Boolean?,
+            callback: Callback<JsonObject?>
+    ) = Methods.edit.call(client, callback, JsonObject()
             .put("video_id", videoId)
             .put("owner_id", ownerId)
             .put("name", name)
@@ -111,8 +120,9 @@ class VideoApi(private val client: Client) {
             albumId: Int,
             title: String,
             privacy: PrivacySettings?,
-            groupId: Int?
-    ): JsonObject = Methods.editAlbum.callSync(client, JsonObject()
+            groupId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.editAlbum.call(client, callback, JsonObject()
             .put("album_id", albumId)
             .put("title", title)
             .put("privacy", privacy?.toRequestString())
@@ -123,8 +133,9 @@ class VideoApi(private val client: Client) {
             commentId: Int,
             ownerId: Int?,
             message: String?,
-            attachments: List<CommentAttachment>?
-    ): JsonObject = Methods.editComment.callSync(client, JsonObject()
+            attachments: List<CommentAttachment>?,
+            callback: Callback<JsonObject?>
+    ) = Methods.editComment.call(client, callback, JsonObject()
             .put("comment_id", commentId)
             .put("owner_id", ownerId)
             .put("message", message)
@@ -137,8 +148,9 @@ class VideoApi(private val client: Client) {
             albumId: Int?,
             count: Int,
             offset: Int,
-            extended: Boolean
-    ): JsonObject = Methods.get.callSync(client, JsonObject()
+            extended: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.get.call(client, callback, JsonObject()
             .put("owner_id", ownerId)
             .put("videos", videos?.joinToString(",", transform = Media::mediaString))
             .put("album_id", albumId)
@@ -149,8 +161,9 @@ class VideoApi(private val client: Client) {
 
     fun getAlbumById(
             albumId: Int,
-            ownerId: Int?
-    ): JsonObject = Methods.getAlbumById.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.getAlbumById.call(client, callback, JsonObject()
             .put("album_id", albumId)
             .put("owner_id", ownerId)
     )
@@ -160,8 +173,9 @@ class VideoApi(private val client: Client) {
             offset: Int,
             count: Int,
             extended: Boolean,
-            needSystem: Boolean
-    ): JsonObject = Methods.getAlbums.callSync(client, JsonObject()
+            needSystem: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.getAlbums.call(client, callback, JsonObject()
             .put("owner_id", ownerId)
             .put("offset", offset)
             .put("count", count)
@@ -172,8 +186,9 @@ class VideoApi(private val client: Client) {
     fun getAlbumsIdsByVideo(
             videoId: Int,
             ownerId: Int,
-            targetId: Int?
-    ): JsonObject = Methods.getAlbumsByVideo.callSync(client, JsonObject()
+            targetId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.getAlbumsByVideo.call(client, callback, JsonObject()
             .put("video_id", videoId)
             .put("owner_id", ownerId)
             .put("target_id", targetId)
@@ -183,8 +198,9 @@ class VideoApi(private val client: Client) {
     fun getAlbumsByVideo(
             videoId: Int,
             ownerId: Int,
-            targetId: Int?
-    ): JsonObject = Methods.getAlbumsByVideo.callSync(client, JsonObject()
+            targetId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.getAlbumsByVideo.call(client, callback, JsonObject()
             .put("video_id", videoId)
             .put("owner_id", ownerId)
             .put("target_id", targetId)
@@ -200,8 +216,9 @@ class VideoApi(private val client: Client) {
             count: Int,
             sort: CommentsSort,
             extended: Boolean,
-            fields: List<ObjectField>
-    ): JsonObject = Methods.getComments.callSync(client, JsonObject()
+            fields: List<ObjectField>,
+            callback: Callback<JsonObject?>
+    ) = Methods.getComments.call(client, callback, JsonObject()
             .put("video_id", videoId)
             .put("owner_id", ownerId)
             .put("need_likes", needLikes.asInt())
@@ -217,8 +234,9 @@ class VideoApi(private val client: Client) {
             videoId: Int,
             ownerId: Int,
             albumIds: List<VideoAlbumType>,
-            targetId: Int?
-    ): JsonObject = Methods.removeFromAlbum.callSync(client, JsonObject()
+            targetId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.removeFromAlbum.call(client, callback, JsonObject()
             .put("video_id", videoId)
             .put("owner_id", ownerId)
             .put("album_ids", albumIds.joinToString(",") { it.value.toString() })
@@ -229,8 +247,9 @@ class VideoApi(private val client: Client) {
             albumId: Int,
             before: Int?,
             after: Int?,
-            ownerId: Int?
-    ):JsonObject = Methods.reorderAlbums.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.reorderAlbums.call(client, callback, JsonObject()
             .put("album_id", albumId)
             .put("before", before)
             .put("after", after)
@@ -243,8 +262,9 @@ class VideoApi(private val client: Client) {
             albumId: Int,
             before: Media?,
             after: Media?,
-            targetId: Int?
-    ): JsonObject = Methods.reorderVideos.callSync(client, JsonObject()
+            targetId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.reorderVideos.call(client, callback, JsonObject()
             .put("video_id", videoId)
             .put("owner_id", ownerId)
             .put("album_id", albumId)
@@ -260,8 +280,9 @@ class VideoApi(private val client: Client) {
             ownerId: Int,
             reason: PostReportComplaintType,
             comment: String?,
-            searchQuery: String?
-    ): JsonObject = Methods.report.callSync(client, JsonObject()
+            searchQuery: String?,
+            callback: Callback<JsonObject?>
+    ) = Methods.report.call(client, callback, JsonObject()
             .put("video_id", videoId)
             .put("owner_id", ownerId)
             .put("reason", reason.value)
@@ -272,8 +293,9 @@ class VideoApi(private val client: Client) {
     fun reportComment(
             ownerId: Int,
             commentId: Int,
-            reason: PostReportComplaintType
-    ): JsonObject = Methods.reportComment.callSync(client, JsonObject()
+            reason: PostReportComplaintType,
+            callback: Callback<JsonObject?>
+    ) = Methods.reportComment.call(client, callback, JsonObject()
             .put("owner_id", ownerId)
             .put("comment_id", commentId)
             .put("reason", reason.value)
@@ -281,16 +303,18 @@ class VideoApi(private val client: Client) {
 
     fun restore(
             videoId: Int,
-            ownerId: Int?
-    ): JsonObject = Methods.restore.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.restore.call(client, callback, JsonObject()
             .put("video_id", videoId)
             .put("owner_id", ownerId)
     )
 
     fun restoreComment(
             commentId: Int,
-            ownerId: Int?
-    ): JsonObject = Methods.restoreComment.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.restoreComment.call(client, callback, JsonObject()
             .put("comment_id", commentId)
             .put("owner_id", ownerId)
     )
@@ -307,8 +331,9 @@ class VideoApi(private val client: Client) {
             privacyComment: PrivacySettings,
             disableComments: Boolean,
             enableRepeat: Boolean,
-            enableCompression: Boolean
-    ): JsonObject = Methods.save.callSync(client, JsonObject()
+            enableCompression: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.save.call(client, callback, JsonObject()
             .put("name", name)
             .put("description", description)
             .put("is_private", isPrivate.asInt())
@@ -334,8 +359,9 @@ class VideoApi(private val client: Client) {
             count: Int,
             longerThan: Int?,
             shorterThan: Int?,
-            extended: Boolean
-    ): JsonObject = Methods.search.callSync(client, JsonObject()
+            extended: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.search.call(client, callback, JsonObject()
             .put("q", query)
             .put("sort", sort.value)
             .put("hd", onlyHd.asInt())

@@ -2,12 +2,13 @@ package com.github.stormbit.sdk.utils.vkapi.apis
 
 import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
-import com.github.stormbit.sdk.utils.Utils
+import com.github.stormbit.sdk.utils.*
 import com.github.stormbit.sdk.utils.Utils.Companion.map
+import com.github.stormbit.sdk.utils.Utils.Companion.toJsonObject
 import com.github.stormbit.sdk.utils.vkapi.API
 import com.github.stormbit.sdk.utils.vkapi.calls.CallAsync
 import com.github.stormbit.sdk.utils.vkapi.executors.ExecutorUser
-import org.json.JSONObject
+import com.google.gson.JsonObject
 import java.util.*
 
 /**
@@ -17,19 +18,19 @@ import java.util.*
  */
 class APIUser(private val client: Client) : API(ExecutorUser(client.auth)) {
 
-    override fun call(method: String, params: Any?, callback: Callback<JSONObject?>) {
+    override fun call(method: String, params: Any?, callback: Callback<JsonObject?>) {
         try {
-            var parameters = JSONObject()
+            var parameters = JsonObject()
             var good = false
 
             // Work with map
             if (params is Map<*, *>) {
-                parameters = JSONObject(params as Map<*, *>?)
+                parameters = toJsonObject(params as Map<String, Any>?)
                 good = true
             }
 
             // with JO
-            if (params is JSONObject) {
+            if (params is JsonObject) {
                 parameters = params
                 good = true
             }
@@ -39,7 +40,7 @@ class APIUser(private val client: Client) : API(ExecutorUser(client.auth)) {
                 val s = params.toString()
 
                 if (s.startsWith("{")) {
-                    parameters = JSONObject(s)
+                    parameters = toJsonObject(s)
                     good = true
                 } else {
                     if (s.contains("&") && s.contains("=")) {
@@ -57,7 +58,7 @@ class APIUser(private val client: Client) : API(ExecutorUser(client.auth)) {
         }
     }
 
-    override fun call(method: String, callback: Callback<JSONObject?>, vararg params: Any?) {
+    override fun call(method: String, callback: Callback<JsonObject?>, vararg params: Any?) {
         try {
             if (params.size == 1) {
                 return this.call(method, params[0], callback)
@@ -81,24 +82,24 @@ class APIUser(private val client: Client) : API(ExecutorUser(client.auth)) {
             log.error("Some error occurred when calling VK API: {}", e.message)
         }
 
-        callback.onResult(JSONObject())
+        callback.onResult(JsonObject())
     }
 
-    override fun callSync(method: String, params: Any?): JSONObject {
+    override fun callSync(method: String, params: Any?): JsonObject {
         try {
-            var parameters = JSONObject()
+            var parameters = JsonObject()
 
             if (params != null) {
                 var good = false
 
                 // Work with map
                 if (params is Map<*, *>) {
-                    parameters = JSONObject(params as Map<*, *>?)
+                    parameters = toJsonObject(params as Map<String, Any>?)
                     good = true
                 }
 
                 // with JO
-                if (params is JSONObject) {
+                if (params is JsonObject) {
                     parameters = params
                     good = true
                 }
@@ -108,7 +109,7 @@ class APIUser(private val client: Client) : API(ExecutorUser(client.auth)) {
                     val s = params.toString()
 
                     if (s.startsWith("{")) {
-                        parameters = JSONObject(s)
+                        parameters = toJsonObject(s)
                         good = true
                     } else {
                         if (s.contains("&") && s.contains("=")) {
@@ -123,10 +124,10 @@ class APIUser(private val client: Client) : API(ExecutorUser(client.auth)) {
                         Utils.getHash(client.auth, method)
                     }
 
-                    val data = JSONObject()
+                    val data = JsonObject()
                     data.put("act", "a_run_method")
                     data.put("al", 1)
-                    data.put("hash", Utils.hashes.get(method))
+                    data.put("hash", Utils.hashes.getString(method))
                     data.put("method", method)
                     data.put("param_v", Utils.version)
 
@@ -138,17 +139,17 @@ class APIUser(private val client: Client) : API(ExecutorUser(client.auth)) {
                             .body(data.map())
                             .send().readToText().replace("[<!>]".toRegex(), "").substring(2)
 
-                    return JSONObject(JSONObject(responseString).getJSONArray("payload").getJSONArray(1).getString(0))
+                    return toJsonObject(toJsonObject(responseString).getAsJsonArray("payload").getJsonArray(1).getString(0))
                 }
             }
         } catch (e: java.lang.Exception) {
             log.error("Some error occurred when calling VK API: {${e.message}}")
         }
 
-        return JSONObject()
+        return JsonObject()
     }
 
-    override fun callSync(method: String, vararg params: Any?): JSONObject {
+    override fun callSync(method: String, vararg params: Any?): JsonObject {
         try {
             if (params.size == 1) {
                 return this.callSync(method, params[0])
@@ -172,6 +173,6 @@ class APIUser(private val client: Client) : API(ExecutorUser(client.auth)) {
             log.error("Some error occurred when calling VK API: {}", e.message)
         }
 
-        return JSONObject()
+        return JsonObject()
     }
 }

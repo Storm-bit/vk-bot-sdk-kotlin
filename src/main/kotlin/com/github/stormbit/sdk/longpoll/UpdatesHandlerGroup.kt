@@ -4,14 +4,16 @@ import com.github.stormbit.sdk.callbacks.CallbackDouble
 import com.github.stormbit.sdk.callbacks.CallbackFourth
 import com.github.stormbit.sdk.callbacks.CallbackTriple
 import com.github.stormbit.sdk.clients.Client
-import com.github.stormbit.sdk.objects.Chat
 import com.github.stormbit.sdk.objects.Message
 import com.github.stormbit.sdk.utils.Utils.Companion.shift
-import org.json.JSONObject
+import com.github.stormbit.sdk.utils.getInt
+import com.github.stormbit.sdk.utils.getJsonObject
+import com.github.stormbit.sdk.utils.getString
+import com.google.gson.JsonObject
 
 class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
     override fun handleCurrentUpdate() {
-        val currentUpdate: JSONObject
+        val currentUpdate: JsonObject
 
         if (queue.updatesGroup.isEmpty()) {
             return
@@ -19,9 +21,9 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
             currentUpdate = queue.updatesGroup.shift()!!
         }
 
-        val updateType = Events[currentUpdate.getString("type")]!!
+        val updateType = Events[currentUpdate["type"].asString]!!
 
-        val obj = currentUpdate.getJSONObject("object")
+        val obj = currentUpdate["object"].asJsonObject
 
         if (callbacks.containsKey(updateType.value)) {
             callbacks[updateType.value]?.onResult(obj)
@@ -54,9 +56,9 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
     /**
      * Handle chat events
      */
-    private fun handleChatEvents(updateObject: JSONObject) {
+    private fun handleChatEvents(updateObject: JsonObject) {
         val chatId = updateObject.getInt("peer_id")
-        val attachments = (if (updateObject.getJSONArray("attachments").length() > 0) updateObject.getJSONArray("attachments").getJSONObject(0) else null)
+        val attachments = (if (updateObject.getAsJsonArray("attachments").size() > 0) updateObject.getAsJsonArray("attachments").getJsonObject(0) else null)
                 ?: return
 
         // Return if no attachments
@@ -82,10 +84,10 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
                     }
                 }
                 "chat_photo_update" -> {
-                    val photo = client.messages.getById(listOf(updateObject.getInt("conversation_message_id"))).getJSONObject("response").getJSONArray("items").getJSONObject(0).getJSONArray("attachments").getJSONObject(0).getJSONObject("photo")
+                    val photo = client.messages.getById(listOf(updateObject.getInt("conversation_message_id"))).getAsJsonObject("response").getAsJsonArray("items").getJsonObject(0).getAsJsonArray("attachments").getJsonObject(0).getAsJsonObject("photo")
 
                     if (chatCallbacks.containsKey(Events.CHAT_PHOTO_UPDATE.value)) {
-                        (chatCallbacks[Events.CHAT_PHOTO_UPDATE.value] as CallbackTriple<JSONObject?, Int?, Int?>).onEvent(photo, from, chatId)
+                        (chatCallbacks[Events.CHAT_PHOTO_UPDATE.value] as CallbackTriple<JsonObject?, Int?, Int?>).onEvent(photo, from, chatId)
                     }
                 }
                 "chat_invite_user" -> {
@@ -114,7 +116,7 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
     /**
      * Handle every longpoll event
      */
-    private fun handleEveryLongPollUpdate(updateObject: JSONObject) {
+    private fun handleEveryLongPollUpdate(updateObject: JsonObject) {
         if (callbacks.containsKey(Events.EVERY.value)) {
             callbacks[Events.EVERY.value]!!.onResult(updateObject)
         }
@@ -123,7 +125,7 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
     /**
      * Handle new message
      */
-    private fun handleMessageUpdate(updateObject: JSONObject) {
+    private fun handleMessageUpdate(updateObject: JsonObject) {
 
         // Flag
         var messageIsAlreadyHandled = false
@@ -229,7 +231,7 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
     /**
      * Handle dialog with typing user
      */
-    private fun handleTypingUpdate(updateObject: JSONObject) {
+    private fun handleTypingUpdate(updateObject: JsonObject) {
         if (callbacks.containsKey("OnTypingCallback")) {
             callbacks["OnTypingCallback"]!!.onResult(updateObject.getString("from_id"))
         }

@@ -33,8 +33,8 @@ import com.github.stormbit.sdk.utils.vkapi.methods.video.VideoApi
 import com.github.stormbit.sdk.utils.vkapi.methods.video.VideoApiAsync
 import com.github.stormbit.sdk.utils.vkapi.methods.wall.WallApi
 import com.github.stormbit.sdk.utils.vkapi.methods.wall.WallApiAsync
-import org.json.JSONArray
-import org.json.JSONObject
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import java.util.concurrent.*
 
 @Suppress("unused", "LeakingThis")
@@ -103,7 +103,7 @@ abstract class Client {
         this.longPoll = LongPoll(this)
     }
 
-    fun sendMessage(block: Message.() -> Unit): JSONObject? {
+    fun sendMessage(block: Message.() -> Unit): JsonObject? {
         val message = Message()
         message.from(this)
 
@@ -122,7 +122,7 @@ abstract class Client {
     fun enableTyping(enable: Boolean) = this.longPoll.enableTyping(enable)
 
     /* On every event */
-    fun onLongPollEvent(callback: Callback<JSONArray>) = this.longPoll.registerCallback(Events.EVERY.value, callback)
+    fun onLongPollEvent(callback: Callback<JsonArray>) = this.longPoll.registerCallback(Events.EVERY.value, callback)
 
     /* Chats */
     fun onChatJoin(callback: CallbackTriple<Int, Int, Int>) = this.longPoll.registerChatCallback(Events.CHAT_JOIN.value, callback)
@@ -131,7 +131,7 @@ abstract class Client {
 
     fun onChatTitleChanged(callback: CallbackFourth<String, String, Int, Int>) = this.longPoll.registerChatCallback(Events.CHAT_TITLE_CHANGE.value, callback)
 
-    fun onChatPhotoChanged(callback: CallbackTriple<JSONObject, Int, Int>) = this.longPoll.registerChatCallback(Events.CHAT_PHOTO_UPDATE.value, callback)
+    fun onChatPhotoChanged(callback: CallbackTriple<JsonObject, Int, Int>) = this.longPoll.registerChatCallback(Events.CHAT_PHOTO_UPDATE.value, callback)
 
     fun onChatPhotoRemoved(callback: CallbackDouble<Int?, Int?>) = this.longPoll.registerChatCallback(Events.CHAT_PHOTO_REMOVE.value, callback)
 

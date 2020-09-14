@@ -1,8 +1,9 @@
 package com.github.stormbit.sdk.utils.vkapi.methods.users
 
+import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.utils.Utils.Companion.asInt
-import com.github.stormbit.sdk.utils.Utils.Companion.callSync
+import com.github.stormbit.sdk.utils.Utils.Companion.call
 import com.github.stormbit.sdk.utils.getJsonObject
 import com.github.stormbit.sdk.utils.getString
 import com.github.stormbit.sdk.utils.put
@@ -10,12 +11,13 @@ import com.github.stormbit.sdk.utils.vkapi.methods.*
 import com.google.gson.JsonObject
 
 @Suppress("unused")
-class UsersApi(private val client: Client) {
+class UsersApiAsync(private val client: Client) {
     fun get(
             userNames: List<String>? = null,
             userFields: List<UserOptionalField>? = null,
-            nameCase: NameCase? = null
-    ): JsonObject = Methods.get.callSync(client, JsonObject()
+            nameCase: NameCase? = null,
+            callback: Callback<JsonObject?>
+    ) = Methods.get.call(client, callback, JsonObject()
             .put("user_ids", userNames?.joinToString(","))
             .put("fields", userFields?.joinToString(",") { it.value })
             .put("name_case", nameCase?.value)
@@ -24,22 +26,26 @@ class UsersApi(private val client: Client) {
     fun getById(
             userIds: List<Int>,
             userFields: List<UserOptionalField>? = null,
-            nameCase: NameCase = NameCase.NOM
-    ): JsonObject = get(
+            nameCase: NameCase = NameCase.NOM,
+            callback: Callback<JsonObject?>
+    ) = get(
             userNames = userIds.map(Int::toString),
             userFields = userFields,
-            nameCase = nameCase
+            nameCase = nameCase,
+            callback
     )
 
     fun getName(
             userId: Int,
-            nameCase: NameCase = NameCase.NOM
-    ): String {
-        val user = getById(listOf(userId), null, nameCase)
+            nameCase: NameCase = NameCase.NOM,
+            callback: Callback<String>
+    ) {
+        getById(listOf(userId), null, nameCase) {
 
-        val response = user.getAsJsonArray("response").getJsonObject(0)
+            val response = it!!.getAsJsonArray("response").getJsonObject(0)
 
-        return "${response.getString("first_name")} ${response.getString("last_name")}"
+            callback.onResult("${response.getString("first_name")} ${response.getString("last_name")}")
+        }
     }
 
     fun getFollowers(
@@ -47,8 +53,9 @@ class UsersApi(private val client: Client) {
             offset: Int,
             count: Int,
             userFields: List<UserOptionalField>,
-            nameCase: NameCase
-    ): JsonObject = Methods.getFollowers.callSync(client, JsonObject()
+            nameCase: NameCase,
+            callback: Callback<JsonObject?>
+    ) = Methods.getFollowers.call(client, callback, JsonObject()
             .put("user_id", userId)
             .put("offset", offset)
             .put("count", count)
@@ -64,8 +71,9 @@ class UsersApi(private val client: Client) {
             radius: NearbyRadius,
             userFields: List<UserOptionalField>,
             nameCase: NameCase,
-            needDescription: Boolean
-    ): JsonObject = Methods.getNearby.callSync(client, JsonObject()
+            needDescription: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.getNearby.call(client, callback, JsonObject()
             .put("latitude", latitude)
             .put("longitude", longitude)
             .put("accuracy", accuracy)
@@ -80,8 +88,9 @@ class UsersApi(private val client: Client) {
             userId: Int?,
             offset: Int,
             count: Int,
-            fields: List<ObjectField>
-    ): JsonObject = Methods.getSubscriptions.callSync(client, JsonObject()
+            fields: List<ObjectField>,
+            callback: Callback<JsonObject?>
+    ) = Methods.getSubscriptions.call(client, callback, JsonObject()
             .put("user_id", userId)
             .put("extended", 1)
             .put("offset", offset)
@@ -90,22 +99,25 @@ class UsersApi(private val client: Client) {
     )
 
     fun getSubscriptionsIds(
-            userId: Int?
-    ): JsonObject = Methods.getSubscriptions.callSync(client, JsonObject()
+            userId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.getSubscriptions.call(client, callback, JsonObject()
             .put("user_id", userId)
     )
 
     fun isAppUser(
-            userId: Int?
-    ): JsonObject = Methods.isAppUser.callSync(client, JsonObject()
+            userId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.isAppUser.call(client, callback, JsonObject()
             .put("user_id", userId)
     )
 
     fun report(
             userId: Int,
             complaintType: UserReportComplaintType,
-            comment: String?
-    ): JsonObject = Methods.report.callSync(client, JsonObject()
+            comment: String?,
+            callback: Callback<JsonObject?>
+    ) = Methods.report.call(client, callback, JsonObject()
             .put("user_id", userId)
             .put("type", complaintType.value)
             .put("comment", comment)
@@ -144,8 +156,9 @@ class UsersApi(private val client: Client) {
             companyName: String?,
             positionName: String?,
             groupId: Int?,
-            fromList: List<UsersListType>?
-    ): JsonObject = Methods.search.callSync(client, JsonObject()
+            fromList: List<UsersListType>?,
+            callback: Callback<JsonObject?>
+    ) = Methods.search.call(client, callback, JsonObject()
             .put("q", query)
             .put("sort", sort.value)
             .put("offset", offset)

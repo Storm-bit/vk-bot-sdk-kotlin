@@ -1,10 +1,11 @@
 package com.github.stormbit.sdk.utils.vkapi.calls
 
-import org.json.JSONObject
+import com.github.stormbit.sdk.utils.Utils.Companion.map
+import com.google.gson.JsonObject
 import java.util.*
 
 class CallSync : Call {
-    constructor(methodName: String, params: JSONObject) {
+    constructor(methodName: String, params: JsonObject) {
         this.methodName = methodName
         this.params = params
     }
@@ -23,6 +24,6 @@ class CallSync : Call {
         if (other !is CallSync) return false
 
         return Objects.equals(methodName, other.methodName) &&
-                Objects.equals(params.toMap(), other.params.toMap())
+                Objects.equals(params.map(), other.params.map())
     }
 }

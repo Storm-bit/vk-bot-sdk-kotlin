@@ -7,8 +7,13 @@ import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.objects.Chat
 import com.github.stormbit.sdk.objects.Message
 import com.github.stormbit.sdk.utils.Utils.Companion.shift
-import org.json.JSONArray
-import org.json.JSONObject
+import com.github.stormbit.sdk.utils.Utils.Companion.toJsonObject
+import com.github.stormbit.sdk.utils.getInt
+import com.github.stormbit.sdk.utils.getJsonObject
+import com.github.stormbit.sdk.utils.getString
+import com.github.stormbit.sdk.utils.gson
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 
 class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
 
@@ -55,10 +60,10 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
     /**
      * Handle chat events
      */
-    private fun handleChatEvents(updateObject: JSONArray) {
+    private fun handleChatEvents(updateObject: JsonArray) {
         val chatId = updateObject.getInt(3)
 
-        val attachments = if (updateObject.length() > 6) if (updateObject[6].toString().startsWith("{")) JSONObject(updateObject[6].toString()) else null else null
+        val attachments = if (updateObject.size() > 6) if (updateObject[6].toString().startsWith("{")) gson.toJsonTree(updateObject[6].toString()).asJsonObject else null else null
                 ?: return
 
         // Return if no attachments
@@ -82,10 +87,10 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
                     }
                 }
                 "chat_photo_update" -> {
-                    val photo = JSONObject(client.messages.getById(listOf(updateObject.getInt(1))).getJSONObject("response").getJSONArray("items").getJSONObject(0).getJSONArray("attachments").getJSONObject(0).getJSONObject("photo"))
+                    val photo = gson.toJsonTree(client.messages.getById(listOf(updateObject.getInt(1))).getAsJsonObject("response").getAsJsonArray("items").getJsonObject(0).getAsJsonArray("attachments").getJsonObject(0).getAsJsonObject("photo")).asJsonObject
 
                     if (chatCallbacks.containsKey(Events.CHAT_PHOTO_UPDATE.value)) {
-                        (chatCallbacks[Events.CHAT_PHOTO_UPDATE.value] as CallbackTriple<JSONObject?, Int?, Int?>).onEvent(photo, from, chatId)
+                        (chatCallbacks[Events.CHAT_PHOTO_UPDATE.value] as CallbackTriple<JsonObject?, Int?, Int?>).onEvent(photo, from, chatId)
                     }
                 }
                 "chat_invite_user" -> {
@@ -112,13 +117,13 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
     /**
      * Handle every longpoll event
      */
-    private fun handleEveryLongPollUpdate(updateObject: JSONArray) {
+    private fun handleEveryLongPollUpdate(updateObject: JsonArray) {
         if (callbacks.containsKey(Events.EVERY.value)) {
             callbacks[Events.EVERY.value]!!.onResult(updateObject)
         }
     }
 
-    private fun handleMessageUpdate(updateObject: JSONArray) {
+    private fun handleMessageUpdate(updateObject: JsonArray) {
         var messageIsAlreadyHandled = false
 
         val messageId = updateObject.getInt(1)
@@ -128,13 +133,13 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
 
         val messageText = updateObject.getString(5)
 
-        val payload = JSONObject()
+        val payload = JsonObject()
 
-        val title = updateObject.getJSONObject(6).getString("title")
+        val title = updateObject.getJsonObject(6).getString("title")
 
-        val attachments = if (updateObject.length() > 0) if (updateObject.get(7).toString().startsWith("{")) JSONObject(updateObject[7].toString()) else null else null
+        val attachments = if (updateObject.size() > 0) if (updateObject.get(7).toString().startsWith("{")) toJsonObject(updateObject[7].toString()) else null else null
 
-        val randomId = if (updateObject.length() > 7) updateObject.getInt(8) else 0
+        val randomId = if (updateObject.size() > 7) updateObject.getInt(8) else 0
 
         // Check for chat
         if (peerId > Chat.CHAT_PREFIX) {
@@ -256,7 +261,7 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
         }
     }
 
-    private fun handleOnline(updateObject: JSONArray) {
+    private fun handleOnline(updateObject: JsonArray) {
         val targetId = updateObject.getInt(1)
         val timestamp = updateObject.getInt(3)
 
@@ -266,7 +271,7 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
         }
     }
 
-    private fun handleOffline(updateObject: JSONArray) {
+    private fun handleOffline(updateObject: JsonArray) {
         val targetId = updateObject.getInt(1)
         val timestamp = updateObject.getInt(3)
 
@@ -278,7 +283,7 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
     /**
      * Handle dialog with typing user
      */
-    private fun handleTypingUpdate(updateObject: JSONArray) {
+    private fun handleTypingUpdate(updateObject: JsonArray) {
         if (callbacks.containsKey(Events.TYPING.value)) {
             callbacks[Events.TYPING.value]!!.onResult(updateObject.getInt(1))
         }

@@ -1,7 +1,7 @@
 package com.github.stormbit.sdk.longpoll
 
-import org.json.JSONArray
-import org.json.JSONObject
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
@@ -14,10 +14,10 @@ class Queue {
      * List of updates that we need to handle
      */
     @Volatile
-    var updatesUser = CopyOnWriteArrayList<JSONArray>()
+    var updatesUser = CopyOnWriteArrayList<JsonArray>()
 
     @Volatile
-    var updatesGroup = CopyOnWriteArrayList<JSONObject>()
+    var updatesGroup = CopyOnWriteArrayList<JsonObject>()
 
     /**
      * We add all of updates from longpoll server
@@ -25,11 +25,11 @@ class Queue {
      *
      * @param elements Array of updates
      */
-    fun putAll(elements: JSONArray) {
+    fun putAll(elements: JsonArray) {
         elements.forEach {
-            if (it is JSONArray) {
+            if (it is JsonArray) {
                 updatesUser.add(it)
-            } else if (it is JSONObject) {
+            } else if (it is JsonObject) {
                 updatesGroup.add(it)
             }
         }

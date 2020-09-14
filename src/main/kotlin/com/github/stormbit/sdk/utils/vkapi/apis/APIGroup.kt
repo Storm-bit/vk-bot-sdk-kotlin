@@ -4,10 +4,12 @@ import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.utils.Utils
 import com.github.stormbit.sdk.utils.Utils.Companion.map
+import com.github.stormbit.sdk.utils.Utils.Companion.toJsonObject
+import com.github.stormbit.sdk.utils.put
 import com.github.stormbit.sdk.utils.vkapi.API
 import com.github.stormbit.sdk.utils.vkapi.calls.CallAsync
 import com.github.stormbit.sdk.utils.vkapi.executors.ExecutorGroup
-import org.json.JSONObject
+import com.google.gson.JsonObject
 import java.util.*
 
 class APIGroup(private val client: Client) : API(ExecutorGroup(client, client.auth)) {
@@ -19,20 +21,20 @@ class APIGroup(private val client: Client) : API(ExecutorGroup(client, client.au
      * @param params   Params as string, JSONObject or Map
      * @param callback Callback to return the response
      */
-    override fun call(method: String, params: Any?, callback: Callback<JSONObject?>) {
+    override fun call(method: String, params: Any?, callback: Callback<JsonObject?>) {
         try {
-            var parameters = JSONObject()
+            var parameters = JsonObject()
             if (params != null) {
                 var good = false
 
                 // Work with map
                 if (params is Map<*, *>) {
-                    parameters = JSONObject(params as Map<*, *>?)
+                    parameters = toJsonObject(params as Map<String, Any>?)
                     good = true
                 }
 
                 // with JO
-                if (params is JSONObject) {
+                if (params is JsonObject) {
                     parameters = params
                     good = true
                 }
@@ -41,7 +43,7 @@ class APIGroup(private val client: Client) : API(ExecutorGroup(client, client.au
                 if (params is String) {
                     val s = params.toString()
                     if (s.startsWith("{")) {
-                        parameters = JSONObject(s)
+                        parameters = toJsonObject(s)
                         good = true
                     } else {
                         if (s.contains("&") && s.contains("=")) {
@@ -60,7 +62,7 @@ class APIGroup(private val client: Client) : API(ExecutorGroup(client, client.au
         }
     }
 
-    override fun call(method: String, callback: Callback<JSONObject?>, vararg params: Any?) {
+    override fun call(method: String, callback: Callback<JsonObject?>, vararg params: Any?) {
         try {
             if (params.size == 1) {
                 return this.call(method, params[0], callback)
@@ -84,7 +86,7 @@ class APIGroup(private val client: Client) : API(ExecutorGroup(client, client.au
             log.error("Some error occurred when calling VK API: {}", e.message)
         }
 
-        callback.onResult(JSONObject())
+        callback.onResult(JsonObject())
     }
 
     /**
@@ -94,21 +96,21 @@ class APIGroup(private val client: Client) : API(ExecutorGroup(client, client.au
      * @param params Params as string, JSONObject or Map
      * @return JSONObject response of VK answer
      */
-    override fun callSync(method: String, params: Any?): JSONObject {
+    override fun callSync(method: String, params: Any?): JsonObject {
         try {
-            var parameters = JSONObject()
+            var parameters = JsonObject()
 
             if (params != null) {
                 var good = false
 
                 // Work with map
                 if (params is Map<*, *>) {
-                    parameters = JSONObject(params as Map<*, *>?)
+                    parameters = toJsonObject(params as Map<String, Any>?)
                     good = true
                 }
 
                 // with JO
-                if (params is JSONObject) {
+                if (params is JsonObject) {
                     parameters = params
                     good = true
                 }
@@ -117,7 +119,7 @@ class APIGroup(private val client: Client) : API(ExecutorGroup(client, client.au
                 if (params is String) {
                     val s = params.toString()
                     if (s.startsWith("{")) {
-                        parameters = JSONObject(s)
+                        parameters = toJsonObject(s)
                         good = true
                     } else {
                         if (s.contains("&") && s.contains("=")) {
@@ -128,9 +130,9 @@ class APIGroup(private val client: Client) : API(ExecutorGroup(client, client.au
                 }
 
                 if (good) {
-                    val data = JSONObject()
+                    val data = JsonObject()
                     data.put("v", Utils.version)
-                    data.put("access_token", client.token)
+                    data.put("access_token", client.token!!)
 
                     for (key in parameters.keySet()) {
                         data.put(key, parameters[key])
@@ -140,14 +142,14 @@ class APIGroup(private val client: Client) : API(ExecutorGroup(client, client.au
                             .body(data.map())
                             .send().readToText().replace("[<!>]".toRegex(), "")
 
-                    return JSONObject(responseString)
+                    return toJsonObject(responseString)
                 }
             }
         } catch (e: java.lang.Exception) {
             log.error("Some error occurred when calling VK API: {}", e.message)
         }
 
-        return JSONObject()
+        return JsonObject()
     }
 
     /**
@@ -157,7 +159,7 @@ class APIGroup(private val client: Client) : API(ExecutorGroup(client, client.au
      * @param params Floating count of params
      * @return JSONObject response of VK answer
      */
-    override fun callSync(method: String, vararg params: Any?): JSONObject {
+    override fun callSync(method: String, vararg params: Any?): JsonObject {
         try {
             if (params.size == 1) {
                 return this.callSync(method, params[0])
@@ -181,6 +183,6 @@ class APIGroup(private val client: Client) : API(ExecutorGroup(client, client.au
             log.error("Some error occurred when calling VK API: {}", e.message)
         }
 
-        return JSONObject()
+        return JsonObject()
     }
 }

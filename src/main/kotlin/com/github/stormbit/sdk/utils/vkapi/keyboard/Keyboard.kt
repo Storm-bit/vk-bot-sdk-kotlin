@@ -1,7 +1,8 @@
 package com.github.stormbit.sdk.utils.vkapi.keyboard
 
+import com.github.stormbit.sdk.utils.gson
+import com.google.gson.JsonObject
 import kotlinx.serialization.Serializable
-import org.json.JSONObject
 import java.util.*
 
 @Suppress("unused")
@@ -74,11 +75,11 @@ class Keyboard {
                 this.type = type.type
             }
 
-            fun setPayload(payload: JSONObject) {
+            fun setPayload(payload: JsonObject) {
                 this.payload = payload.toString()
             }
 
-            constructor(type: Type, label: String?, payload: JSONObject, hash: String?, link: String?) {
+            constructor(type: Type, label: String?, payload: JsonObject, hash: String?, link: String?) {
                 this.type = type.type
                 this.label = label
                 this.payload = payload.toString()
@@ -86,38 +87,38 @@ class Keyboard {
                 this.link = link
             }
 
-            constructor(type: Type, label: String?, payload: JSONObject) {
+            constructor(type: Type, label: String?, payload: JsonObject) {
                 this.type = type.type
                 this.label = label
                 this.payload = payload.toString()
             }
 
-            constructor(type: Type, label: String?, payload: JSONObject, hash: String?) {
+            constructor(type: Type, label: String?, payload: JsonObject, hash: String?) {
                 this.type = type.type
                 this.label = label
                 this.payload = payload.toString()
                 this.hash = hash
             }
 
-            constructor(type: Type, label: String?, link: String?, payload: JSONObject) {
+            constructor(type: Type, label: String?, link: String?, payload: JsonObject) {
                 this.type = type.type
                 this.label = label
                 this.payload = payload.toString()
                 this.link = link
             }
 
-            constructor(type: Type, payload: JSONObject, hash: String?) {
+            constructor(type: Type, payload: JsonObject, hash: String?) {
                 this.type = type.type
                 this.payload = payload.toString()
                 this.hash = hash
             }
 
-            constructor(label: String?, payload: JSONObject) {
+            constructor(label: String?, payload: JsonObject) {
                 this.label = label
                 this.payload = payload.toString()
             }
 
-            constructor(type: Type, payload: JSONObject) {
+            constructor(type: Type, payload: JsonObject) {
                 this.type = type.type
                 this.payload = payload.toString()
             }
@@ -156,6 +157,6 @@ class Keyboard {
     }
 
     override fun toString(): String {
-        return JSONObject(this).toString()
+        return gson.toJsonTree(this).toString()
     }
 }

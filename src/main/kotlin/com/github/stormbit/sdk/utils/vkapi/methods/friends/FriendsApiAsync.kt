@@ -1,8 +1,9 @@
 package com.github.stormbit.sdk.utils.vkapi.methods.friends
 
+import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.utils.Utils.Companion.asInt
-import com.github.stormbit.sdk.utils.Utils.Companion.callSync
+import com.github.stormbit.sdk.utils.Utils.Companion.call
 import com.github.stormbit.sdk.utils.put
 import com.github.stormbit.sdk.utils.vkapi.methods.FriendsOrder
 import com.github.stormbit.sdk.utils.vkapi.methods.NameCase
@@ -10,12 +11,13 @@ import com.github.stormbit.sdk.utils.vkapi.methods.UserOptionalField
 import com.google.gson.JsonObject
 
 @Suppress("unused")
-class FriendsApi(private var client: Client) {
+class FriendsApiAsync(private var client: Client) {
     fun add(
             userId: Int,
             text: String?,
-            declineRequest: Boolean
-    ): JsonObject = Methods.add.callSync(client, JsonObject()
+            declineRequest: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.add.call(client, callback, JsonObject()
             .put("user_id", userId)
             .put("text", text)
             .put("follow", declineRequest.asInt())
@@ -23,38 +25,43 @@ class FriendsApi(private var client: Client) {
 
     fun addList(
             name: String,
-            userIds: List<Int>?
-    ): JsonObject = Methods.addList.callSync(client, JsonObject()
+            userIds: List<Int>?,
+            callback: Callback<JsonObject?>
+    ) = Methods.addList.call(client, callback, JsonObject()
             .put("name", name)
             .put("user_ids", userIds?.joinToString(","))
     )
 
     fun areFriends(
             userIds: List<Int>,
-            needSign: Boolean
-    ): JsonObject = Methods.areFriends.callSync(client, JsonObject()
+            needSign: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.areFriends.call(client, callback, JsonObject()
             .put("user_ids", userIds.joinToString(","))
             .put("need_sign", needSign.asInt())
     )
 
     fun delete(
-            userId: Int
-    ): JsonObject = Methods.delete.callSync(client, JsonObject()
+            userId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.delete.call(client, callback, JsonObject()
             .put("user_id", userId)
     )
 
-    fun deleteAllRequests(): JsonObject = Methods.deleteAllRequests.callSync(client, JsonObject())
+    fun deleteAllRequests(callback: Callback<JsonObject?>) = Methods.deleteAllRequests.call(client, callback, JsonObject())
 
     fun deleteList(
-            listId: Int
-    ): JsonObject = Methods.deleteList.callSync(client, JsonObject()
+            listId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.deleteList.call(client, callback, JsonObject()
             .put("list_id", listId)
     )
 
     fun edit(
             userId: Int,
-            listIds: List<Int>?
-    ): JsonObject = Methods.edit.callSync(client, JsonObject()
+            listIds: List<Int>?,
+            callback: Callback<JsonObject?>
+    ) = Methods.edit.call(client, callback, JsonObject()
             .put("user_id", userId)
             .put("list_ids", listIds?.joinToString(","))
     )
@@ -62,8 +69,9 @@ class FriendsApi(private var client: Client) {
     fun editList(
             listId: Int,
             userIds: List<Int>,
-            name: String?
-    ): JsonObject = Methods.editList.callSync(client, JsonObject()
+            name: String?,
+            callback: Callback<JsonObject?>
+    ) = Methods.editList.call(client, callback, JsonObject()
             .put("list_id", listId)
             .put("user_ids", userIds.joinToString(","))
             .put("name", name)
@@ -73,8 +81,9 @@ class FriendsApi(private var client: Client) {
             listId: Int,
             addUserIds: List<Int>?,
             deleteUserIds: List<Int>?,
-            name: String?
-    ): JsonObject = Methods.editList.callSync(client, JsonObject()
+            name: String?,
+            callback: Callback<JsonObject?>
+    ) = Methods.editList.call(client, callback, JsonObject()
             .put("list_id", listId)
             .put("add_user_ids", addUserIds?.joinToString(","))
             .put("delete_user_ids", deleteUserIds?.joinToString(","))
@@ -88,8 +97,9 @@ class FriendsApi(private var client: Client) {
             count: Int,
             offset: Int,
             userFields: List<UserOptionalField>,
-            nameCase: NameCase
-    ): JsonObject = Methods.get.callSync(client, JsonObject()
+            nameCase: NameCase,
+            callback: Callback<JsonObject?>
+    ) = Methods.get.call(client, callback, JsonObject()
             .put("user_id", userId)
             .put("order", order?.value)
             .put("list_id", listId)
@@ -104,8 +114,9 @@ class FriendsApi(private var client: Client) {
             order: FriendsOrder?,
             listId: Int?,
             count: Int,
-            offset: Int
-    ): JsonObject = Methods.get.callSync(client, JsonObject()
+            offset: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.get.call(client, callback, JsonObject()
             .put("user_id", userId)
             .put("order", order?.value)
             .put("list_id", listId)
@@ -113,20 +124,22 @@ class FriendsApi(private var client: Client) {
             .put("offset", offset)
     )
 
-    fun getAppUsers(): JsonObject = Methods.getAppUsers.callSync(client, JsonObject())
+    fun getAppUsers(callback: Callback<JsonObject?>) = Methods.getAppUsers.call(client, callback, JsonObject())
 
     fun getByPhones(
             phones: List<String>,
-            userFields: List<UserOptionalField>
-    ): JsonObject = Methods.getByPhones.callSync(client, JsonObject()
+            userFields: List<UserOptionalField>,
+            callback: Callback<JsonObject?>
+    ) = Methods.getByPhones.call(client, callback, JsonObject()
             .put("phones", phones.joinToString(","))
             .put("fields", userFields.joinToString(",") { it.value })
     )
 
     fun getLists(
             userId: Int?,
-            withSystem: Boolean
-    ): JsonObject = Methods.getLists.callSync(client, JsonObject()
+            withSystem: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.getLists.call(client, callback, JsonObject()
             .put("user_id", userId)
             .put("return_system", withSystem.asInt())
     )
@@ -136,8 +149,9 @@ class FriendsApi(private var client: Client) {
             sourceUserId: Int?,
             sortRandomly: Boolean,
             count: Int?,
-            offset: Int
-    ): JsonObject = Methods.getMutual.callSync(client, JsonObject()
+            offset: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getMutual.call(client, callback, JsonObject()
             .put("target_uid", targetUserId)
             .put("source_uid", sourceUserId)
             .put("order", if (sortRandomly) "random" else null)
@@ -150,8 +164,9 @@ class FriendsApi(private var client: Client) {
             sourceUserId: Int?,
             sortRandomly: Boolean,
             count: Int?,
-            offset: Int
-    ): JsonObject = Methods.getMutual.callSync(client, JsonObject()
+            offset: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getMutual.call(client, callback, JsonObject()
             .put("target_uids", targetUserIds.joinToString(","))
             .put("source_uid", sourceUserId)
             .put("order", if (sortRandomly) "random" else null)
@@ -164,8 +179,9 @@ class FriendsApi(private var client: Client) {
             listId: Int?,
             sortRandomly: Boolean,
             count: Int?,
-            offset: Int
-    ): JsonObject = Methods.getOnline.callSync(client, JsonObject()
+            offset: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getOnline.call(client, callback, JsonObject()
             .put("user_id", userId)
             .put("list_id", listId)
             .put("order", if (sortRandomly) "random" else null)
@@ -178,8 +194,9 @@ class FriendsApi(private var client: Client) {
             listId: Int?,
             sortRandomly: Boolean,
             count: Int?,
-            offset: Int
-    ): JsonObject = Methods.getOnline.callSync(client, JsonObject()
+            offset: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getOnline.call(client, callback, JsonObject()
             .put("user_id", userId)
             .put("list_id", listId)
             .put("online_mobile", 1)
@@ -189,23 +206,26 @@ class FriendsApi(private var client: Client) {
     )
 
     fun getRecent(
-            count: Int
-    ): JsonObject = Methods.getRecent.callSync(client, JsonObject()
+            count: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getRecent.call(client, callback, JsonObject()
             .put("count", count)
     )
 
     fun getOutgoingRequests(
             count: Int,
-            offset: Int
-    ): JsonObject = Methods.getRequests.callSync(client, JsonObject()
+            offset: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getRequests.call(client, callback, JsonObject()
             .put("count", count)
             .put("offset", offset)
             .put("out", 1)
     )
 
     fun getOutgoingRequestsWithMutual(
-            offset: Int
-    ): JsonObject = Methods.getRequests.callSync(client, JsonObject()
+            offset: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getRequests.call(client, callback, JsonObject()
             .put("offset", offset)
             .put("need_mutual", 1)
             .put("out", 1)
@@ -215,8 +235,9 @@ class FriendsApi(private var client: Client) {
             count: Int,
             offset: Int,
             sortByMutual: Boolean,
-            needViewed: Boolean
-    ): JsonObject = Methods.getRequests.callSync(client, JsonObject()
+            needViewed: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.getRequests.call(client, callback, JsonObject()
             .put("count", count)
             .put("offset", offset)
             .put("sort", sortByMutual.asInt())
@@ -226,8 +247,9 @@ class FriendsApi(private var client: Client) {
     fun getRequestsWithMutual(
             offset: Int,
             sortByMutual: Boolean,
-            needViewed: Boolean
-    ): JsonObject = Methods.getRequests.callSync(client, JsonObject()
+            needViewed: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.getRequests.call(client, callback, JsonObject()
             .put("offset", offset)
             .put("sort", sortByMutual.asInt())
             .put("need_viewed", needViewed.asInt())
@@ -237,8 +259,9 @@ class FriendsApi(private var client: Client) {
     fun getSuggestedRequests(
             count: Int,
             offset: Int,
-            sortByMutual: Boolean
-    ): JsonObject = Methods.getRequests.callSync(client, JsonObject()
+            sortByMutual: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.getRequests.call(client, callback, JsonObject()
             .put("count", count)
             .put("offset", offset)
             .put("sort", sortByMutual.asInt())
@@ -248,8 +271,9 @@ class FriendsApi(private var client: Client) {
     fun getSuggestedRequestsExtended(
             count: Int,
             offset: Int,
-            sortByMutual: Boolean
-    ): JsonObject = Methods.getRequests.callSync(client, JsonObject()
+            sortByMutual: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.getRequests.call(client, callback, JsonObject()
             .put("count", count)
             .put("offset", offset)
             .put("sort", sortByMutual.asInt())
@@ -259,8 +283,9 @@ class FriendsApi(private var client: Client) {
 
     fun getSuggestedRequestsWithMutual(
             offset: Int,
-            sortByMutual: Boolean
-    ): JsonObject = Methods.getRequests.callSync(client, JsonObject()
+            sortByMutual: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.getRequests.call(client, callback, JsonObject()
             .put("offset", offset)
             .put("sort", sortByMutual.asInt())
             .put("extended", 1)
@@ -273,8 +298,9 @@ class FriendsApi(private var client: Client) {
             offset: Int,
             onlyWithMutual: Boolean,
             userFields: List<UserOptionalField>,
-            nameCase: NameCase
-    ): JsonObject = Methods.getSuggestions.callSync(client, JsonObject()
+            nameCase: NameCase,
+            callback: Callback<JsonObject?>
+    ) = Methods.getSuggestions.call(client, callback, JsonObject()
             .put("count", count)
             .put("offset", offset)
             .put("filter", if (onlyWithMutual) "mutual" else null)
@@ -288,8 +314,9 @@ class FriendsApi(private var client: Client) {
             count: Int,
             offset: Int,
             userFields: List<UserOptionalField>,
-            nameCase: NameCase
-    ): JsonObject = Methods.search.callSync(client, JsonObject()
+            nameCase: NameCase,
+            callback: Callback<JsonObject?>
+    ) = Methods.search.call(client, callback, JsonObject()
             .put("q", query)
             .put("user_id", userId)
             .put("count", count)

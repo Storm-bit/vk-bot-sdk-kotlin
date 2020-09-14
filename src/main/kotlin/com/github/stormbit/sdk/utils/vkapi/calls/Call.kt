@@ -1,10 +1,10 @@
 package com.github.stormbit.sdk.utils.vkapi.calls
 
-import org.json.JSONObject
+import com.google.gson.JsonObject
 
 abstract class Call {
     lateinit var methodName: String
-    lateinit var params: JSONObject
+    lateinit var params: JsonObject
 
     override fun toString(): String {
         return """Call{

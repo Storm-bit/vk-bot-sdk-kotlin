@@ -6,12 +6,15 @@ import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.clients.Group
 import com.github.stormbit.sdk.longpoll.responses.GetLongpollServerResponse
 import com.github.stormbit.sdk.utils.Utils
+import com.github.stormbit.sdk.utils.Utils.Companion.toJsonObject
+import com.github.stormbit.sdk.utils.getInt
+import com.github.stormbit.sdk.utils.getString
 import com.github.stormbit.sdk.utils.vkapi.methods.messages.MessagesApi
+import com.google.gson.JsonObject
+import com.google.gson.JsonParseException
 import net.dongliu.requests.Header
 import net.dongliu.requests.Requests
 import net.dongliu.requests.exception.RequestsException
-import org.json.JSONException
-import org.json.JSONObject
 import org.slf4j.LoggerFactory
 
 @Suppress("unused")
@@ -138,16 +141,16 @@ class LongPoll(private val client: Client) {
 
         val result = client.messages.getLongPollServer(isNeedPts, version)
 
-        val response: JSONObject
+        val response: JsonObject
 
-        if (!result.has("response") || !result.getJSONObject("response").has("key") || !result.getJSONObject("response").has("server") || !result.getJSONObject("response").has("ts")) {
+        if (!result.has("response") || !result.getAsJsonObject("response").has("key") || !result.getAsJsonObject("response").has("server") || !result.getAsJsonObject("response").has("ts")) {
             log.error("Bad response of getting longpoll server!\nQuery: {\"need_pts\": \"$isNeedPts\", \"lp_version\": \"$version\"}\n Response: {}", result)
             return null
         }
 
         response = try {
-            result.getJSONObject("response")
-        } catch (e: JSONException) {
+            result.getAsJsonObject("response")
+        } catch (e: JsonParseException) {
             log.error("Bad response of getting longpoll server.")
             return null
         }
@@ -165,16 +168,16 @@ class LongPoll(private val client: Client) {
     private fun getLongpollServerGroup(groupId: Int): GetLongpollServerResponse? {
         val result = client.groups.getLongPollServer(groupId)
 
-        val response: JSONObject
+        val response: JsonObject
 
-        if (!result.has("response") || !result.getJSONObject("response").has("key") || !result.getJSONObject("response").has("server") || !result.getJSONObject("response").has("ts")) {
+        if (!result.has("response") || !result.getAsJsonObject("response").has("key") || !result.getAsJsonObject("response").has("server") || !result.getAsJsonObject("response").has("ts")) {
             log.error("Bad response of getting longpoll server!\nQuery: {groupId: $groupId}\n Response: {}", result)
             return null
         }
 
         response = try {
-            result.getJSONObject("response")
-        } catch (e: JSONException) {
+            result.getAsJsonObject("response")
+        } catch (e: JsonParseException) {
             log.error("Bad response of getting longpoll server.")
             return null
         }
@@ -192,7 +195,7 @@ class LongPoll(private val client: Client) {
         log.info("Started listening to events from VK LongPoll server...")
 
         while (longpollIsOn) {
-            var response: JSONObject?
+            var response: JsonObject?
             var responseString = "{}"
 
             try {
@@ -205,9 +208,9 @@ class LongPoll(private val client: Client) {
                             .send().readToText()
                 } catch (ignored: RequestsException) { continue }
 
-                response = JSONObject(responseString)
+                response = toJsonObject(responseString)
 
-            } catch (ignored: JSONException) {
+            } catch (ignored: JsonParseException) {
                 log.error("Some error occurred, no updates got from longpoll server: {}", responseString)
 
                 try {
@@ -240,7 +243,7 @@ class LongPoll(private val client: Client) {
 
                 if (this.updatesHandler.callbacksCount() > 0 || this.updatesHandler.commandsCount() > 0 || this.updatesHandler.chatCallbacksCount() > 0) {
                     if (response.has("ts") && response.has("updates")) {
-                        this.updatesHandler.handle(response.getJSONArray("updates"))
+                        this.updatesHandler.handle(response.getAsJsonArray("updates"))
                     } else {
                         log.error("Bad response from VK LongPoll server: no `ts` or `updates` array: {}", response)
                         try {

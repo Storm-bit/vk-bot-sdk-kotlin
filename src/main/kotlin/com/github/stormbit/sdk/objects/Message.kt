@@ -3,15 +3,14 @@ package com.github.stormbit.sdk.objects
 import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.clients.Group
-import com.github.stormbit.sdk.utils.isChatPeerId
-import com.github.stormbit.sdk.utils.isGroupId
-import com.github.stormbit.sdk.utils.isUserPeerId
+import com.github.stormbit.sdk.utils.*
 import com.github.stormbit.sdk.utils.vkapi.API
 import com.github.stormbit.sdk.utils.vkapi.Upload
 import com.github.stormbit.sdk.utils.vkapi.docs.DocTypes
 import com.github.stormbit.sdk.utils.vkapi.keyboard.Keyboard
-import org.json.JSONArray
-import org.json.JSONObject
+import com.google.gson.Gson
+import com.google.gson.JsonArray
+import com.google.gson.JsonObject
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.regex.Pattern
@@ -19,6 +18,7 @@ import java.util.regex.Pattern
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 class Message {
     private val log = LoggerFactory.getLogger(Message::class.java)
+    private val gson = Gson()
 
     var messageId: Int? = null
         private set
@@ -40,9 +40,9 @@ class Message {
 
     var keyboard: Keyboard? = null
 
-    private var payload: JSONObject? = JSONObject()
+    private var payload: JsonObject? = JsonObject()
         private set(value) {
-            field = value ?: JSONObject()
+            field = value ?: JsonObject()
         }
 
     var text: String = ""
@@ -69,9 +69,9 @@ class Message {
      *
      * More: [link](https://vk.com/dev/using_longpoll_2)
      */
-    private var attachmentsOfReceivedMessage: JSONObject? = JSONObject()
+    private var attachmentsOfReceivedMessage: JsonObject? = JsonObject()
         private set(value) {
-            field = value ?: JSONObject()
+            field = value ?: JsonObject()
         }
 
     /**
@@ -80,7 +80,7 @@ class Message {
     private var attachments: CopyOnWriteArrayList<String> = CopyOnWriteArrayList()
     private var forwardedMessages: CopyOnWriteArrayList<String> = CopyOnWriteArrayList()
     private val photosToUpload = CopyOnWriteArrayList<String>()
-    private val docsToUpload = CopyOnWriteArrayList<JSONObject>()
+    private val docsToUpload = CopyOnWriteArrayList<JsonObject>()
 
     var stringPhotos = ArrayList<String>()
     var stringDocs = ArrayList<String>()
@@ -103,7 +103,7 @@ class Message {
      * @param attachments message attachments
      * @param randomId random id
      */
-    constructor(client: Client, messageId: Int, peerId: Int, timestamp: Int, text: String, title: String, attachments: JSONObject?, randomId: Int, payload: JSONObject?) {
+    constructor(client: Client, messageId: Int, peerId: Int, timestamp: Int, text: String, title: String, attachments: JsonObject?, randomId: Int, payload: JsonObject?) {
         this.messageId = messageId
         this.peerId = peerId
         this.timestamp = timestamp
@@ -118,7 +118,7 @@ class Message {
         this.upload = Upload(client)
     }
 
-    constructor(client: Client, json: JSONObject) {
+    constructor(client: Client, json: JsonObject) {
         this.client = client
         this.api = client.api
         this.upload = Upload(client)
@@ -128,14 +128,14 @@ class Message {
         this.timestamp = json.getInt("date")
         this.text = json.getString("text")
         this.randomId = json.getInt("random_id")
-        this.payload = if (json.has("payload")) JSONObject(json.getString("payload")) else JSONObject()
+        this.payload = if (json.has("payload")) gson.toJsonTree(json.getString("payload")).asJsonObject else JsonObject()
         this.title = " ... "
-        val attachments = if (json.getJSONArray("attachments").length() > 0) json.getJSONArray("attachments").getJSONObject(0) else JSONObject()
+        val attachments = if (json.getAsJsonArray("attachments").size() > 0) json.getAsJsonArray("attachments").getJsonObject(0) else JsonObject()
 
         // Check for chat
         if (this.peerId > Chat.CHAT_PREFIX) {
             this.chatId = this.peerId - Chat.CHAT_PREFIX
-            if (attachments != null) {
+            if (attachments.keySet().size > 0) {
                 this.peerId = attachments.getString("from").toInt()
             }
             this.messageId = json.getInt("conversation_message_id")
@@ -330,7 +330,7 @@ class Message {
             return this
         }
 
-        docsToUpload.add(JSONObject().put("doc", doc).put("type", type.type))
+        docsToUpload.add(JsonObject().put("doc", doc).put("type", type.type))
         return this
     }
 
@@ -351,7 +351,7 @@ class Message {
      * @param doc      URL or path to file
      * @param callback response will returns to callback
      */
-    fun sendVoiceMessage(doc: String, callback: Callback<JSONObject>?) {
+    fun sendVoiceMessage(doc: String, callback: Callback<JsonObject>?) {
         val docAsAttach = upload.uploadDoc(doc, peerId, DocTypes.AUDIO_MESSAGE)
         if (docAsAttach != null) attachments.add(docAsAttach)
         send(callback)
@@ -361,7 +361,7 @@ class Message {
      * Send the message
      *
      */
-    fun sendAsync(): JSONObject? {
+    fun sendAsync(): JsonObject? {
         if (photosToUpload.size > 0) {
             val photo = photosToUpload[0]
             photosToUpload.removeAt(0)
@@ -398,7 +398,7 @@ class Message {
                 keyboard = keyboard)
     }
 
-    fun send(callback: Callback<JSONObject>? = null) {
+    fun send(callback: Callback<JsonObject>? = null) {
         if (photosToUpload.size > 0) {
             val photo = photosToUpload[0]
             photosToUpload.removeAt(0)
@@ -483,38 +483,38 @@ class Message {
     /**
      * @return array of forwarded messages or []
      */
-    fun getForwardedMessages(): JSONArray {
+    fun getForwardedMessages(): JsonArray {
         if (hasFwds()) {
             val response = client.messages.getById(listOf(messageId!!))
 
-            if (response.has("response") && response.getJSONObject("response").getJSONArray("items").getJSONObject(0).has("fwd_messages")) {
-                return response.getJSONObject("response").getJSONArray("items").getJSONObject(0).getJSONArray("fwd_messages")
+            if (response.has("response") && response.getAsJsonObject("response").getAsJsonArray("items").getJsonObject(0).has("fwd_messages")) {
+                return response.getAsJsonObject("response").getAsJsonArray("items").getJsonObject(0).getAsJsonArray("fwd_messages")
             }
         }
 
-        return JSONArray()
+        return JsonArray()
     }
 
     /**
-     * @return JSONObject with reply message or {}
+     * @return JsonObject with reply message or {}
      */
-    fun getReplyMessage(): JSONObject {
+    fun getReplyMessage(): JsonObject {
         if (hasFwds()) {
             val response = client.messages.getById(listOf(messageId!!))
 
-            if (response.has("response") && response.getJSONObject("response").getJSONArray("items").getJSONObject(0).has("reply_message")) {
-                return response.getJSONObject("response").getJSONArray("items").getJSONObject(0).getJSONObject("reply_message")
+            if (response.has("response") && response.getAsJsonObject("response").getAsJsonArray("items").getJsonObject(0).has("reply_message")) {
+                return response.getAsJsonObject("response").getAsJsonArray("items").getJsonObject(0).getAsJsonObject("reply_message")
             }
         }
-        return JSONObject()
+        return JsonObject()
     }
 
     /**
      * Get attachments from message
      * @return JSONArray attachments
      */
-    fun getAttachments(): JSONArray {
-        val response: JSONObject = if (isMessageFromChat()) {
+    fun getAttachments(): JsonArray {
+        val response: JsonObject = if (isMessageFromChat()) {
             client.messages.getByConversationMessageId(chatIdLong, listOf(messageId!!), groupId = client.id)
         } else {
             client.messages.getById(listOf(messageId!!))
@@ -525,33 +525,33 @@ class Message {
         val stringVideos = ArrayList<String>()
         val stringAudios = ArrayList<String>()
 
-        if (response.has("response") && response.getJSONObject("response").getJSONArray("items").length() > 0) {
-            val items = response.getJSONObject("response").getJSONArray("items")
+        if (response.has("response") && response.getAsJsonObject("response").getAsJsonArray("items").size() > 0) {
+            val items = response.getAsJsonObject("response").getAsJsonArray("items")
 
-            if (items.getJSONObject(0).has("attachments")) {
-                val attachs = items.getJSONObject(0).getJSONArray("attachments")
+            if (items.getJsonObject(0).has("attachments")) {
+                val attachs = items.getJsonObject(0).getAsJsonArray("attachments")
 
                 for (item in attachs) {
-                    if (item is JSONObject) {
+                    if (item is JsonObject) {
                         if (item.has("type")) {
                             when (item.getString("type")) {
                                 "photo" -> {
-                                    val photo = item.getJSONObject("photo")
+                                    val photo = item.getAsJsonObject("photo")
                                     stringPhotos.add("photo${photo.getInt("owner_id")}_${photo.getInt("id")}")
                                 }
 
                                 "doc" -> {
-                                    val doc = item.getJSONObject("doc")
+                                    val doc = item.getAsJsonObject("doc")
                                     stringDocs.add("doc${doc.getInt("owner_id")}_${doc.getInt("id")}")
                                 }
 
                                 "video" -> {
-                                    val video = item.getJSONObject("video")
+                                    val video = item.getAsJsonObject("video")
                                     stringVideos.add("video${video.getInt("owner_id")}_${video.getInt("id")}")
                                 }
 
                                 "audio" -> {
-                                    val audio = item.getJSONObject("audio")
+                                    val audio = item.getAsJsonObject("audio")
                                     stringAudios.add("audio${audio.getInt("owner_id")}_${audio.getInt("id")}")
                                 }
                             }
@@ -568,7 +568,7 @@ class Message {
             }
         }
 
-        return JSONArray()
+        return JsonArray()
     }
 
     /*
@@ -694,22 +694,22 @@ class Message {
 
     /* Public getters */
 
-    fun getPhotos(): JSONArray? {
+    fun getPhotos(): JsonArray? {
         val attachments = getAttachments()
-        val answer = JSONArray()
-        for (i in 0 until attachments.length()) {
-            if (attachments.getJSONObject(i).getString("type").contains("photo")) answer.put(attachments.getJSONObject(i).getJSONObject("photo"))
+        val answer = JsonArray()
+        for (i in 0 until attachments.size()) {
+            if (attachments.getJsonObject(i).getString("type").contains("photo")) answer.add(attachments.getJsonObject(i).getAsJsonObject("photo"))
         }
         return answer
     }
 
     /* Private setters */
 
-    fun getVoiceMessage(): JSONObject? {
+    fun getVoiceMessage(): JsonObject? {
         val attachments = getAttachments()
-        var answer: JSONObject? = JSONObject()
-        for (i in 0 until attachments.length()) {
-            if (attachments.getJSONObject(i).getString("type").contains("doc") && attachments.getJSONObject(i).getJSONObject("doc").toString().contains("waveform")) answer = attachments.getJSONObject(i).getJSONObject("doc")
+        var answer: JsonObject? = JsonObject()
+        for (i in 0 until attachments.size()) {
+            if (attachments.getJsonObject(i).getString("type").contains("doc") && attachments.getJsonObject(i).getAsJsonObject("doc").toString().contains("waveform")) answer = attachments.getJsonObject(i).getAsJsonObject("doc")
         }
         return answer
     }
@@ -718,7 +718,7 @@ class Message {
         return chatId > 0 || chatIdLong > 0
     }
 
-    private fun setAttachments(attachments: JSONObject?) {
+    private fun setAttachments(attachments: JsonObject?) {
         if (attachments == null) return
         attachmentsOfReceivedMessage = attachments
     }

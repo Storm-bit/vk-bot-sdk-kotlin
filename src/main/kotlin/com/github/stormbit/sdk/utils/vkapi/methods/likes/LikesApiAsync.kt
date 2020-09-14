@@ -1,21 +1,23 @@
 package com.github.stormbit.sdk.utils.vkapi.methods.likes
 
+import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.utils.Utils.Companion.asInt
-import com.github.stormbit.sdk.utils.Utils.Companion.callSync
+import com.github.stormbit.sdk.utils.Utils.Companion.call
 import com.github.stormbit.sdk.utils.put
 import com.github.stormbit.sdk.utils.vkapi.methods.LikeType
 import com.github.stormbit.sdk.utils.vkapi.methods.LikesFilter
 import com.google.gson.JsonObject
 
 @Suppress("unused")
-class LikesApi(private val client: Client) {
+class LikesApiAsync(private val client: Client) {
     fun add(
             type: LikeType,
             itemId: Int,
             ownerId: Int?,
-            accessKey: String?
-    ): JsonObject = Methods.add.callSync(client, JsonObject()
+            accessKey: String?,
+            callback: Callback<JsonObject?>
+    ) = Methods.add.call(client, callback, JsonObject()
             .put("type", type.value)
             .put("owner_id", ownerId)
             .put("item_id", itemId)
@@ -25,8 +27,9 @@ class LikesApi(private val client: Client) {
     fun delete(
             type: LikeType,
             itemId: Int,
-            ownerId: Int?
-    ): JsonObject = Methods.delete.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.delete.call(client, callback, JsonObject()
             .put("type", type.value)
             .put("owner_id", ownerId)
             .put("item_id", itemId)
@@ -41,8 +44,9 @@ class LikesApi(private val client: Client) {
             onlyFriends: Boolean,
             offset: Int,
             count: Int,
-            skipOwn: Boolean
-    ): JsonObject = Methods.getList.callSync(client, JsonObject()
+            skipOwn: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.getList.call(client, callback, JsonObject()
             .put("type", type.value)
             .put("item_id", itemId)
             .put("owner_id", ownerId)
@@ -64,8 +68,9 @@ class LikesApi(private val client: Client) {
             onlyFriends: Boolean,
             offset: Int,
             count: Int,
-            skipOwn: Boolean
-    ): JsonObject = Methods.getList.callSync(client, JsonObject()
+            skipOwn: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.getList.call(client, callback, JsonObject()
             .put("type", type.value)
             .put("item_id", itemId)
             .put("owner_id", ownerId)
@@ -81,8 +86,9 @@ class LikesApi(private val client: Client) {
             type: LikeType,
             itemId: Int,
             ownerId: Int?,
-            userId: Int?
-    ): JsonObject = Methods.isLiked.callSync(client, JsonObject()
+            userId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.isLiked.call(client, callback, JsonObject()
             .put("type", type.value)
             .put("owner_id", ownerId)
             .put("item_id", itemId)

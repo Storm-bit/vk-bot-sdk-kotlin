@@ -1,8 +1,9 @@
 package com.github.stormbit.sdk.utils.vkapi.methods.photos
 
+import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.utils.Utils.Companion.asInt
-import com.github.stormbit.sdk.utils.Utils.Companion.callSync
+import com.github.stormbit.sdk.utils.Utils.Companion.call
 import com.github.stormbit.sdk.utils.put
 import com.github.stormbit.sdk.utils.vkapi.methods.*
 import com.google.gson.JsonArray
@@ -10,13 +11,14 @@ import com.google.gson.JsonObject
 import javax.print.attribute.standard.Media
 
 @Suppress("unused")
-class PhotosApi(private val client: Client) {
+class PhotosApiAsync(private val client: Client) {
 
     fun confirmTag(
             photoId: Int,
             tagId: Int,
-            ownerId: Int?
-    ): JsonObject = Methods.confirmTag.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.confirmTag.call(client, callback, JsonObject()
             .put("photo_id", photoId)
             .put("tag_id", tagId)
             .put("owner_id", ownerId)
@@ -26,8 +28,9 @@ class PhotosApi(private val client: Client) {
     fun copy(
             ownerId: Int,
             photoId: Int,
-            accessKey: String?
-    ): JsonObject = Methods.copy.callSync(client, JsonObject()
+            accessKey: String?,
+            callback: Callback<JsonObject?>
+    ) = Methods.copy.call(client, callback, JsonObject()
             .put("owner_id", ownerId)
             .put("photo_id", photoId)
             .put("access_key", accessKey)
@@ -41,8 +44,9 @@ class PhotosApi(private val client: Client) {
             privacyComment: PrivacySettings,
             groupId: Int?,
             isUploadByAdminsOnly: Boolean,
-            isCommentsDisabled: Boolean
-    ): JsonObject = Methods.createAlbum.callSync(client, JsonObject()
+            isCommentsDisabled: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.createAlbum.call(client, callback, JsonObject()
             .put("title", title)
             .put("description", description)
             .put("privacy_view", privacyView.toRequestString())
@@ -61,8 +65,9 @@ class PhotosApi(private val client: Client) {
             stickerId: Int?,
             fromGroup: Boolean,
             accessKey: String?,
-            guid: String?
-    ): JsonObject = Methods.createComment.callSync(client, JsonObject()
+            guid: String?,
+            callback: Callback<JsonObject?>
+    ) = Methods.createComment.call(client, callback, JsonObject()
             .put("photo_id", photoId)
             .put("owner_id", ownerId)
             .put("message", message)
@@ -76,8 +81,9 @@ class PhotosApi(private val client: Client) {
 
     fun delete(
             photoId: Int,
-            ownerId: Int?
-    ): JsonObject = Methods.delete.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.delete.call(client, callback, JsonObject()
             .put("photo_id", photoId)
             .put("owner_id", ownerId)
     )
@@ -85,8 +91,9 @@ class PhotosApi(private val client: Client) {
 
     fun deleteAlbum(
             albumId: Int,
-            groupId: Int?
-    ): JsonObject = Methods.deleteAlbum.callSync(client, JsonObject()
+            groupId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.deleteAlbum.call(client, callback, JsonObject()
             .put("album_id", albumId)
             .put("group_id", groupId)
     )
@@ -94,8 +101,9 @@ class PhotosApi(private val client: Client) {
 
     fun deleteComment(
             commentId: Int,
-            ownerId: Int?
-    ): JsonObject = Methods.deleteComment.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.deleteComment.call(client, callback, JsonObject()
             .put("comment_id", commentId)
             .put("owner_id", ownerId)
     )
@@ -109,8 +117,9 @@ class PhotosApi(private val client: Client) {
             longitude: Double?,
             placeName: String?,
             foursquareId: String?,
-            deletePlace: Boolean
-    ): JsonObject = Methods.edit.callSync(client, JsonObject()
+            deletePlace: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.edit.call(client, callback, JsonObject()
             .put("photo_id", photoId)
             .put("owner_id", ownerId)
             .put("caption", caption)
@@ -130,8 +139,9 @@ class PhotosApi(private val client: Client) {
             privacyView: PrivacySettings?,
             privacyComment: PrivacySettings?,
             isUploadByAdminsOnly: Boolean?,
-            isCommentsDisabled: Boolean?
-    ): JsonObject = Methods.editAlbum.callSync(client, JsonObject()
+            isCommentsDisabled: Boolean?,
+            callback: Callback<JsonObject?>
+    ) = Methods.editAlbum.call(client, callback, JsonObject()
             .put("album_id", albumId)
             .put("owner_id", ownerId)
             .put("title", title)
@@ -147,8 +157,9 @@ class PhotosApi(private val client: Client) {
             commentId: Int,
             ownerId: Int?,
             message: String?,
-            attachments: List<String>?
-    ): JsonObject = Methods.editComment.callSync(client, JsonObject()
+            attachments: List<String>?,
+            callback: Callback<JsonObject?>
+    ) = Methods.editComment.call(client, callback, JsonObject()
             .put("comment_id", commentId)
             .put("owner_id", ownerId)
             .put("message", message)
@@ -165,8 +176,9 @@ class PhotosApi(private val client: Client) {
             feedType: FeedType?,
             feed: Int?,
             offset: Int,
-            count: Int
-    ): JsonObject = Methods.get.callSync(client, JsonObject()
+            count: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.get.call(client, callback, JsonObject()
             .put("album_id", album.value)
             .put("owner_id", ownerId)
             .put("photo_ids", photoIds?.joinToString(","))
@@ -186,8 +198,9 @@ class PhotosApi(private val client: Client) {
             count: Int,
             needSystem: Boolean,
             needCovers: Boolean,
-            needPhotoSizes: Boolean
-    ): JsonObject = Methods.getAlbums.callSync(client, JsonObject()
+            needPhotoSizes: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.getAlbums.call(client, callback, JsonObject()
             .put("album_ids", albumIds?.joinToString(","))
             .put("owner_id", ownerId)
             .put("offset", offset)
@@ -199,15 +212,17 @@ class PhotosApi(private val client: Client) {
 
 
     fun getAlbumsCountGroup(
-            groupId: Int
-    ): JsonObject = Methods.getAlbumsCount.callSync(client, JsonObject()
+            groupId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getAlbumsCount.call(client, callback, JsonObject()
             .put("group_id", groupId)
     )
 
 
     fun getAlbumsCountUser(
-            userId: Int?
-    ): JsonObject = Methods.getAlbumsCount.callSync(client, JsonObject()
+            userId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.getAlbumsCount.call(client, callback, JsonObject()
             .put("user_id", userId)
     )
 
@@ -219,8 +234,9 @@ class PhotosApi(private val client: Client) {
             count: Int,
             noServiceAlbums: Boolean,
             needHidden: Boolean,
-            skipHidden: Boolean
-    ): JsonObject = Methods.getAll.callSync(client, JsonObject()
+            skipHidden: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.getAll.call(client, callback, JsonObject()
             .put("owner_id", ownerId)
             .put("extended", extended.asInt())
             .put("offset", offset)
@@ -236,8 +252,9 @@ class PhotosApi(private val client: Client) {
             albumId: Int?,
             needLikes: Boolean,
             offset: Int,
-            count: Int
-    ): JsonObject = Methods.getAllComments.callSync(client, JsonObject()
+            count: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getAllComments.call(client, callback, JsonObject()
             .put("owner_id", ownerId)
             .put("album_id", albumId)
             .put("need_likes", needLikes.asInt())
@@ -248,8 +265,9 @@ class PhotosApi(private val client: Client) {
 
     fun getById(
             photos: List<Media>,
-            extended: Boolean
-    ): JsonObject = Methods.getById.callSync(client, JsonObject()
+            extended: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.getById.call(client, callback, JsonObject()
             .put("photos", photos.joinToString(","))
             .put("extended", extended.asInt())
     )
@@ -259,8 +277,9 @@ class PhotosApi(private val client: Client) {
             chatId: Int,
             cropX: Int? = null,
             cropY: Int? = null,
-            cropWidth: Int? = null
-    ): JsonObject = Methods.getChatUploadServer.callSync(client, JsonObject()
+            cropWidth: Int? = null,
+            callback: Callback<JsonObject?>
+    ) = Methods.getChatUploadServer.call(client, callback, JsonObject()
             .put("chat_id", chatId)
             .put("crop_x", cropX)
             .put("crop_y", cropY)
@@ -278,8 +297,9 @@ class PhotosApi(private val client: Client) {
             sort: CommentsSort,
             accessKey: String?,
             extended: Boolean,
-            fields: List<ObjectField>
-    ): JsonObject = Methods.getComments.callSync(client, JsonObject()
+            fields: List<ObjectField>,
+            callback: Callback<JsonObject?>
+    ) = Methods.getComments.call(client, callback, JsonObject()
             .put("photo_id", photoId)
             .put("owner_id", ownerId)
             .put("need_likes", needLikes.asInt())
@@ -294,8 +314,9 @@ class PhotosApi(private val client: Client) {
 
 
     fun getMarketAlbumUploadServer(
-            groupId: Int
-    ): JsonObject = Methods.getMarketAlbumUploadServer.callSync(client, JsonObject()
+            groupId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getMarketAlbumUploadServer.call(client, callback, JsonObject()
             .put("group_id", groupId)
     )
 
@@ -305,8 +326,9 @@ class PhotosApi(private val client: Client) {
             isMainPhoto: Boolean,
             cropX: Int?,
             cropY: Int?,
-            cropWidth: Int?
-    ): JsonObject = Methods.getMarketUploadServer.callSync(client, JsonObject()
+            cropWidth: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.getMarketUploadServer.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("main_photo", isMainPhoto.asInt())
             .put("crop_x", cropX)
@@ -316,16 +338,18 @@ class PhotosApi(private val client: Client) {
 
 
     fun getMessagesUploadServer(
-            peerId: Int
-    ): JsonObject = Methods.getMessagesUploadServer.callSync(client, JsonObject()
-            .put("peer_id", peerId)
-    ).getAsJsonObject("response")
+            peerId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getMessagesUploadServer.call(client, JsonObject()
+            .put("peer_id", peerId), callback = {callback.onResult(it!!.getAsJsonObject("response"))}
+    )
 
 
     fun getNewTags(
             offset: Int,
-            count: Int
-    ): JsonObject = Methods.getNewTags.callSync(client, JsonObject()
+            count: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getNewTags.call(client, callback, JsonObject()
             .put("offset", offset)
             .put("count", count)
     )
@@ -336,8 +360,9 @@ class PhotosApi(private val client: Client) {
             cropX: Int,
             cropY: Int,
             cropX2: Int,
-            cropY2: Int
-    ): JsonObject = Methods.getOwnerCoverPhotoUploadServer.callSync(client, JsonObject()
+            cropY2: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getOwnerCoverPhotoUploadServer.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("crop_x", cropX)
             .put("crop_y", cropY)
@@ -347,8 +372,9 @@ class PhotosApi(private val client: Client) {
 
 
     fun getOwnerPhotoUploadServer(
-            ownerId: Int?
-    ): JsonObject = Methods.getOwnerPhotoUploadServer.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.getOwnerPhotoUploadServer.call(client, callback, JsonObject()
             .put("owner_id", ownerId)
     )
 
@@ -356,8 +382,9 @@ class PhotosApi(private val client: Client) {
     fun getTags(
             photoId: Int,
             ownerId: Int?,
-            accessKey: String?
-    ): JsonObject = Methods.getTags.callSync(client, JsonObject()
+            accessKey: String?,
+            callback: Callback<JsonObject?>
+    ) = Methods.getTags.call(client, callback, JsonObject()
             .put("photo_id", photoId)
             .put("owner_id", ownerId)
             .put("access_key", accessKey)
@@ -366,8 +393,9 @@ class PhotosApi(private val client: Client) {
 
     fun getUploadServer(
             albumId: Int,
-            groupId: Int? = null
-    ): JsonObject = Methods.getUploadServer.callSync(client, JsonObject()
+            groupId: Int? = null,
+            callback: Callback<JsonObject?>
+    ) = Methods.getUploadServer.call(client, callback, JsonObject()
             .put("album_id", albumId)
             .put("group_id", groupId)
     )
@@ -378,8 +406,9 @@ class PhotosApi(private val client: Client) {
             offset: Int,
             count: Int,
             extended: Boolean,
-            sortDescending: Boolean
-    ): JsonObject = Methods.getUserPhotos.callSync(client, JsonObject()
+            sortDescending: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.getUserPhotos.call(client, callback, JsonObject()
             .put("user_id", userId)
             .put("offset", offset)
             .put("count", count)
@@ -389,8 +418,9 @@ class PhotosApi(private val client: Client) {
 
 
     fun getWallUploadServer(
-            groupId: Int?
-    ): JsonObject = Methods.getWallUploadServer.callSync(client, JsonObject()
+            groupId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.getWallUploadServer.call(client, callback, JsonObject()
             .put("group_id", groupId)
     )
 
@@ -398,8 +428,9 @@ class PhotosApi(private val client: Client) {
     fun makeCover(
             photoId: Int,
             albumId: Int,
-            ownerId: Int?
-    ): JsonObject = Methods.makeCover.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.makeCover.call(client, callback, JsonObject()
             .put("photo_id", photoId)
             .put("album_id", albumId)
             .put("owner_id", ownerId)
@@ -409,8 +440,9 @@ class PhotosApi(private val client: Client) {
     fun move(
             photoId: Int,
             targetAlbumId: Int,
-            ownerId: Int?
-    ): JsonObject = Methods.move.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.move.call(client, callback, JsonObject()
             .put("photo_id", photoId)
             .put("target_album_id", targetAlbumId)
             .put("owner_id", ownerId)
@@ -424,8 +456,9 @@ class PhotosApi(private val client: Client) {
             y: Double,
             x2: Double,
             y2: Double,
-            ownerId: Int?
-    ): JsonObject = Methods.putTag.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.putTag.call(client, callback, JsonObject()
             .put("photo_id", photoId)
             .put("user_id", userId)
             .put("x", x)
@@ -439,8 +472,9 @@ class PhotosApi(private val client: Client) {
     fun removeTag(
             photoId: Int,
             tagId: Int,
-            ownerId: Int?
-    ): JsonObject = Methods.removeTag.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.removeTag.call(client, callback, JsonObject()
             .put("photo_id", photoId)
             .put("tag_id", tagId)
             .put("owner_id", ownerId)
@@ -451,8 +485,9 @@ class PhotosApi(private val client: Client) {
             albumId: Int,
             before: Int?,
             after: Int?,
-            ownerId: Int?
-    ): JsonObject = Methods.reorderAlbums.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.reorderAlbums.call(client, callback, JsonObject()
             .put("album_id", albumId)
             .put("before", before)
             .put("after", after)
@@ -464,8 +499,9 @@ class PhotosApi(private val client: Client) {
             photoId: Int,
             before: Int?,
             after: Int?,
-            ownerId: Int?
-    ): JsonObject = Methods.reorderPhotos.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.reorderPhotos.call(client, callback, JsonObject()
             .put("photo_id", photoId)
             .put("before", before)
             .put("after", after)
@@ -476,8 +512,9 @@ class PhotosApi(private val client: Client) {
     fun report(
             ownerId: Int,
             photoId: Int,
-            reason: PostReportComplaintType
-    ): JsonObject = Methods.report.callSync(client, JsonObject()
+            reason: PostReportComplaintType,
+            callback: Callback<JsonObject?>
+    ) = Methods.report.call(client, callback, JsonObject()
             .put("owner_id", ownerId)
             .put("photo_id", photoId)
             .put("reason", reason.value)
@@ -487,8 +524,9 @@ class PhotosApi(private val client: Client) {
     fun reportComment(
             ownerId: Int,
             commentId: Int,
-            reason: PostReportComplaintType
-    ): JsonObject = Methods.reportComment.callSync(client, JsonObject()
+            reason: PostReportComplaintType,
+            callback: Callback<JsonObject?>
+    ) = Methods.reportComment.call(client, callback, JsonObject()
             .put("owner_id", ownerId)
             .put("comment_id", commentId)
             .put("reason", reason.value)
@@ -497,8 +535,9 @@ class PhotosApi(private val client: Client) {
 
     fun restore(
             photoId: Int,
-            ownerId: Int?
-    ): JsonObject = Methods.restore.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.restore.call(client, callback, JsonObject()
             .put("photo_id", photoId)
             .put("owner_id", ownerId)
     )
@@ -506,8 +545,9 @@ class PhotosApi(private val client: Client) {
 
     fun restoreComment(
             commentId: Int,
-            ownerId: Int?
-    ): JsonObject = Methods.restoreComment.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.restoreComment.call(client, callback, JsonObject()
             .put("comment_id", commentId)
             .put("owner_id", ownerId)
     )
@@ -521,8 +561,9 @@ class PhotosApi(private val client: Client) {
             latitude: Double?,
             longitude: Double?,
             caption: String?,
-            groupId: Int?
-    ): JsonObject = Methods.save.callSync(client, JsonObject()
+            groupId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.save.call(client, callback, JsonObject()
             .put("album_id", albumId)
             .put("server", server)
             .put("photos_list", photosList)
@@ -538,8 +579,9 @@ class PhotosApi(private val client: Client) {
             groupId: Int,
             server: Int,
             photo: String,
-            hash: String
-    ): JsonObject = Methods.saveMarketAlbumPhoto.callSync(client, JsonObject()
+            hash: String,
+            callback: Callback<JsonObject?>
+    ) = Methods.saveMarketAlbumPhoto.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("server", server)
             .put("photo", photo)
@@ -553,8 +595,9 @@ class PhotosApi(private val client: Client) {
             hash: String,
             cropData: String?,
             cropHash: String?,
-            groupId: Int?
-    ): JsonObject = Methods.saveMarketPhoto.callSync(client, JsonObject()
+            groupId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.saveMarketPhoto.call(client, callback, JsonObject()
             .put("server", server)
             .put("photo", photo)
             .put("hash", hash)
@@ -567,18 +610,22 @@ class PhotosApi(private val client: Client) {
     fun saveMessagesPhoto(
             server: Int,
             photo: String,
-            hash: String
-    ): JsonArray = Methods.saveMessagesPhoto.callSync(client, JsonObject()
+            hash: String,
+            callback: Callback<JsonArray?>
+    ) = Methods.saveMessagesPhoto.call(client, JsonObject()
             .put("server", server)
             .put("photo", photo)
-            .put("hash", hash)
-    ).getAsJsonArray("response")
+            .put("hash", hash),
+
+            callback = {callback.onResult(it!!.getAsJsonArray("response"))}
+    )
 
 
     fun saveOwnerCoverPhoto(
             photo: String,
-            hash: String
-    ): JsonObject = Methods.saveOwnerCoverPhoto.callSync(client, JsonObject()
+            hash: String,
+            callback: Callback<JsonObject?>
+    ) = Methods.saveOwnerCoverPhoto.call(client, callback, JsonObject()
             .put("photo", photo)
             .put("hash", hash)
     )
@@ -587,8 +634,9 @@ class PhotosApi(private val client: Client) {
     fun saveOwnerPhoto(
             server: Int,
             photo: String,
-            hash: String
-    ): JsonObject = Methods.saveOwnerPhoto.callSync(client, JsonObject()
+            hash: String,
+            callback: Callback<JsonObject?>
+    ) = Methods.saveOwnerPhoto.call(client, callback, JsonObject()
             .put("server", server)
             .put("photo", photo)
             .put("hash", hash)
@@ -603,8 +651,9 @@ class PhotosApi(private val client: Client) {
             groupId: Int?,
             latitude: Double?,
             longitude: Double?,
-            caption: String?
-    ): JsonObject = Methods.saveWallPhoto.callSync(client, JsonObject()
+            caption: String?,
+            callback: Callback<JsonObject?>
+    ) = Methods.saveWallPhoto.call(client, callback, JsonObject()
             .put("server", server)
             .put("photo", photo)
             .put("hash", hash)
@@ -625,8 +674,9 @@ class PhotosApi(private val client: Client) {
             sort: PhotoSearchSort,
             offset: Int,
             count: Int,
-            radius: Int
-    ): JsonObject = Methods.search.callSync(client, JsonObject()
+            radius: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.search.call(client, callback, JsonObject()
             .put("q", query)
             .put("lat", latitude)
             .put("long", longitude)

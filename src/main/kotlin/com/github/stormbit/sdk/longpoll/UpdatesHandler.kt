@@ -4,7 +4,7 @@ import com.github.stormbit.sdk.callbacks.AbstractCallback
 import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.clients.Client.Companion.scheduler
-import org.json.JSONArray
+import com.google.gson.JsonArray
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
@@ -23,7 +23,7 @@ abstract class UpdatesHandler(private val client: Client) : Thread() {
     protected val chatCallbacks = ConcurrentHashMap<String, AbstractCallback>()
     protected val abstractCallbacks = ConcurrentHashMap<String, AbstractCallback>()
 
-    fun handle(updates: JSONArray) {
+    fun handle(updates: JsonArray) {
         this.queue.putAll(updates)
     }
 

@@ -1,8 +1,9 @@
 package com.github.stormbit.sdk.utils.vkapi.methods.groups
 
+import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.utils.Utils.Companion.asInt
-import com.github.stormbit.sdk.utils.Utils.Companion.callSync
+import com.github.stormbit.sdk.utils.Utils.Companion.call
 import com.github.stormbit.sdk.utils.Utils.Companion.unixtime
 import com.github.stormbit.sdk.utils.put
 import com.github.stormbit.sdk.utils.serialize
@@ -11,7 +12,7 @@ import io.ktor.util.date.*
 import com.google.gson.JsonObject
 
 @Suppress("unused")
-class GroupsApi(private val client: Client) {
+class GroupsApiAsync(private val client: Client) {
     fun addAddress(
             groupId: Int,
             title: String,
@@ -25,8 +26,9 @@ class GroupsApi(private val client: Client) {
             phone: String?,
             workInfoStatus: Address.WorkInfoStatus?,
             timetable: Address.Timetable?,
-            isMainAddress: Boolean?
-    ): JsonObject = Methods.addAddress.callSync(client, JsonObject()
+            isMainAddress: Boolean?,
+            callback: Callback<JsonObject?>
+    ) = Methods.addAddress.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("title", title)
             .put("address", address)
@@ -46,8 +48,9 @@ class GroupsApi(private val client: Client) {
             groupId: Int,
             url: String,
             title: String,
-            secretKey: String?
-    ): JsonObject = Methods.addCallbackServer.callSync(client, JsonObject()
+            secretKey: String?,
+            callback: Callback<JsonObject?>
+    ) = Methods.addCallbackServer.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("url", url)
             .put("title", title)
@@ -57,8 +60,9 @@ class GroupsApi(private val client: Client) {
     fun addLink(
             groupId: Int,
             link: String,
-            text: String?
-    ): JsonObject = Methods.addLink.callSync(client, JsonObject()
+            text: String?,
+            callback: Callback<JsonObject?>
+    ) = Methods.addLink.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("link", link)
             .put("text", text)
@@ -66,8 +70,9 @@ class GroupsApi(private val client: Client) {
 
     fun approveRequest(
             groupId: Int,
-            userId: Int
-    ): JsonObject = Methods.approveRequest.callSync(client, JsonObject()
+            userId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.approveRequest.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("user_id", userId)
     )
@@ -78,8 +83,9 @@ class GroupsApi(private val client: Client) {
             endDate: GMTDate?,
             reason: Community.CommunityBan.Reason,
             comment: String?,
-            commentVisible: Boolean
-    ): JsonObject = Methods.ban.callSync(client, JsonObject()
+            commentVisible: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.ban.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("owner_id", ownerId)
             .put("end_date", endDate?.unixtime)
@@ -93,8 +99,9 @@ class GroupsApi(private val client: Client) {
             type: GroupType,
             description: String? = null,
             publicCategory: Int? = null,
-            subtype: PublicSubtype? = null
-    ): JsonObject = Methods.create.callSync(client, JsonObject()
+            subtype: PublicSubtype? = null,
+            callback: Callback<JsonObject?>
+    ) = Methods.create.call(client, callback, JsonObject()
             .put("title", title)
             .put("description", description)
             .put("type", type.value)
@@ -104,60 +111,70 @@ class GroupsApi(private val client: Client) {
 
     fun createEvent(
             title: String,
-            description: String
-    ): JsonObject = create(
+            description: String,
+            callback: Callback<JsonObject?>
+    ) = create(
             title = title,
             type = GroupType.EVENT,
-            description = description
+            description = description,
+            callback = callback
     )
 
     fun createGroup(
             title: String,
-            description: String
-    ): JsonObject = create(
+            description: String,
+            callback: Callback<JsonObject?>
+    ) = create(
             title = title,
             type = GroupType.GROUP,
-            description = description
+            description = description,
+            callback = callback
     )
 
     fun createPublic(
             title: String,
             subtype: PublicSubtype,
-            publicCategory: Int?
-    ): JsonObject = create(
+            publicCategory: Int?,
+            callback: Callback<JsonObject?>
+    ) = create(
             title = title,
             type = GroupType.PUBLIC,
             publicCategory = publicCategory,
-            subtype = subtype
+            subtype = subtype,
+            callback = callback
     )
 
     fun deleteAddress(
             groupId: Int,
-            addressId: Int
-    ): JsonObject = Methods.deleteAddress.callSync(client, JsonObject()
+            addressId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.deleteAddress.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("address_id", addressId)
     )
 
     fun deleteCallbackServer(
             groupId: Int,
-            serverId: Int
-    ): JsonObject = Methods.deleteCallbackServer.callSync(client, JsonObject()
+            serverId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.deleteCallbackServer.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("server_id", serverId)
     )
 
     fun deleteLink(
             groupId: Int,
-            linkId: Int
-    ): JsonObject = Methods.deleteLink.callSync(client, JsonObject()
+            linkId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.deleteLink.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("link_id", linkId)
     )
 
     fun disableOnline(
-            groupId: Int
-    ): JsonObject = Methods.disableOnline.callSync(client, JsonObject()
+            groupId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.disableOnline.call(client, callback, JsonObject()
             .put("group_id", groupId)
     )
 
@@ -206,8 +223,9 @@ class GroupsApi(private val client: Client) {
             obsceneStopwords: Boolean? = null,
             obsceneWords: List<String>? = null,
             mainSection: Community.MainSectionType? = null,
-            secondarySection: Community.MainSectionType? = null
-    ): JsonObject = Methods.edit.callSync(client, JsonObject()
+            secondarySection: Community.MainSectionType? = null,
+            callback: Callback<JsonObject?>
+    ) = Methods.edit.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("title", title)
             .put("description", description)
@@ -269,8 +287,9 @@ class GroupsApi(private val client: Client) {
             phone: String?,
             workInfoStatus: Address.WorkInfoStatus?,
             timetable: Address.Timetable?,
-            isMainAddress: Boolean?
-    ): JsonObject = Methods.editAddress.callSync(client, JsonObject()
+            isMainAddress: Boolean?,
+            callback: Callback<JsonObject?>
+    ) = Methods.editAddress.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("address_id", addressId)
             .put("title", title)
@@ -327,8 +346,9 @@ class GroupsApi(private val client: Client) {
             obsceneStopwords: Boolean?,
             obsceneWords: List<String>?,
             mainSection: Community.MainSectionType?,
-            secondarySection: Community.MainSectionType?
-    ): JsonObject = edit(
+            secondarySection: Community.MainSectionType?,
+            callback: Callback<JsonObject?>
+    ) = edit(
             groupId = groupId,
             title = title,
             description = description,
@@ -368,7 +388,8 @@ class GroupsApi(private val client: Client) {
             obsceneStopwords = obsceneStopwords,
             obsceneWords = obsceneWords,
             mainSection = mainSection,
-            secondarySection = secondarySection
+            secondarySection = secondarySection,
+            callback = callback
     )
 
     fun editEvent(
@@ -409,8 +430,9 @@ class GroupsApi(private val client: Client) {
             obsceneStopwords: Boolean?,
             obsceneWords: List<String>?,
             mainSection: Community.MainSectionType?,
-            secondarySection: Community.MainSectionType?
-    ): JsonObject = edit(
+            secondarySection: Community.MainSectionType?,
+            callback: Callback<JsonObject?>
+    ) = edit(
             groupId = groupId,
             title = title,
             description = description,
@@ -448,7 +470,8 @@ class GroupsApi(private val client: Client) {
             obsceneStopwords = obsceneStopwords,
             obsceneWords = obsceneWords,
             mainSection = mainSection,
-            secondarySection = secondarySection
+            secondarySection = secondarySection,
+            callback = callback
     )
 
     fun editGroup(
@@ -484,8 +507,9 @@ class GroupsApi(private val client: Client) {
             obsceneStopwords: Boolean?,
             obsceneWords: List<String>?,
             mainSection: Community.MainSectionType?,
-            secondarySection: Community.MainSectionType?
-    ): JsonObject = edit(
+            secondarySection: Community.MainSectionType?,
+            callback: Callback<JsonObject?>
+    ) = edit(
             groupId = groupId,
             title = title,
             description = description,
@@ -518,7 +542,8 @@ class GroupsApi(private val client: Client) {
             obsceneStopwords = obsceneStopwords,
             obsceneWords = obsceneWords,
             mainSection = mainSection,
-            secondarySection = secondarySection
+            secondarySection = secondarySection,
+            callback = callback
     )
 
     fun editCallbackServer(
@@ -526,8 +551,9 @@ class GroupsApi(private val client: Client) {
             serverId: Int,
             url: String,
             title: String,
-            secretKey: String?
-    ): JsonObject = Methods.editCallbackServer.callSync(client, JsonObject()
+            secretKey: String?,
+            callback: Callback<JsonObject?>
+    ) = Methods.editCallbackServer.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("server_id", serverId)
             .put("url", url)
@@ -538,8 +564,9 @@ class GroupsApi(private val client: Client) {
     fun editLink(
             groupId: Int,
             linkId: Int,
-            text: String?
-    ): JsonObject = Methods.editLink.callSync(client, JsonObject()
+            text: String?,
+            callback: Callback<JsonObject?>
+    ) = Methods.editLink.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("link_id", linkId)
             .put("text", text)
@@ -552,8 +579,9 @@ class GroupsApi(private val client: Client) {
             isContact: Boolean?,
             contactPosition: String?,
             contactPhone: String?,
-            contactEmail: String?
-    ): JsonObject = Methods.editManager.callSync(client, JsonObject()
+            contactEmail: String?,
+            callback: Callback<JsonObject?>
+    ) = Methods.editManager.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("user_id", userId)
             .put("role", role?.value)
@@ -570,8 +598,9 @@ class GroupsApi(private val client: Client) {
             countryId: Int?,
             cityId: Int?,
             latitude: Double?,
-            longitude: Double?
-    ): JsonObject = Methods.editPlace.callSync(client, JsonObject()
+            longitude: Double?,
+            callback: Callback<JsonObject?>
+    ) = Methods.editPlace.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("title", title)
             .put("address", address)
@@ -582,8 +611,9 @@ class GroupsApi(private val client: Client) {
     )
 
     fun enableOnline(
-            groupId: Int
-    ): JsonObject = Methods.enableOnline.callSync(client, JsonObject()
+            groupId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.enableOnline.call(client, callback, JsonObject()
             .put("group_id", groupId)
     )
 
@@ -591,8 +621,9 @@ class GroupsApi(private val client: Client) {
             userId: Int?,
             filter: GroupsFilter?,
             offset: Int,
-            count: Int
-    ): JsonObject = Methods.get.callSync(client, JsonObject()
+            count: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.get.call(client, callback, JsonObject()
             .put("user_id", userId)
             .put("filter", filter?.value)
             .put("offset", offset)
@@ -604,8 +635,9 @@ class GroupsApi(private val client: Client) {
             filter: GroupsFilter?,
             fields: List<CommunityOptionalField>?,
             offset: Int,
-            count: Int
-    ): JsonObject = Methods.get.callSync(client, JsonObject()
+            count: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.get.call(client, callback, JsonObject()
             .put("user_id", userId)
             .put("extended", 1)
             .put("filter", filter?.value)
@@ -621,9 +653,10 @@ class GroupsApi(private val client: Client) {
             longitude: Double?,
             offset: Int,
             count: Int,
-            fields: List<AddressOptionalFields>?
+            fields: List<AddressOptionalFields>?,
+            callback: Callback<JsonObject?>
 
-    ): JsonObject = Methods.getAddresses.callSync(client, JsonObject()
+    ) = Methods.getAddresses.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("address_ids", addressIds?.joinToString(","))
             .put("latitude", latitude)
@@ -638,8 +671,9 @@ class GroupsApi(private val client: Client) {
             offset: Int,
             count: Int,
             fields: List<ObjectField>,
-            ownerId: Int?
-    ): JsonObject = Methods.getBanned.callSync(client, JsonObject()
+            ownerId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.getBanned.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("offset", offset)
             .put("count", count)
@@ -649,54 +683,62 @@ class GroupsApi(private val client: Client) {
 
     fun getByScreenName(
             groupNames: List<String>,
-            communityFields: List<CommunityOptionalField>?
-    ): JsonObject = Methods.getById.callSync(client, JsonObject()
+            communityFields: List<CommunityOptionalField>?,
+            callback: Callback<JsonObject?>
+    ) = Methods.getById.call(client, callback, JsonObject()
             .put("group_ids", groupNames.joinToString(","))
             .put("fields", communityFields?.joinToString(",") { it.value })
     )
 
     fun getById(
             groupIds: List<Int>,
-            communityFields: List<CommunityOptionalField>?
-    ): JsonObject = getByScreenName(
+            communityFields: List<CommunityOptionalField>?,
+            callback: Callback<JsonObject?>
+    ) = getByScreenName(
             groupNames = groupIds.map(Int::toString),
-            communityFields = communityFields
+            communityFields = communityFields,
+            callback
     )
 
     fun getCallbackConfirmationCode(
-            groupId: Int
-    ): JsonObject = Methods.getCallbackConfirmationCode.callSync(client, JsonObject()
+            groupId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getCallbackConfirmationCode.call(client, callback, JsonObject()
             .put("group_id", groupId)
     )
 
     fun getCallbackServers(
             groupId: Int,
-            serverIds: List<Int>?
-    ): JsonObject = Methods.getCallbackServers.callSync(client, JsonObject()
+            serverIds: List<Int>?,
+            callback: Callback<JsonObject?>
+    ) = Methods.getCallbackServers.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("server_ids", serverIds?.joinToString(","))
     )
 
     fun getCallbackSettings(
             groupId: Int,
-            serverId: Int
-    ): JsonObject = Methods.getCallbackSettings.callSync(client, JsonObject()
+            serverId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getCallbackSettings.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("server_id", serverId)
     )
 
     fun getCatalog(
             categoryId: Int?,
-            subcategoryId: Int?
-    ): JsonObject = Methods.getCatalog.callSync(client, JsonObject()
+            subcategoryId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.getCatalog.call(client, callback, JsonObject()
             .put("category_id", categoryId)
             .put("subcategory_id", subcategoryId)
     )
 
     fun getCatalogInfo(
             extended: Boolean,
-            withSubcategories: Boolean
-    ): JsonObject = Methods.getCatalogInfo.callSync(client, JsonObject()
+            withSubcategories: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.getCatalogInfo.call(client, callback, JsonObject()
             .put("extended", extended.asInt())
             .put("subcategories", withSubcategories.asInt())
     )
@@ -706,8 +748,9 @@ class GroupsApi(private val client: Client) {
             offset: Int,
             count: Int,
             userFields: List<UserOptionalField>,
-            nameCase: NameCase
-    ): JsonObject = Methods.getInvitedUsers.callSync(client, JsonObject()
+            nameCase: NameCase,
+            callback: Callback<JsonObject?>
+    ) = Methods.getInvitedUsers.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("offset", offset)
             .put("count", count)
@@ -718,22 +761,25 @@ class GroupsApi(private val client: Client) {
     fun getInvites(
             offset: Int,
             count: Int,
-            extended: Boolean
-    ): JsonObject = Methods.getInvites.callSync(client, JsonObject()
+            extended: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.getInvites.call(client, callback, JsonObject()
             .put("offset", offset)
             .put("count", count)
             .put("extended", extended.asInt())
     )
 
     fun getLongPollServer(
-            groupId: Int
-    ): JsonObject = Methods.getLongPollServer.callSync(client, JsonObject()
+            groupId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getLongPollServer.call(client, callback, JsonObject()
             .put("group_id", groupId)
     )
 
     fun getLongPollSettings(
-            groupId: Int
-    ): JsonObject = Methods.getLongPollSettings.callSync(client, JsonObject()
+            groupId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getLongPollSettings.call(client, callback, JsonObject()
             .put("group_id", groupId)
     )
 
@@ -742,8 +788,9 @@ class GroupsApi(private val client: Client) {
             sort: CommunityMembersSort,
             offset: Int,
             count: Int,
-            onlyFriends: Boolean
-    ): JsonObject = Methods.getMembers.callSync(client, JsonObject()
+            onlyFriends: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.getMembers.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("sort", sort.value)
             .put("offset", offset)
@@ -757,8 +804,9 @@ class GroupsApi(private val client: Client) {
             offset: Int,
             count: Int,
             userFields: List<UserOptionalField>,
-            onlyFriends: Boolean
-    ): JsonObject = Methods.getMembers.callSync(client, JsonObject()
+            onlyFriends: Boolean,
+            callback: Callback<JsonObject?>
+    ) = Methods.getMembers.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("sort", sort.value)
             .put("offset", offset)
@@ -771,8 +819,9 @@ class GroupsApi(private val client: Client) {
             groupId: Int,
             sort: CommunityMembersSort,
             offset: Int,
-            count: Int
-    ): JsonObject = Methods.getMembers.callSync(client, JsonObject()
+            count: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getMembers.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("sort", sort.value)
             .put("offset", offset)
@@ -785,8 +834,9 @@ class GroupsApi(private val client: Client) {
             sort: CommunityMembersSort,
             offset: Int,
             count: Int,
-            userFields: List<UserOptionalField>
-    ): JsonObject = Methods.getMembers.callSync(client, JsonObject()
+            userFields: List<UserOptionalField>,
+            callback: Callback<JsonObject?>
+    ) = Methods.getMembers.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("sort", sort.value)
             .put("offset", offset)
@@ -796,16 +846,18 @@ class GroupsApi(private val client: Client) {
     )
 
     fun getOnlineStatus(
-            groupId: Int
-    ): JsonObject = Methods.getOnlineStatus.callSync(client, JsonObject()
+            groupId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getOnlineStatus.call(client, callback, JsonObject()
             .put("group_id", groupId)
     )
 
     fun getRequestsIds(
             groupId: Int,
             offset: Int,
-            count: Int
-    ): JsonObject = Methods.getRequests.callSync(client, JsonObject()
+            count: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getRequests.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("offset", offset)
             .put("count", count)
@@ -815,8 +867,9 @@ class GroupsApi(private val client: Client) {
             groupId: Int,
             offset: Int,
             count: Int,
-            userFields: List<UserOptionalField>
-    ): JsonObject = Methods.getRequests.callSync(client, JsonObject()
+            userFields: List<UserOptionalField>,
+            callback: Callback<JsonObject?>
+    ) = Methods.getRequests.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("offset", offset)
             .put("count", count)
@@ -824,25 +877,28 @@ class GroupsApi(private val client: Client) {
     )
 
     fun getSettings(
-            groupId: Int
-    ): JsonObject = Methods.getSettings.callSync(client, JsonObject()
+            groupId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.getSettings.call(client, callback, JsonObject()
             .put("group_id", groupId)
     )
 
-    fun getTokenPermissions(): JsonObject = Methods.getTokenPermissions.callSync(client, null)
+    fun getTokenPermissions(callback: Callback<JsonObject?>) = Methods.getTokenPermissions.call(client, callback, null)
 
     fun invite(
             groupId: Int,
-            userId: Int
-    ): JsonObject = Methods.invite.callSync(client, JsonObject()
+            userId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.invite.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("user_id", userId)
     )
 
     fun isMember(
             groupId: Int,
-            userId: Int?
-    ): JsonObject = Methods.isMember.callSync(client, JsonObject()
+            userId: Int?,
+            callback: Callback<JsonObject?>
+    ) = Methods.isMember.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("user_id", userId)
             .put("extended", 1)
@@ -850,30 +906,34 @@ class GroupsApi(private val client: Client) {
 
     fun isMembers(
             groupId: Int,
-            userIds: List<Int>
-    ): JsonObject = Methods.isMember.callSync(client, JsonObject()
+            userIds: List<Int>,
+            callback: Callback<JsonObject?>
+    ) = Methods.isMember.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("user_ids", userIds.joinToString(","))
     )
 
     fun join(
             groupId: Int,
-            notSure: Boolean?
-    ): JsonObject = Methods.join.callSync(client, JsonObject()
+            notSure: Boolean?,
+            callback: Callback<JsonObject?>
+    ) = Methods.join.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("not_sure", notSure?.asInt())
     )
 
     fun leave(
-            groupId: Int
-    ): JsonObject = Methods.leave.callSync(client, JsonObject()
+            groupId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.leave.call(client, callback, JsonObject()
             .put("group_id", groupId)
     )
 
     fun removeUser(
             groupId: Int,
-            userId: Int
-    ): JsonObject = Methods.removeUser.callSync(client, JsonObject()
+            userId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.removeUser.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("user_id", userId)
     )
@@ -881,8 +941,9 @@ class GroupsApi(private val client: Client) {
     fun reorderLink(
             groupId: Int,
             linkId: Int,
-            after: Int
-    ): JsonObject = Methods.reorderLink.callSync(client, JsonObject()
+            after: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.reorderLink.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("link_id", linkId)
             .put("after", after)
@@ -897,8 +958,9 @@ class GroupsApi(private val client: Client) {
             hasMarket: Boolean?,
             sort: CommunitySearchOrder,
             offset: Int,
-            count: Int
-    ): JsonObject = Methods.search.callSync(client, JsonObject()
+            count: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.search.call(client, callback, JsonObject()
             .put("q", query)
             .put("type", type?.value)
             .put("country_id", countryId)
@@ -954,8 +1016,9 @@ class GroupsApi(private val client: Client) {
             groupChangeSettings: Boolean?,
             groupChangePhoto: Boolean?,
             vkPayTransaction: Boolean?,
-            appPayload: Boolean?
-    ): JsonObject = Methods.setCallbackSettings.callSync(client, JsonObject()
+            appPayload: Boolean?,
+            callback: Callback<JsonObject?>
+    ) = Methods.setCallbackSettings.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("server_id", serverId)
             .put("api_version", apiVersion)
@@ -1046,8 +1109,9 @@ class GroupsApi(private val client: Client) {
             groupChangeSettings: Boolean?,
             groupChangePhoto: Boolean?,
             vkPayTransaction: Boolean?,
-            appPayload: Boolean?
-    ): JsonObject = Methods.setLongPollSettings.callSync(client, JsonObject()
+            appPayload: Boolean?,
+            callback: Callback<JsonObject?>
+    ) = Methods.setLongPollSettings.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("api_version", apiVersion)
             .put("enabled", enabled?.asInt())
@@ -1099,8 +1163,9 @@ class GroupsApi(private val client: Client) {
             messages: Boolean?,
             botsCapabilities: Boolean?,
             botsStartButton: Boolean?,
-            botsAddToChat: Boolean?
-    ): JsonObject = Methods.setSettings.callSync(client, JsonObject()
+            botsAddToChat: Boolean?,
+            callback: Callback<JsonObject?>
+    ) = Methods.setSettings.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("messages", messages?.asInt())
             .put("bots_capabilities", botsCapabilities?.asInt())
@@ -1110,8 +1175,9 @@ class GroupsApi(private val client: Client) {
 
     fun unban(
             groupId: Int,
-            ownerId: Int
-    ): JsonObject = Methods.unban.callSync(client, JsonObject()
+            ownerId: Int,
+            callback: Callback<JsonObject?>
+    ) = Methods.unban.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("owner_id", ownerId)
     )

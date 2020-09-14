@@ -1,6 +1,6 @@
 package com.github.stormbit.sdk.utils.vkapi.keyboard
 
-import org.json.JSONObject
+import com.google.gson.JsonObject
 import java.io.Serializable
 import java.util.*
 
@@ -21,22 +21,22 @@ class KeyboardBuilder(buildd: KeyboardBuilder.() -> Unit) : Serializable {
         return this
     }
 
-    fun locationButton(payload: JSONObject): KeyboardBuilder {
+    fun locationButton(payload: JsonObject): KeyboardBuilder {
         rows.add(listOf(Keyboard.Button(Keyboard.Button.Action(Keyboard.Button.Action.Type.LOCATION, payload))))
         return this
     }
 
-    fun vkPayButton(hash: String, payload: JSONObject): KeyboardBuilder {
+    fun vkPayButton(hash: String, payload: JsonObject): KeyboardBuilder {
         rows.add(listOf(Keyboard.Button(Keyboard.Button.Action(Keyboard.Button.Action.Type.VK_PAY, payload, hash))))
         return this
     }
 
-    fun vkAppButton(label: String, payload: JSONObject): KeyboardBuilder {
+    fun vkAppButton(label: String, payload: JsonObject): KeyboardBuilder {
         rows.add(listOf(Keyboard.Button(Keyboard.Button.Action(Keyboard.Button.Action.Type.LOCATION, label, payload))))
         return this
     }
 
-    fun openLinkButton(label: String, link: String, payload: JSONObject): KeyboardBuilder {
+    fun openLinkButton(label: String, link: String, payload: JsonObject): KeyboardBuilder {
         rows.add(listOf(Keyboard.Button(Keyboard.Button.Action(Keyboard.Button.Action.Type.LOCATION, label, link, payload))))
         return this
     }
