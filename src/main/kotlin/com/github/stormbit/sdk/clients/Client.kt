@@ -17,12 +17,22 @@ import com.github.stormbit.sdk.utils.vkapi.apis.APIGroup
 import com.github.stormbit.sdk.utils.vkapi.apis.APIUser
 import com.github.stormbit.sdk.utils.vkapi.methods.likes.LikesApi
 import com.github.stormbit.sdk.utils.vkapi.methods.docs.DocsApi
+import com.github.stormbit.sdk.utils.vkapi.methods.docs.DocsApiAsync
 import com.github.stormbit.sdk.utils.vkapi.methods.friends.FriendsApi
+import com.github.stormbit.sdk.utils.vkapi.methods.friends.FriendsApiAsync
 import com.github.stormbit.sdk.utils.vkapi.methods.groups.GroupsApi
+import com.github.stormbit.sdk.utils.vkapi.methods.groups.GroupsApiAsync
+import com.github.stormbit.sdk.utils.vkapi.methods.likes.LikesApiAsync
 import com.github.stormbit.sdk.utils.vkapi.methods.messages.MessagesApi
+import com.github.stormbit.sdk.utils.vkapi.methods.messages.MessagesApiAsync
 import com.github.stormbit.sdk.utils.vkapi.methods.photos.PhotosApi
+import com.github.stormbit.sdk.utils.vkapi.methods.photos.PhotosApiAsync
 import com.github.stormbit.sdk.utils.vkapi.methods.users.UsersApi
+import com.github.stormbit.sdk.utils.vkapi.methods.users.UsersApiAsync
 import com.github.stormbit.sdk.utils.vkapi.methods.video.VideoApi
+import com.github.stormbit.sdk.utils.vkapi.methods.video.VideoApiAsync
+import com.github.stormbit.sdk.utils.vkapi.methods.wall.WallApi
+import com.github.stormbit.sdk.utils.vkapi.methods.wall.WallApiAsync
 import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.*
@@ -54,6 +64,17 @@ abstract class Client {
     val docs = DocsApi(this)
     val friends = FriendsApi(this)
     val likes = LikesApi(this)
+    val wall = WallApi(this)
+
+    val messagesAsync = MessagesApiAsync(this)
+    val groupsAsync = GroupsApiAsync(this)
+    val usersAsync = UsersApiAsync(this)
+    val photosAsync = PhotosApiAsync(this)
+    val videosAsync = VideoApiAsync(this)
+    val docsAsync = DocsApiAsync(this)
+    val friendsAsync = FriendsApiAsync(this)
+    val likesAsync = LikesApiAsync(this)
+    val wallAsync = WallApiAsync(this)
 
     companion object {
         /**

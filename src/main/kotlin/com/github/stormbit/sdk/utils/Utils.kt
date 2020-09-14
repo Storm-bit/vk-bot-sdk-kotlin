@@ -2,6 +2,7 @@
 
 package com.github.stormbit.sdk.utils
 
+import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.objects.Chat
 import com.github.stormbit.sdk.utils.Utils.Companion.EnumDescriptor
@@ -91,6 +92,9 @@ class Utils {
         }
 
         fun String.callSync(client: Client, params: JSONObject?): JSONObject = client.api.callSync(this, params)
+
+        fun String.call(client: Client, params: JSONObject?, callback: Callback<JSONObject?>) = client.api.call(this, params, callback)
+        fun String.call(client: Client, callback: Callback<JSONObject?>, vararg params: Any?) = client.api.call(this, callback, *params)
 
         fun JSONObject.map(): Map<String, Any> {
             val map = HashMap<String, Any>()

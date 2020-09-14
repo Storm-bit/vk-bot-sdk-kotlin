@@ -60,9 +60,7 @@ class ExecutorGroup(private val client: Client, auth: Auth) : Executor(auth) {
                         return
                     }
 
-                    val responses = response.getJSONObject("response")
-
-                    (0..count).forEach { tmpQueue[it].callback.onResult(responses) }
+                    (0..count).forEach { tmpQueue[it].callback.onResult(response) }
                 }
             }
         }

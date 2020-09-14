@@ -4,6 +4,9 @@ import com.github.stormbit.sdk.clients.Group
 import com.github.stormbit.sdk.utils.vkapi.keyboard.KeyboardBuilder
 import org.apache.log4j.BasicConfigurator
 
+/**
+ * Simple echo bot with keyboard
+ */
 class ExampleGroup {
     companion object {
         private const val token = "" // Your token

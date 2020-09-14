@@ -60,6 +60,33 @@ class APIGroup(private val client: Client) : API(ExecutorGroup(client, client.au
         }
     }
 
+    override fun call(method: String, callback: Callback<JSONObject?>, vararg params: Any?) {
+        try {
+            if (params.size == 1) {
+                return this.call(method, params[0], callback)
+            }
+
+            if (params.size > 1 && params.size % 2 == 0) {
+                val map: MutableMap<String, Any> = HashMap()
+
+                var i = 0
+
+                while (i < params.size - 1) {
+                    map[params[i].toString()] = params[i + 1]!!
+                    i += 2
+                }
+
+                return this.call(method, map, callback)
+            }
+
+            return this.call(method, HashMap<String, Any>(), callback)
+        } catch (e: java.lang.Exception) {
+            log.error("Some error occurred when calling VK API: {}", e.message)
+        }
+
+        callback.onResult(JSONObject())
+    }
+
     /**
      * Call to VK API
      *

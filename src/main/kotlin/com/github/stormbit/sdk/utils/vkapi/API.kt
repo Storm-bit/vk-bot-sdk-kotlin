@@ -22,6 +22,8 @@ abstract class API(protected val executor: Executor) {
 
     abstract fun call(method: String, params: Any?, callback: Callback<JSONObject?>)
 
+    abstract fun call(method: String, callback: Callback<JSONObject?>, vararg params: Any?)
+
     fun execute(code: String): JSONObject {
         return JSONObject(callSync("execute", JSONObject().put("code", code)))
     }

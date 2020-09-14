@@ -1,6 +1,7 @@
 package com.github.stormbit.sdk.utils.vkapi.executors
 
 import com.github.stormbit.sdk.utils.Utils
+import com.github.stormbit.sdk.utils.Utils.Companion.map
 import com.github.stormbit.sdk.utils.vkapi.Auth
 import com.github.stormbit.sdk.utils.vkapi.Executor
 import com.github.stormbit.sdk.utils.vkapi.calls.CallAsync
@@ -45,8 +46,8 @@ class ExecutorUser(auth: Auth) : Executor(auth) {
                 // Execute
                 if (count > 0) {
                     val responseString: String = auth.session.post(Utils.userApiUrl)
-                            .body(data.toMap())
-                            .send().readToText().replace("[<!>]", "").substring(2)
+                            .body(data.map())
+                            .send().readToText().replace("[<!>]".toRegex(), "").substring(2)
 
                     if (LOG_REQUESTS) {
                         log.error("New executing request response: {}", responseString)
@@ -68,9 +69,7 @@ class ExecutorUser(auth: Auth) : Executor(auth) {
                         return
                     }
 
-                    val responses = response.getJSONObject("response")
-
-                    (0..count).forEach { i: Int -> tmpQueue[i].callback.onResult(responses) }
+                    (0..count).forEach { i: Int -> tmpQueue[i].callback.onResult(response) }
                 }
             }
         }
