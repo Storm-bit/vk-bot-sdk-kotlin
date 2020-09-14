@@ -118,6 +118,36 @@ class Message {
         this.upload = Upload(client)
     }
 
+    constructor(client: Client, json: JSONObject) {
+        this.client = client
+        this.api = client.api
+        this.upload = Upload(client)
+
+        this.messageId = json.getInt("id")
+        this.peerId = json.getInt("peer_id")
+        this.timestamp = json.getInt("date")
+        this.text = json.getString("text")
+        this.randomId = json.getInt("random_id")
+        this.payload = if (json.has("payload")) JSONObject(json.getString("payload")) else JSONObject()
+        this.title = " ... "
+        val attachments = if (json.getJSONArray("attachments").length() > 0) json.getJSONArray("attachments").getJSONObject(0) else JSONObject()
+
+        // Check for chat
+        if (this.peerId > Chat.CHAT_PREFIX) {
+            this.chatId = this.peerId - Chat.CHAT_PREFIX
+            if (attachments != null) {
+                this.peerId = attachments.getString("from").toInt()
+            }
+            this.messageId = json.getInt("conversation_message_id")
+        }
+
+        this.attachmentsOfReceivedMessage = attachments
+
+        if (chatId > 0) {
+            this.chatIdLong = Chat.CHAT_PREFIX + chatId
+        }
+    }
+
     constructor(block: Message.() -> Message) {
         block()
     }

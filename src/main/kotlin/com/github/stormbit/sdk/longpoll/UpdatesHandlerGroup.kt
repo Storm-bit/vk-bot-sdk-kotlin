@@ -128,39 +128,9 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
         // Flag
         var messageIsAlreadyHandled = false
 
-        // All necessary data
-        var messageId = updateObject.getInt("id")
-        var peerId = updateObject.getInt("peer_id")
-        var chatId = 0
-        val timestamp = updateObject.getInt("date")
-        val messageText = updateObject.getString("text")
-        val payload = if (updateObject.has("payload")) JSONObject(updateObject.getString("payload")) else JSONObject()
-        val attachments = if (updateObject.getJSONArray("attachments").length() > 0) updateObject.getJSONArray("attachments").getJSONObject(0) else null
-        val randomId = updateObject.getInt("random_id")
+        val message = Message(client, updateObject)
 
-        // Check for chat
-        if (peerId > Chat.CHAT_PREFIX) {
-            chatId = peerId - Chat.CHAT_PREFIX
-            if (attachments != null) {
-                peerId = attachments.getString("from").toInt()
-            }
-            messageId = updateObject.getInt("conversation_message_id")
-        }
-        val message = Message(
-                client,
-                messageId,
-                peerId,
-                timestamp,
-                messageText,
-                " ... ",
-                attachments,
-                randomId,
-                payload
-        )
-        if (chatId > 0) {
-            message.chatId = chatId
-            message.chatIdLong = Chat.CHAT_PREFIX + chatId
-
+        if (message.chatId > 0) {
             // chat events
             handleChatEvents(updateObject)
         }
@@ -169,6 +139,7 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
         if (client.commands.size > 0) {
             messageIsAlreadyHandled = handleCommands(message)
         }
+
         if (message.hasFwds()) {
             if (callbacks.containsKey(MessageEvents.MESSAGE_WITH_FORWARDS.value)) {
                 callbacks[MessageEvents.MESSAGE_WITH_FORWARDS.value]!!.onResult(message)
@@ -176,6 +147,7 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
                 handleSendTyping(message)
             }
         }
+
         if (!messageIsAlreadyHandled) {
             when (message.messageType()) {
                 Message.MessageType.VOICE -> {
@@ -243,10 +215,12 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
                 }
             }
         }
+
         if (callbacks.containsKey(MessageEvents.MESSAGE.value) && !messageIsAlreadyHandled) {
             callbacks[MessageEvents.MESSAGE.value]!!.onResult(message)
             handleSendTyping(message)
         }
+
         if (callbacks.containsKey(MessageEvents.CHAT_MESSAGE.value) && !messageIsAlreadyHandled) {
             callbacks[MessageEvents.CHAT_MESSAGE.value]!!.onResult(message)
         }
