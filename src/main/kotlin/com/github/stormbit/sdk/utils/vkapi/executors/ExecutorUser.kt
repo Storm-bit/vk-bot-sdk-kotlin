@@ -23,7 +23,7 @@ class ExecutorUser(auth: Auth) : Executor(auth) {
         }
 
         if (tmpQueue.isNotEmpty()) {
-            for (item in tmpQueue) {
+            for ((index, item) in tmpQueue.withIndex()) {
                 val method = item.methodName
                 val params = item.params
 
@@ -31,7 +31,7 @@ class ExecutorUser(auth: Auth) : Executor(auth) {
                     Utils.getHash(auth, method)
                 }
 
-                queue.removeAll(tmpQueue)
+                queue.removeAt(index)
 
                 val data = JsonObject()
                 data.put("act", "a_run_method")

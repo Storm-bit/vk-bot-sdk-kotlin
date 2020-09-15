@@ -22,11 +22,11 @@ class ExecutorGroup(private val client: Client, auth: Auth) : Executor(auth) {
         }
 
         if (tmpQueue.isNotEmpty()) {
-            for (item in tmpQueue) {
+            for ((index, item) in tmpQueue.withIndex()) {
                 val method = item.methodName
                 val params = item.params
 
-                queue.removeAll(tmpQueue)
+                queue.removeAt(index)
 
                 val data = JsonObject()
                 data.put("v", Utils.version)
