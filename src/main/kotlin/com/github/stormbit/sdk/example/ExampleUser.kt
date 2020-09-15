@@ -17,7 +17,11 @@ class ExampleUser {
             BasicConfigurator.configure()
 
             // Captcha handler
-            val captchaHandler = { it: Captcha -> println(it.getUrl()) }
+            val captchaHandler = { it: Captcha ->
+                println("Captcha url: ${it.url}")
+                print("Code: ")
+                readLine() ?: ""
+            }
 
             // Two Factor handler
             val twoFactorHandler = {

@@ -69,7 +69,7 @@ class Message {
      *
      * More: [link](https://vk.com/dev/using_longpoll_2)
      */
-    private var attachmentsOfReceivedMessage: JsonObject? = JsonObject()
+    var attachmentsOfReceivedMessage: JsonObject? = JsonObject()
         private set(value) {
             field = value ?: JsonObject()
         }

@@ -164,7 +164,7 @@ class Utils {
             return if (this) 1 else 0
         }
 
-        fun toJsonObject(string: String): JsonObject = gson.fromJson(string, JsonObject::class.java)
+        fun toJsonObject(string: String): JsonObject = JsonParser.parseString(string).asJsonObject
 
         fun toJsonObject(map: Map<String, Any>?): JsonObject = gson.toJsonTree(map).asJsonObject
 

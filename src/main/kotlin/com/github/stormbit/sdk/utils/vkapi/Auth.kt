@@ -1,5 +1,6 @@
 package com.github.stormbit.sdk.utils.vkapi
 
+import com.github.stormbit.sdk.exceptions.CaptchaException
 import com.github.stormbit.sdk.exceptions.NotValidAuthorization
 import com.github.stormbit.sdk.exceptions.TwoFactorException
 import com.github.stormbit.sdk.objects.Captcha
@@ -91,17 +92,25 @@ class Auth {
                 log.info("Captcha code is required")
 
                 val captchaSid = Utils.regexSearch(RE_CAPTCHAID, response)
-                val captcha = Captcha(session, captchaSid!!, func = { prms -> auth(prms) })
+                val captcha = Captcha(session, captchaSid!!)
 
-                captchaListener?.onCaptcha(captcha)
+                val code = captchaListener?.onCaptcha(captcha) ?: throw CaptchaException("Captcha listener is required")
+                auth(mapOf(
+                        "captcha_sid" to captchaSid,
+                        "captcha_key" to code
+                ))
             }
             response.contains("onLoginReCaptcha(") -> {
                 log.info("Captcha code is required (recaptcha)")
 
                 val captchaSid = System.currentTimeMillis().toString()
-                val captcha = Captcha(session, captchaSid, func = { prms -> auth(prms) })
+                val captcha = Captcha(session, captchaSid)
 
-                captchaListener?.onCaptcha(captcha)
+                val code = captchaListener?.onCaptcha(captcha) ?: throw CaptchaException("Captcha listener is required")
+                auth(mapOf(
+                        "captcha_sid" to captchaSid,
+                        "captcha_key" to code
+                ))
             }
             response.contains("onLoginFailed(4") -> throw NotValidAuthorization("Incorrect login or password")
         }
@@ -115,7 +124,7 @@ class Auth {
     }
 
     private fun passTwoFactor(response: String): String {
-        val pair = twoFactorListener?.twoFactor() ?: throw TwoFactorException("Two Factor Listener is not initialized")
+        val pair = twoFactorListener?.twoFactor() ?: throw TwoFactorException("Two Factor listener is not initialized")
 
         val authHash = Utils.regexSearch(AUTH_HASH, response, 1)!!
 
@@ -164,6 +173,6 @@ class Auth {
     }
 
     fun interface CaptchaListener {
-        fun onCaptcha(captcha: Captcha)
+        fun onCaptcha(captcha: Captcha): String
     }
 }

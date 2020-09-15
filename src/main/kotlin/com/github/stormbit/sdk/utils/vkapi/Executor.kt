@@ -1,18 +1,21 @@
 package com.github.stormbit.sdk.utils.vkapi
 
 import com.github.stormbit.sdk.clients.Client
+import com.github.stormbit.sdk.utils.Utils.Companion.map
 import com.github.stormbit.sdk.utils.vkapi.calls.Call
 import com.github.stormbit.sdk.utils.vkapi.calls.CallAsync
 import com.github.stormbit.sdk.utils.vkapi.calls.CallSync
+import com.google.gson.Gson
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 
 abstract class Executor(protected val auth: Auth) {
     val log: Logger = LoggerFactory.getLogger(Executor::class.java)
 
     @Volatile
-    protected var queue = ArrayList<CallAsync>()
+    protected var queue = CopyOnWriteArrayList<CallAsync>()
 
     companion object {
         var LOG_REQUESTS = false
@@ -46,7 +49,7 @@ abstract class Executor(protected val auth: Auth) {
      * @see CallSync
      */
     fun codeForExecute(call: Call): String {
-        return "API." + call.methodName + '(' + call.params.toString() + ')'
+        return "return API." + call.methodName + '(' + Gson().toJson(call.params.map()) + ')' + ';'
     }
 
     /**
