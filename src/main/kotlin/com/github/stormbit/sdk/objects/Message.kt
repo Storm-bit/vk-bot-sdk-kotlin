@@ -124,7 +124,7 @@ class Message {
         this.upload = Upload(client)
 
         this.messageId = json.getInt("id")
-        this.peerId = json.getInt("peer_id")
+        this.peerId = json.getInt("from_id")
         this.timestamp = json.getInt("date")
         this.text = json.getString("text")
         this.randomId = json.getInt("random_id")
