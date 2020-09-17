@@ -142,7 +142,7 @@ class APIUser(private val client: Client) : API(ExecutorUser(client.auth)) {
                     return toJsonObject(toJsonObject(responseString).getAsJsonArray("payload").getJsonArray(1).getString(0))
                 }
             }
-        } catch (e: java.lang.Exception) {
+        } catch (e: Exception) {
             log.error("Some error occurred when calling VK API: {${e.message}}")
         }
 
@@ -169,7 +169,7 @@ class APIUser(private val client: Client) : API(ExecutorUser(client.auth)) {
             }
 
             return this.callSync(method, HashMap<String, Any>())
-        } catch (e: java.lang.Exception) {
+        } catch (e: Exception) {
             log.error("Some error occurred when calling VK API: {}", e.message)
         }
 

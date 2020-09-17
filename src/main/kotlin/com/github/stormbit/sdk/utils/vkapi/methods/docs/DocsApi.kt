@@ -15,7 +15,7 @@ class DocsApi(private val client: Client) {
     fun add(
             ownerId: Int,
             docId: Int,
-            accessKey: String?
+            accessKey: String? = null
     ): JsonObject = Methods.add.callSync(client, JsonObject()
             .put("owner_id", ownerId)
             .put("doc_id", docId)
@@ -34,7 +34,7 @@ class DocsApi(private val client: Client) {
             docId: Int,
             title: String,
             ownerId: Int?,
-            tags: List<String>?
+            tags: List<String>? = null
     ): JsonObject = Methods.edit.callSync(client, JsonObject()
             .put("doc_id", docId)
             .put("title", title)
@@ -46,7 +46,7 @@ class DocsApi(private val client: Client) {
             ownerId: Int?,
             count: Int,
             offset: Int,
-            type: Document.Type?
+            type: Document.Type? = null
     ): JsonObject = Methods.get.callSync(client, JsonObject()
             .put("owner_id", ownerId)
             .put("count", count)
@@ -64,11 +64,11 @@ class DocsApi(private val client: Client) {
 
     fun getMessagesUploadServer(
             peerId: Int,
-            type: DocTypes? = DocTypes.DOC,
+            type: DocTypes? = null,
             forAudioMessage: Boolean = false
     ): JsonObject = Methods.getMessagesUploadServer.callSync(client, JsonObject()
             .put("peer_id", peerId)
-            .put("type", if (forAudioMessage) "audio_message" else type?.type ?: "doc")
+            .put("type", if (forAudioMessage) "audio_message" else type?.type ?: DocTypes.DOC.type)
     )
 
     fun getTypes(

@@ -16,7 +16,7 @@ class DocsApiAsync(private val client: Client) {
     fun add(
             ownerId: Int,
             docId: Int,
-            accessKey: String?,
+            accessKey: String? = null,
             callback: Callback<JsonObject?>
     ) = Methods.add.call(client, callback, JsonObject()
             .put("owner_id", ownerId)
@@ -37,7 +37,7 @@ class DocsApiAsync(private val client: Client) {
             docId: Int,
             title: String,
             ownerId: Int?,
-            tags: List<String>?,
+            tags: List<String>? = null,
             callback: Callback<JsonObject?>
     ) = Methods.edit.call(client, callback, JsonObject()
             .put("doc_id", docId)
@@ -50,7 +50,7 @@ class DocsApiAsync(private val client: Client) {
             ownerId: Int?,
             count: Int,
             offset: Int,
-            type: Document.Type?,
+            type: Document.Type? = null,
             callback: Callback<JsonObject?>
     ) = Methods.get.call(client, callback, JsonObject()
             .put("owner_id", ownerId)
