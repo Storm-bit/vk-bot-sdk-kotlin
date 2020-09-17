@@ -21,19 +21,19 @@ class MessagesApiAsync(private val client: Client) {
             chatId: Int,
             userId: Int,
             callback: Callback<JsonObject?>
-    ) = client.api.call(Methods.addChatUser, callback, "chat_id", chatId, "user_id", userId)
+    ) = Methods.addChatUser.call(client, callback, "chat_id", chatId, "user_id", userId)
 
     fun allowMessagesFromGroup(
             groupId: Int,
             key: String?,
             callback: Callback<JsonObject?>
-    ) = client.api.call(Methods.allowMessagesFromGroup, callback,  "group_id", groupId, "key", key)
+    ) = Methods.allowMessagesFromGroup.call(client, callback,  "group_id", groupId, "key", key)
 
     fun createChat(
             userIds: List<Int>,
             title: String,
             callback: Callback<JsonObject?>
-    ) = client.api.call(Methods.createChat, callback, "user_ids", userIds.joinToString(","), "title", title)
+    ) = Methods.createChat.call(client, callback, "user_ids", userIds.joinToString(","), "title", title)
 
     fun delete(
             messageIds: List<Int>,
@@ -41,43 +41,43 @@ class MessagesApiAsync(private val client: Client) {
             deleteForAll: Boolean,
             groupId: Int?,
             callback: Callback<JsonObject?>
-    ) = client.api.call(Methods.delete, callback, "message_ids", messageIds.joinToString(","), "spam", markAsSpam.asInt(), "delete_for_all", deleteForAll.asInt(), "group_id", groupId)
+    ) = Methods.delete.call(client, callback, "message_ids", messageIds.joinToString(","), "spam", markAsSpam.asInt(), "delete_for_all", deleteForAll.asInt(), "group_id", groupId)
 
     fun delete(
             messageIds: List<Int>,
             markAsSpam: Boolean,
             deleteForAll: Boolean,
             callback: Callback<JsonObject?>
-    ) = client.api.call(Methods.delete, callback, "message_ids", messageIds.joinToString(","), "spam", markAsSpam.asInt(), "delete_for_all", deleteForAll.asInt())
+    ) = Methods.delete.call(client, callback, "message_ids", messageIds.joinToString(","), "spam", markAsSpam.asInt(), "delete_for_all", deleteForAll.asInt())
 
 
     fun deleteChatPhoto(
             chatId: Int,
             groupId: Int?,
             callback: Callback<JsonObject?>
-    ) = client.api.call(Methods.deleteChatPhoto, callback, "chat_id", chatId, "group_id", groupId)
+    ) = Methods.deleteChatPhoto.call(client, callback, "chat_id", chatId, "group_id", groupId)
 
 
     fun deleteChatPhoto(
             chatId: Int,
             callback: Callback<JsonObject?>
-    ) = client.api.call(Methods.deleteChatPhoto, callback, "chat_id", chatId)
+    ) = Methods.deleteChatPhoto.call(client, callback, "chat_id", chatId)
 
     fun deleteConversation(
             peerId: Int,
             groupId: Int?,
             callback: Callback<JsonObject?>
-    ) = client.api.call(Methods.deleteConversation, callback, "peer_id", peerId, "group_id", groupId)
+    ) = Methods.deleteConversation.call(client, callback, "peer_id", peerId, "group_id", groupId)
 
     fun deleteConversation(
             peerId: Int,
             callback: Callback<JsonObject?>
-    ) = client.api.call(Methods.deleteConversation, callback, "peer_id", peerId)
+    ) = Methods.deleteConversation.call(client, callback, "peer_id", peerId)
 
     fun denyMessagesFromGroup(
             groupId: Int,
             callback: Callback<JsonObject?>
-    ) = client.api.call(Methods.denyMessagesFromGroup, callback, "group_id", groupId)
+    ) = Methods.denyMessagesFromGroup.call(client, callback, "group_id", groupId)
 
     fun edit(
             peerId: Int,
@@ -90,17 +90,16 @@ class MessagesApiAsync(private val client: Client) {
             keepSnippets: Boolean,
             groupId: Int?,
             callback: Callback<JsonObject?>
-    ) = client.api.call(Methods.edit, callback,
-            JsonObject()
-                    .put("peer_id", peerId)
-                    .put("message_id", messageId)
-                    .put("message", message)
-                    .put("lat", latitude)
-                    .put("long", longitude)
-                    .put("attachment", attachments?.joinToString(","))
-                    .put("keep_forward_messages", keepForwardMessages.asInt())
-                    .put("keep_snippets", keepSnippets.asInt())
-                    .put("group_id", groupId)
+    ) = Methods.edit.call(client, callback, JsonObject()
+            .put("peer_id", peerId)
+            .put("message_id", messageId)
+            .put("message", message)
+            .put("lat", latitude)
+            .put("long", longitude)
+            .put("attachment", attachments?.joinToString(","))
+            .put("keep_forward_messages", keepForwardMessages.asInt())
+            .put("keep_snippets", keepSnippets.asInt())
+            .put("group_id", groupId)
     )
 
     fun edit(
@@ -129,24 +128,12 @@ class MessagesApiAsync(private val client: Client) {
     fun editChat(
             chatId: Int,
             title: String,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
-    ) = client.api.call(Methods.editChat, callback,
-            JsonObject()
-                    .put("chat_id", chatId)
-                    .put("title", title)
-                    .put("group_id", groupId)
-    )
-
-    fun editChat(
-            chatId: Int,
-            title: String,
-            callback: Callback<JsonObject?>
-    ) = editChat(
-            chatId = chatId,
-            title = title,
-            groupId = null,
-            callback
+    ) = Methods.editChat.call(client, callback, JsonObject()
+            .put("chat_id", chatId)
+            .put("title", title)
+            .put("group_id", groupId)
     )
 
     fun getByConversationMessageId(
@@ -156,13 +143,12 @@ class MessagesApiAsync(private val client: Client) {
             fields: List<ObjectField>? = null,
             groupId: Int? = null,
             callback: Callback<JsonObject?>
-    ) = client.api.call(Methods.getByConversationMessageId, callback,
-            JsonObject()
-                    .put("peer_id", peerId)
-                    .put("conversation_message_ids", conversationMessageIds?.joinToString(","))
-                    .put("extended", extended?.asInt())
-                    .put("fields", fields?.joinToString(",") { it.value })
-                    .put("group_id", groupId)
+    ) = Methods.getByConversationMessageId.call(client, callback, JsonObject()
+            .put("peer_id", peerId)
+            .put("conversation_message_ids", conversationMessageIds?.joinToString(","))
+            .put("extended", extended?.asInt())
+            .put("fields", fields?.joinToString(",") { it.value })
+            .put("group_id", groupId)
     )
 
     fun getById(
@@ -172,13 +158,12 @@ class MessagesApiAsync(private val client: Client) {
             fields: List<ObjectField>?,
             groupId: Int?,
             callback: Callback<JsonObject?>
-    ) = client.api.call(Methods.getById, callback,
-            JsonObject()
-                    .put("message_ids", messageIds.joinToString(","))
-                    .put("preview_length", previewLength)
-                    .put("extended", extended?.asInt())
-                    .put("fields", fields?.joinToString(",") { it.value })
-                    .put("group_id", groupId)
+    ) = Methods.getById.call(client, callback, JsonObject()
+            .put("message_ids", messageIds.joinToString(","))
+            .put("preview_length", previewLength)
+            .put("extended", extended?.asInt())
+            .put("fields", fields?.joinToString(",") { it.value })
+            .put("group_id", groupId)
     )
 
     fun getById(
@@ -199,18 +184,15 @@ class MessagesApiAsync(private val client: Client) {
     fun getChat(
             chatIds: List<Int>,
             callback: Callback<JsonObject?>
-    ) = client.api.call(Methods.getChat, callback,
-            JsonObject().put("chat_ids", chatIds.joinToString(","))
-    )
+    ) = Methods.getChat.call(client, callback, "chat_ids", chatIds.joinToString(","))
 
     fun getChatPreview(
             link: String,
             fields: List<ObjectField>,
             callback: Callback<JsonObject?>
-    ) = client.api.call(Methods.getChatPreview, callback,
-            JsonObject()
-                    .put("link", link)
-                    .put("fields", fields.joinToString(",") { it.value })
+    ) = Methods.getChatPreview.call(client, callback, JsonObject()
+            .put("link", link)
+            .put("fields", fields.joinToString(",") { it.value })
     )
 
     fun getChatUsers(
@@ -223,11 +205,10 @@ class MessagesApiAsync(private val client: Client) {
             fields: List<ObjectField>,
             groupId: Int?,
             callback: Callback<JsonObject?>
-    ) = client.api.call(Methods.getConversationMembers, callback,
-            JsonObject()
-                    .put("peer_id", peerId)
-                    .put("fields", fields.joinToString(",") { it.value })
-                    .put("group_id", groupId)
+    ) = Methods.getConversationMembers.call(client, callback, JsonObject()
+            .put("peer_id", peerId)
+            .put("fields", fields.joinToString(",") { it.value })
+            .put("group_id", groupId)
     )
 
     fun getConversationMembers(
@@ -250,15 +231,14 @@ class MessagesApiAsync(private val client: Client) {
             fields: List<ObjectField>,
             groupId: Int?,
             callback: Callback<JsonObject?>
-    ) = client.api.call(Methods.getConversations, callback,
-            JsonObject()
-                    .put("offset", offset)
-                    .put("count", count)
-                    .put("filter", filter.value)
-                    .put("start_message_id", startMessageId)
-                    .put("extended", extended.asInt())
-                    .put("fields", fields.joinToString(",") { it.value })
-                    .put("group_id", groupId)
+    ) = Methods.getConversations.call(client, callback, JsonObject()
+            .put("offset", offset)
+            .put("count", count)
+            .put("filter", filter.value)
+            .put("start_message_id", startMessageId)
+            .put("extended", extended.asInt())
+            .put("fields", fields.joinToString(",") { it.value })
+            .put("group_id", groupId)
     )
 
     fun getConversations(
@@ -286,12 +266,11 @@ class MessagesApiAsync(private val client: Client) {
             fields: List<ObjectField>,
             groupId: Int?,
             callback: Callback<JsonObject?>
-    ) = Methods.getConversationsById.call(client, callback,
-            JsonObject()
-                    .put("peer_ids", peerIds.joinToString(","))
-                    .put("extended", extended.asInt())
-                    .put("fields", fields.joinToString(",") { it.value })
-                    .put("group_id", groupId)
+    ) = Methods.getConversationsById.call(client, callback, JsonObject()
+            .put("peer_ids", peerIds.joinToString(","))
+            .put("extended", extended.asInt())
+            .put("fields", fields.joinToString(",") { it.value })
+            .put("group_id", groupId)
     )
 
     fun getConversationsById(
