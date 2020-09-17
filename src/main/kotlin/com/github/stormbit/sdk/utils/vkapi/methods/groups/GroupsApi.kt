@@ -4,6 +4,8 @@ import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.utils.Utils.Companion.asInt
 import com.github.stormbit.sdk.utils.Utils.Companion.callSync
 import com.github.stormbit.sdk.utils.Utils.Companion.unixtime
+import com.github.stormbit.sdk.utils.getJsonObject
+import com.github.stormbit.sdk.utils.getString
 import com.github.stormbit.sdk.utils.put
 import com.github.stormbit.sdk.utils.serialize
 import com.github.stormbit.sdk.utils.vkapi.methods.*
@@ -649,7 +651,7 @@ class GroupsApi(private val client: Client) {
 
     fun getByScreenName(
             groupNames: List<String>,
-            communityFields: List<CommunityOptionalField>?
+            communityFields: List<CommunityOptionalField>? = null
     ): JsonObject = Methods.getById.callSync(client, JsonObject()
             .put("group_ids", groupNames.joinToString(","))
             .put("fields", communityFields?.joinToString(",") { it.value })
@@ -657,11 +659,15 @@ class GroupsApi(private val client: Client) {
 
     fun getById(
             groupIds: List<Int>,
-            communityFields: List<CommunityOptionalField>?
+            communityFields: List<CommunityOptionalField>? = null
     ): JsonObject = getByScreenName(
             groupNames = groupIds.map(Int::toString),
             communityFields = communityFields
     )
+
+    fun getName(
+            groupId: Int
+    ): String = getById(listOf(groupId)).getAsJsonArray("response").getJsonObject(0).getString("name")
 
     fun getCallbackConfirmationCode(
             groupId: Int

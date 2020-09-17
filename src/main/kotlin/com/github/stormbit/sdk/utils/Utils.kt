@@ -169,7 +169,7 @@ class Utils {
         fun toJsonObject(map: Map<String, Any>?): JsonObject = gson.toJsonTree(map).asJsonObject
 
         fun String.callSync(client: Client, params: JsonObject?): JsonObject = client.api.callSync(this, params)
-        fun String.callSync(client: Client, vararg params: Any?): JsonObject = client.api.callSync(this, params)
+        fun String.callSync(client: Client, vararg params: Any?): JsonObject = client.api.callSync(this, *params)
 
         fun String.call(client: Client, params: JsonObject?, callback: Callback<JsonObject?>) = client.api.call(this, params, callback)
         fun String.call(client: Client, callback: Callback<JsonObject?>, vararg params: Any?) = client.api.call(this, callback, *params)

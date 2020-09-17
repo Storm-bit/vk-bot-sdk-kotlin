@@ -1,13 +1,11 @@
 package com.github.stormbit.sdk.utils.vkapi.methods.messages
 
 import com.github.stormbit.sdk.clients.Client
+import com.github.stormbit.sdk.objects.Chat
+import com.github.stormbit.sdk.utils.*
 import com.github.stormbit.sdk.utils.Utils.Companion.asInt
 import com.github.stormbit.sdk.utils.Utils.Companion.callSync
 import com.github.stormbit.sdk.utils.Utils.Companion.toDMYString
-import com.github.stormbit.sdk.utils.getInt
-import com.github.stormbit.sdk.utils.getString
-import com.github.stormbit.sdk.utils.gson
-import com.github.stormbit.sdk.utils.put
 import com.github.stormbit.sdk.utils.vkapi.keyboard.Keyboard
 import com.github.stormbit.sdk.utils.vkapi.methods.AttachmentType
 import com.github.stormbit.sdk.utils.vkapi.methods.ObjectField
@@ -42,7 +40,7 @@ class MessagesApi(private val client: Client) {
             .put("delete_for_all", deleteForAll.asInt())
             .put("group_id", groupId)
     )
-    
+
     fun deleteChatPhoto(
             chatId: Int,
             groupId: Int? = null
@@ -132,7 +130,7 @@ class MessagesApi(private val client: Client) {
             chatIds: List<Int>
     ): JsonObject = Methods.getChat.callSync(client, "chat_ids", chatIds.joinToString(","))
 
-    fun getChatTitle(chatId: Int): String = Methods.getChat.callSync(client, "chat_ids", chatId).getAsJsonObject("response").getString("title")
+    fun getChatTitle(chatId: Int): String = Methods.getChat.callSync(client, "chat_ids", if (chatId.isChatPeerId) chatId - Chat.CHAT_PREFIX else chatId).getAsJsonArray("response").getJsonObject(0).getString("title")
 
     fun getChatPreview(
             link: String,

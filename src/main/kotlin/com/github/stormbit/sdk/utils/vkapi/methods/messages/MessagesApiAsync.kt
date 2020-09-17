@@ -2,12 +2,12 @@ package com.github.stormbit.sdk.utils.vkapi.methods.messages
 
 import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
+import com.github.stormbit.sdk.objects.Chat
+import com.github.stormbit.sdk.utils.*
 import com.github.stormbit.sdk.utils.Utils.Companion.asInt
 import com.github.stormbit.sdk.utils.Utils.Companion.call
+import com.github.stormbit.sdk.utils.Utils.Companion.callSync
 import com.github.stormbit.sdk.utils.Utils.Companion.toDMYString
-import com.github.stormbit.sdk.utils.getInt
-import com.github.stormbit.sdk.utils.gson
-import com.github.stormbit.sdk.utils.put
 import com.github.stormbit.sdk.utils.vkapi.keyboard.Keyboard
 import com.github.stormbit.sdk.utils.vkapi.methods.AttachmentType
 import com.github.stormbit.sdk.utils.vkapi.methods.ObjectField
@@ -180,6 +180,8 @@ class MessagesApiAsync(private val client: Client) {
             groupId = null,
             callback
     )
+
+    fun getChatTitle(chatId: Int): String = MessagesApi.Companion.Methods.getChat.callSync(client, "chat_ids", if (chatId.isChatPeerId) chatId - Chat.CHAT_PREFIX else chatId).getAsJsonArray("response").getJsonObject(0).getString("title")
 
     fun getChat(
             chatIds: List<Int>,
