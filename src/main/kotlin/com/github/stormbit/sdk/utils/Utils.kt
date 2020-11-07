@@ -16,7 +16,6 @@ import com.google.gson.reflect.TypeToken
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
 import com.google.gson.stream.JsonWriter
-import io.ktor.util.date.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.ClassSerialDescriptorBuilder
@@ -338,15 +337,6 @@ class Utils {
 
         interface IntEnum {
             val value: Int
-        }
-
-        internal inline val GMTDate.unixtime: Int
-            get() = (GMTDate(seconds, minutes, hours, dayOfMonth, month, year).timestamp / 1000).toInt()
-
-        fun GMTDate.toDMYString(): String = buildString {
-            append(dayOfMonth.toString().padStart(2, '0'))
-            append((month.ordinal + 1).toString().padStart(2, '0'))
-            append(year.toString().padStart(4, '0'))
         }
 
         @ExperimentalSerializationApi

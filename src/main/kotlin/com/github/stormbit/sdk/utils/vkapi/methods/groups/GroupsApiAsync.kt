@@ -4,11 +4,9 @@ import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.utils.Utils.Companion.asInt
 import com.github.stormbit.sdk.utils.Utils.Companion.call
-import com.github.stormbit.sdk.utils.Utils.Companion.unixtime
 import com.github.stormbit.sdk.utils.put
 import com.github.stormbit.sdk.utils.serialize
 import com.github.stormbit.sdk.utils.vkapi.methods.*
-import io.ktor.util.date.*
 import com.google.gson.JsonObject
 
 @Suppress("unused")
@@ -88,7 +86,7 @@ class GroupsApiAsync(private val client: Client) {
     ) = Methods.ban.call(client, callback, JsonObject()
             .put("group_id", groupId)
             .put("owner_id", ownerId)
-            .put("end_date", endDate?.unixtime)
+            .put("end_date", endDate?.timestamp)
             .put("reason", reason.value)
             .put("comment", comment)
             .put("comment_visible", commentVisible.asInt())
@@ -238,8 +236,8 @@ class GroupsApiAsync(private val client: Client) {
             .put("email", email)
             .put("phone", phone)
             .put("rss", rss)
-            .put("event_start_date", eventStartDate?.unixtime)
-            .put("event_finish_date", eventFinishDate?.unixtime)
+            .put("event_start_date", eventStartDate?.timestamp)
+            .put("event_finish_date", eventFinishDate?.timestamp)
             .put("event_group_id", eventGroupId)
             .put("public_category", publicCategory)
             .put("public_subcategory", publicSubcategory)

@@ -5,12 +5,11 @@ import com.github.stormbit.sdk.objects.Chat
 import com.github.stormbit.sdk.utils.*
 import com.github.stormbit.sdk.utils.Utils.Companion.asInt
 import com.github.stormbit.sdk.utils.Utils.Companion.callSync
-import com.github.stormbit.sdk.utils.Utils.Companion.toDMYString
 import com.github.stormbit.sdk.utils.vkapi.keyboard.Keyboard
 import com.github.stormbit.sdk.utils.vkapi.methods.AttachmentType
+import com.github.stormbit.sdk.utils.vkapi.methods.GMTDate
 import com.github.stormbit.sdk.utils.vkapi.methods.ObjectField
 import com.google.gson.JsonObject
-import io.ktor.util.date.*
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
 class MessagesApi(private val client: Client) {

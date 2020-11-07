@@ -4,12 +4,10 @@ import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.utils.Utils.Companion.asInt
 import com.github.stormbit.sdk.utils.Utils.Companion.call
-import com.github.stormbit.sdk.utils.Utils.Companion.unixtime
 import com.github.stormbit.sdk.utils.attachmentString
 import com.github.stormbit.sdk.utils.put
 import com.github.stormbit.sdk.utils.vkapi.methods.*
 import com.google.gson.JsonObject
-import io.ktor.util.date.*
 
 @Suppress("unused")
 class WallApiAsync(private val client: Client) {
@@ -105,7 +103,7 @@ class WallApiAsync(private val client: Client) {
             .put("attachments", attachments?.joinToString(",", transform = MessageAttachment::attachmentString).append(attachmentLink))
             .put("services", servicesForExport?.joinToString(","))
             .put("signed", signed?.asInt())
-            .put("publish_date", publishDate?.unixtime)
+            .put("publish_date", publishDate?.timestamp)
             .put("lat", latitude)
             .put("long", longitude)
             .put("place_id", placeId)
@@ -292,7 +290,7 @@ class WallApiAsync(private val client: Client) {
             .put("attachments", attachments?.joinToString(",", transform = MessageAttachment::attachmentString).append(attachmentLink))
             .put("services", servicesForExport?.joinToString(","))
             .put("signed", signed.asInt())
-            .put("publish_date", publishDate?.unixtime)
+            .put("publish_date", publishDate?.timestamp)
             .put("lat", latitude)
             .put("long", longitude)
             .put("place_id", placeId)
