@@ -65,10 +65,10 @@ enum class Events(val value: String) {
 
     VKPAY_TRANSACTION("vkpay_transaction"),
 
-    TYPING("on_typing"),
-    FRIEND_ONLINE("on_friend_online"),
-    FRIEND_OFFLINE("on_friend_offline"),
-    EVERY("every_event");
+    TYPING("typing"),
+    FRIEND_ONLINE("friend_online"),
+    FRIEND_OFFLINE("friend_offline"),
+    EVERY("every");
 
     companion object {
 
@@ -80,5 +80,4 @@ enum class Events(val value: String) {
             return null
         }
     }
-
 }

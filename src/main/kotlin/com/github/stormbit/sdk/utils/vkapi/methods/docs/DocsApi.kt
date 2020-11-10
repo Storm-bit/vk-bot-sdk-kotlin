@@ -33,7 +33,7 @@ class DocsApi(private val client: Client) {
     fun edit(
             docId: Int,
             title: String,
-            ownerId: Int?,
+            ownerId: Int? = null,
             tags: List<String>? = null
     ): JsonObject = Methods.edit.callSync(client, JsonObject()
             .put("doc_id", docId)
@@ -43,9 +43,9 @@ class DocsApi(private val client: Client) {
     )
 
     fun get(
-            ownerId: Int?,
             count: Int,
             offset: Int,
+            ownerId: Int? = null,
             type: Document.Type? = null
     ): JsonObject = Methods.get.callSync(client, JsonObject()
             .put("owner_id", ownerId)

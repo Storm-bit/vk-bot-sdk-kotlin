@@ -20,12 +20,12 @@ class GroupsApi(private val client: Client) {
             cityId: Int,
             latitude: Double,
             longitude: Double,
-            additionalAddress: String?,
-            metroId: Int?,
-            phone: String?,
-            workInfoStatus: Address.WorkInfoStatus?,
-            timetable: Address.Timetable?,
-            isMainAddress: Boolean?
+            additionalAddress: String? = null,
+            metroId: Int? = null,
+            phone: String? = null,
+            workInfoStatus: Address.WorkInfoStatus? = null,
+            timetable: Address.Timetable? = null,
+            isMainAddress: Boolean? = null
     ): JsonObject = Methods.addAddress.callSync(client, JsonObject()
             .put("group_id", groupId)
             .put("title", title)
@@ -46,7 +46,7 @@ class GroupsApi(private val client: Client) {
             groupId: Int,
             url: String,
             title: String,
-            secretKey: String?
+            secretKey: String? = null
     ): JsonObject = Methods.addCallbackServer.callSync(client, JsonObject()
             .put("group_id", groupId)
             .put("url", url)
@@ -57,7 +57,7 @@ class GroupsApi(private val client: Client) {
     fun addLink(
             groupId: Int,
             link: String,
-            text: String?
+            text: String? = null
     ): JsonObject = Methods.addLink.callSync(client, JsonObject()
             .put("group_id", groupId)
             .put("link", link)
@@ -75,9 +75,9 @@ class GroupsApi(private val client: Client) {
     fun ban(
             groupId: Int,
             ownerId: Int,
-            endDate: GMTDate?,
+            endDate: GMTDate? = null,
             reason: Community.CommunityBan.Reason,
-            comment: String?,
+            comment: String? = null,
             commentVisible: Boolean
     ): JsonObject = Methods.ban.callSync(client, JsonObject()
             .put("group_id", groupId)
@@ -123,7 +123,7 @@ class GroupsApi(private val client: Client) {
     fun createPublic(
             title: String,
             subtype: PublicSubtype,
-            publicCategory: Int?
+            publicCategory: Int? = null
     ): JsonObject = create(
             title = title,
             type = GroupType.PUBLIC,
@@ -258,18 +258,18 @@ class GroupsApi(private val client: Client) {
     fun editAddress(
             groupId: Int,
             addressId: Int,
-            title: String?,
-            address: String?,
-            additionalAddress: String?,
-            countryId: Int?,
-            cityId: Int?,
-            metroId: Int?,
-            latitude: Double?,
-            longitude: Double?,
-            phone: String?,
-            workInfoStatus: Address.WorkInfoStatus?,
-            timetable: Address.Timetable?,
-            isMainAddress: Boolean?
+            title: String? = null,
+            address: String? = null,
+            additionalAddress: String? = null,
+            countryId: Int? = null,
+            cityId: Int? = null,
+            metroId: Int? = null,
+            latitude: Double? = null,
+            longitude: Double? = null,
+            phone: String? = null,
+            workInfoStatus: Address.WorkInfoStatus? = null,
+            timetable: Address.Timetable? = null,
+            isMainAddress: Boolean? = null
     ): JsonObject = Methods.editAddress.callSync(client, JsonObject()
             .put("group_id", groupId)
             .put("address_id", addressId)
@@ -289,45 +289,45 @@ class GroupsApi(private val client: Client) {
 
     fun editPublic(
             groupId: Int,
-            title: String?,
-            description: String?,
-            screenName: String?,
-            access: Community.CloseType?,
-            countryId: Int?,
-            cityId: Int?,
-            website: String?,
-            subject: GroupSubject?,
-            rss: String?,
-            publicCategory: Int?,
-            publicSubcategory: Int?,
-            publicDate: String?,
-            wall: PublicUnitAccessType?,
-            topics: PublicUnitAccessType?,
-            photos: PublicUnitAccessType?,
-            video: PublicUnitAccessType?,
-            audio: PublicUnitAccessType?,
-            docs: PublicUnitAccessType?,
-            wiki: PublicUnitAccessType?,
-            links: Boolean?,
-            events: Boolean?,
-            places: Boolean?,
-            contacts: Boolean?,
-            messages: Boolean?,
-            articles: Boolean?,
-            addresses: Boolean?,
-            market: Boolean?,
-            marketComments: Boolean?,
-            marketCountries: List<Int>?,
-            marketCities: List<Int>?,
-            ageLimits: Community.AgeLimits?,
-            marketCurrency: MarketCurrency?,
-            marketContact: Int?,
-            marketWiki: Int?,
-            obsceneFilter: Boolean?,
-            obsceneStopwords: Boolean?,
-            obsceneWords: List<String>?,
-            mainSection: Community.MainSectionType?,
-            secondarySection: Community.MainSectionType?
+            title: String? = null,
+            description: String? = null,
+            screenName: String? = null,
+            access: Community.CloseType? = null,
+            countryId: Int? = null,
+            cityId: Int? = null,
+            website: String? = null,
+            subject: GroupSubject? = null,
+            rss: String? = null,
+            publicCategory: Int? = null,
+            publicSubcategory: Int? = null,
+            publicDate: String? = null,
+            wall: PublicUnitAccessType? = null,
+            topics: PublicUnitAccessType? = null,
+            photos: PublicUnitAccessType? = null,
+            video: PublicUnitAccessType? = null,
+            audio: PublicUnitAccessType? = null,
+            docs: PublicUnitAccessType? = null,
+            wiki: PublicUnitAccessType? = null,
+            links: Boolean? = null,
+            events: Boolean? = null,
+            places: Boolean? = null,
+            contacts: Boolean? = null,
+            messages: Boolean? = null,
+            articles: Boolean? = null,
+            addresses: Boolean? = null,
+            market: Boolean? = null,
+            marketComments: Boolean? = null,
+            marketCountries: List<Int>? = null,
+            marketCities: List<Int>? = null,
+            ageLimits: Community.AgeLimits? = null,
+            marketCurrency: MarketCurrency? = null,
+            marketContact: Int? = null,
+            marketWiki: Int? = null,
+            obsceneFilter: Boolean? = null,
+            obsceneStopwords: Boolean? = null,
+            obsceneWords: List<String>? = null,
+            mainSection: Community.MainSectionType? = null,
+            secondarySection: Community.MainSectionType? = null
     ): JsonObject = edit(
             groupId = groupId,
             title = title,
@@ -373,43 +373,43 @@ class GroupsApi(private val client: Client) {
 
     fun editEvent(
             groupId: Int,
-            title: String?,
-            description: String?,
-            screenName: String?,
-            access: Community.CloseType?,
-            countryId: Int?,
-            cityId: Int?,
-            website: String?,
-            subject: GroupSubject?,
-            email: String?,
-            phone: String?,
-            rss: String?,
-            eventStartDate: GMTDate?,
-            eventFinishDate: GMTDate?,
-            eventGroupId: Int?,
-            wall: GroupUnitAccessTypeExtended?,
-            topics: GroupUnitAccessType?,
-            photos: GroupUnitAccessType?,
-            video: GroupUnitAccessType?,
-            audio: GroupUnitAccessType?,
-            docs: GroupUnitAccessType?,
-            wiki: GroupUnitAccessType?,
-            messages: Boolean?,
-            articles: Boolean?,
-            addresses: Boolean?,
-            market: Boolean?,
-            marketComments: Boolean?,
-            marketCountries: List<Int>?,
-            marketCities: List<Int>?,
-            ageLimits: Community.AgeLimits?,
-            marketCurrency: MarketCurrency?,
-            marketContact: Int?,
-            marketWiki: Int?,
-            obsceneFilter: Boolean?,
-            obsceneStopwords: Boolean?,
-            obsceneWords: List<String>?,
-            mainSection: Community.MainSectionType?,
-            secondarySection: Community.MainSectionType?
+            title: String? = null,
+            description: String? = null,
+            screenName: String? = null,
+            access: Community.CloseType? = null,
+            countryId: Int? = null,
+            cityId: Int? = null,
+            website: String? = null,
+            subject: GroupSubject? = null,
+            email: String? = null,
+            phone: String? = null,
+            rss: String? = null,
+            eventStartDate: GMTDate? = null,
+            eventFinishDate: GMTDate? = null,
+            eventGroupId: Int? = null,
+            wall: GroupUnitAccessTypeExtended? = null,
+            topics: GroupUnitAccessType? = null,
+            photos: GroupUnitAccessType? = null,
+            video: GroupUnitAccessType? = null,
+            audio: GroupUnitAccessType? = null,
+            docs: GroupUnitAccessType? = null,
+            wiki: GroupUnitAccessType? = null,
+            messages: Boolean? = null,
+            articles: Boolean? = null,
+            addresses: Boolean? = null,
+            market: Boolean? = null,
+            marketComments: Boolean? = null,
+            marketCountries: List<Int>? = null,
+            marketCities: List<Int>? = null,
+            ageLimits: Community.AgeLimits? = null,
+            marketCurrency: MarketCurrency? = null,
+            marketContact: Int? = null,
+            marketWiki: Int? = null,
+            obsceneFilter: Boolean? = null,
+            obsceneStopwords: Boolean? = null,
+            obsceneWords: List<String>? = null,
+            mainSection: Community.MainSectionType? = null,
+            secondarySection: Community.MainSectionType? = null
     ): JsonObject = edit(
             groupId = groupId,
             title = title,
@@ -453,35 +453,35 @@ class GroupsApi(private val client: Client) {
 
     fun editGroup(
             groupId: Int,
-            title: String?,
-            description: String?,
-            screenName: String?,
+            title: String? = null,
+            description: String? = null,
+            screenName: String? = null,
             access: Community.CloseType?,
-            countryId: Int?,
-            cityId: Int?,
-            website: String?,
-            subject: GroupSubject?,
-            rss: String?,
-            wall: GroupUnitAccessTypeExtended?,
-            topics: GroupUnitAccessType?,
-            photos: GroupUnitAccessType?,
-            video: GroupUnitAccessType?,
-            audio: GroupUnitAccessType?,
-            docs: GroupUnitAccessType?,
-            wiki: GroupUnitAccessType?,
-            messages: Boolean?,
-            articles: Boolean?,
-            addresses: Boolean?,
-            market: Boolean?,
-            marketComments: Boolean?,
+            countryId: Int? = null,
+            cityId: Int? = null,
+            website: String? = null,
+            subject: GroupSubject? = null,
+            rss: String? = null,
+            wall: GroupUnitAccessTypeExtended? = null,
+            topics: GroupUnitAccessType? = null,
+            photos: GroupUnitAccessType? = null,
+            video: GroupUnitAccessType? = null,
+            audio: GroupUnitAccessType? = null,
+            docs: GroupUnitAccessType? = null,
+            wiki: GroupUnitAccessType? = null,
+            messages: Boolean? = null,
+            articles: Boolean? = null,
+            addresses: Boolean? = null,
+            market: Boolean? = null,
+            marketComments: Boolean? = null,
             marketCountries: List<Int>?,
             marketCities: List<Int>?,
             ageLimits: Community.AgeLimits?,
-            marketCurrency: MarketCurrency?,
-            marketContact: Int?,
-            marketWiki: Int?,
-            obsceneFilter: Boolean?,
-            obsceneStopwords: Boolean?,
+            marketCurrency: MarketCurrency? = null,
+            marketContact: Int? = null,
+            marketWiki: Int? = null,
+            obsceneFilter: Boolean? = null,
+            obsceneStopwords: Boolean? = null,
             obsceneWords: List<String>?,
             mainSection: Community.MainSectionType?,
             secondarySection: Community.MainSectionType?
@@ -526,7 +526,7 @@ class GroupsApi(private val client: Client) {
             serverId: Int,
             url: String,
             title: String,
-            secretKey: String?
+            secretKey: String? = null
     ): JsonObject = Methods.editCallbackServer.callSync(client, JsonObject()
             .put("group_id", groupId)
             .put("server_id", serverId)
@@ -538,7 +538,7 @@ class GroupsApi(private val client: Client) {
     fun editLink(
             groupId: Int,
             linkId: Int,
-            text: String?
+            text: String? = null
     ): JsonObject = Methods.editLink.callSync(client, JsonObject()
             .put("group_id", groupId)
             .put("link_id", linkId)
@@ -548,11 +548,11 @@ class GroupsApi(private val client: Client) {
     fun editManager(
             groupId: Int,
             userId: Int,
-            role: CommunityManagerRole?,
-            isContact: Boolean?,
-            contactPosition: String?,
-            contactPhone: String?,
-            contactEmail: String?
+            role: CommunityManagerRole? = null,
+            isContact: Boolean? = null,
+            contactPosition: String? = null,
+            contactPhone: String? = null,
+            contactEmail: String? = null
     ): JsonObject = Methods.editManager.callSync(client, JsonObject()
             .put("group_id", groupId)
             .put("user_id", userId)
@@ -565,12 +565,12 @@ class GroupsApi(private val client: Client) {
 
     fun editPlace(
             groupId: Int,
-            title: String?,
-            address: String?,
-            countryId: Int?,
-            cityId: Int?,
-            latitude: Double?,
-            longitude: Double?
+            title: String? = null,
+            address: String? = null,
+            countryId: Int? = null,
+            cityId: Int? = null,
+            latitude: Double? = null,
+            longitude: Double? = null
     ): JsonObject = Methods.editPlace.callSync(client, JsonObject()
             .put("group_id", groupId)
             .put("title", title)
@@ -588,8 +588,8 @@ class GroupsApi(private val client: Client) {
     )
 
     fun getIds(
-            userId: Int?,
-            filter: GroupsFilter?,
+            userId: Int? = null,
+            filter: GroupsFilter? = null,
             offset: Int,
             count: Int
     ): JsonObject = Methods.get.callSync(client, JsonObject()
@@ -600,8 +600,8 @@ class GroupsApi(private val client: Client) {
     )
 
     fun get(
-            userId: Int?,
-            filter: GroupsFilter?,
+            userId: Int? = null,
+            filter: GroupsFilter? = null,
             fields: List<CommunityOptionalField>?,
             offset: Int,
             count: Int
@@ -617,8 +617,8 @@ class GroupsApi(private val client: Client) {
     fun getAddresses(
             groupId: Int,
             addressIds: List<Int>?,
-            latitude: Double?,
-            longitude: Double?,
+            latitude: Double? = null,
+            longitude: Double? = null,
             offset: Int,
             count: Int,
             fields: List<AddressOptionalFields>?
@@ -638,7 +638,7 @@ class GroupsApi(private val client: Client) {
             offset: Int,
             count: Int,
             fields: List<ObjectField>,
-            ownerId: Int?
+            ownerId: Int? = null
     ): JsonObject = Methods.getBanned.callSync(client, JsonObject()
             .put("group_id", groupId)
             .put("offset", offset)
@@ -690,8 +690,8 @@ class GroupsApi(private val client: Client) {
     )
 
     fun getCatalog(
-            categoryId: Int?,
-            subcategoryId: Int?
+            categoryId: Int? = null,
+            subcategoryId: Int? = null
     ): JsonObject = Methods.getCatalog.callSync(client, JsonObject()
             .put("category_id", categoryId)
             .put("subcategory_id", subcategoryId)
@@ -845,7 +845,7 @@ class GroupsApi(private val client: Client) {
 
     fun isMember(
             groupId: Int,
-            userId: Int?
+            userId: Int? = null
     ): JsonObject = Methods.isMember.callSync(client, JsonObject()
             .put("group_id", groupId)
             .put("user_id", userId)
@@ -862,7 +862,7 @@ class GroupsApi(private val client: Client) {
 
     fun join(
             groupId: Int,
-            notSure: Boolean?
+            notSure: Boolean? = null
     ): JsonObject = Methods.join.callSync(client, JsonObject()
             .put("group_id", groupId)
             .put("not_sure", notSure?.asInt())
@@ -895,10 +895,10 @@ class GroupsApi(private val client: Client) {
     fun search(
             query: String,
             type: Community.Type?,
-            countryId: Int?,
-            cityId: Int?,
-            isFuture: Boolean?,
-            hasMarket: Boolean?,
+            countryId: Int? = null,
+            cityId: Int? = null,
+            isFuture: Boolean? = null,
+            hasMarket: Boolean? = null,
             sort: CommunitySearchOrder,
             offset: Int,
             count: Int
@@ -917,48 +917,48 @@ class GroupsApi(private val client: Client) {
     fun setCallbackSettings(
             groupId: Int,
             serverId: Int,
-            apiVersion: String?,
-            messageReply: Boolean?,
-            messagesEdit: Boolean?,
-            messageAllow: Boolean?,
-            messageDeny: Boolean?,
-            messageTypingState: Boolean?,
-            messageRead: Boolean?,
-            photoNew: Boolean?,
-            photoCommentNew: Boolean?,
-            photoCommentEdit: Boolean?,
-            photoCommentRestore: Boolean?,
-            photoCommentDelete: Boolean?,
-            audioNew: Boolean?,
-            videoNew: Boolean?,
-            videoCommentNew: Boolean?,
-            videoCommentEdit: Boolean?,
-            videoCommentRestore: Boolean?,
-            videoCommentDelete: Boolean?,
-            wallPostNew: Boolean?,
-            wallRepost: Boolean?,
-            wallReplyNew: Boolean?,
-            wallReplyEdit: Boolean?,
-            wallReplyRestore: Boolean?,
-            wallReplyDelete: Boolean?,
-            boardPostNew: Boolean?,
-            boardPostEdit: Boolean?,
-            boardPostRestore: Boolean?,
-            boardPostDelete: Boolean?,
-            marketCommentNew: Boolean?,
-            marketCommentEdit: Boolean?,
-            marketCommentRestore: Boolean?,
-            marketCommentDelete: Boolean?,
-            groupLeave: Boolean?,
-            groupJoin: Boolean?,
-            userBlock: Boolean?,
-            userUnblock: Boolean?,
-            pollVoteNew: Boolean?,
-            groupOfficersEdit: Boolean?,
-            groupChangeSettings: Boolean?,
-            groupChangePhoto: Boolean?,
-            vkPayTransaction: Boolean?,
-            appPayload: Boolean?
+            apiVersion: String? = null,
+            messageReply: Boolean? = null,
+            messagesEdit: Boolean? = null,
+            messageAllow: Boolean? = null,
+            messageDeny: Boolean? = null,
+            messageTypingState: Boolean? = null,
+            messageRead: Boolean? = null,
+            photoNew: Boolean? = null,
+            photoCommentNew: Boolean? = null,
+            photoCommentEdit: Boolean? = null,
+            photoCommentRestore: Boolean? = null,
+            photoCommentDelete: Boolean? = null,
+            audioNew: Boolean? = null,
+            videoNew: Boolean? = null,
+            videoCommentNew: Boolean? = null,
+            videoCommentEdit: Boolean? = null,
+            videoCommentRestore: Boolean? = null,
+            videoCommentDelete: Boolean? = null,
+            wallPostNew: Boolean? = null,
+            wallRepost: Boolean? = null,
+            wallReplyNew: Boolean? = null,
+            wallReplyEdit: Boolean? = null,
+            wallReplyRestore: Boolean? = null,
+            wallReplyDelete: Boolean? = null,
+            boardPostNew: Boolean? = null,
+            boardPostEdit: Boolean? = null,
+            boardPostRestore: Boolean? = null,
+            boardPostDelete: Boolean? = null,
+            marketCommentNew: Boolean? = null,
+            marketCommentEdit: Boolean? = null,
+            marketCommentRestore: Boolean? = null,
+            marketCommentDelete: Boolean? = null,
+            groupLeave: Boolean? = null,
+            groupJoin: Boolean? = null,
+            userBlock: Boolean? = null,
+            userUnblock: Boolean? = null,
+            pollVoteNew: Boolean? = null,
+            groupOfficersEdit: Boolean? = null,
+            groupChangeSettings: Boolean? = null,
+            groupChangePhoto: Boolean? = null,
+            vkPayTransaction: Boolean? = null,
+            appPayload: Boolean? = null
     ): JsonObject = Methods.setCallbackSettings.callSync(client, JsonObject()
             .put("group_id", groupId)
             .put("server_id", serverId)
@@ -1009,48 +1009,48 @@ class GroupsApi(private val client: Client) {
     fun setLongPollSettings(
             groupId: Int,
             apiVersion: String,
-            enabled: Boolean?,
-            messageReply: Boolean?,
-            messagesEdit: Boolean?,
-            messageAllow: Boolean?,
-            messageDeny: Boolean?,
-            messageTypingState: Boolean?,
-            messageRead: Boolean?,
-            photoNew: Boolean?,
-            photoCommentNew: Boolean?,
-            photoCommentEdit: Boolean?,
-            photoCommentRestore: Boolean?,
-            photoCommentDelete: Boolean?,
-            audioNew: Boolean?,
-            videoNew: Boolean?,
-            videoCommentNew: Boolean?,
-            videoCommentEdit: Boolean?,
-            videoCommentRestore: Boolean?,
-            videoCommentDelete: Boolean?,
-            wallPostNew: Boolean?,
-            wallRepost: Boolean?,
-            wallReplyNew: Boolean?,
-            wallReplyEdit: Boolean?,
-            wallReplyRestore: Boolean?,
-            wallReplyDelete: Boolean?,
-            boardPostNew: Boolean?,
-            boardPostEdit: Boolean?,
-            boardPostRestore: Boolean?,
-            boardPostDelete: Boolean?,
-            marketCommentNew: Boolean?,
-            marketCommentEdit: Boolean?,
-            marketCommentRestore: Boolean?,
-            marketCommentDelete: Boolean?,
-            groupLeave: Boolean?,
-            groupJoin: Boolean?,
-            userBlock: Boolean?,
-            userUnblock: Boolean?,
-            pollVoteNew: Boolean?,
-            groupOfficersEdit: Boolean?,
-            groupChangeSettings: Boolean?,
-            groupChangePhoto: Boolean?,
-            vkPayTransaction: Boolean?,
-            appPayload: Boolean?
+            enabled: Boolean? = null,
+            messageReply: Boolean? = null,
+            messagesEdit: Boolean? = null,
+            messageAllow: Boolean? = null,
+            messageDeny: Boolean? = null,
+            messageTypingState: Boolean? = null,
+            messageRead: Boolean? = null,
+            photoNew: Boolean? = null,
+            photoCommentNew: Boolean? = null,
+            photoCommentEdit: Boolean? = null,
+            photoCommentRestore: Boolean? = null,
+            photoCommentDelete: Boolean? = null,
+            audioNew: Boolean? = null,
+            videoNew: Boolean? = null,
+            videoCommentNew: Boolean? = null,
+            videoCommentEdit: Boolean? = null,
+            videoCommentRestore: Boolean? = null,
+            videoCommentDelete: Boolean? = null,
+            wallPostNew: Boolean? = null,
+            wallRepost: Boolean? = null,
+            wallReplyNew: Boolean? = null,
+            wallReplyEdit: Boolean? = null,
+            wallReplyRestore: Boolean? = null,
+            wallReplyDelete: Boolean? = null,
+            boardPostNew: Boolean? = null,
+            boardPostEdit: Boolean? = null,
+            boardPostRestore: Boolean? = null,
+            boardPostDelete: Boolean? = null,
+            marketCommentNew: Boolean? = null,
+            marketCommentEdit: Boolean? = null,
+            marketCommentRestore: Boolean? = null,
+            marketCommentDelete: Boolean? = null,
+            groupLeave: Boolean? = null,
+            groupJoin: Boolean? = null,
+            userBlock: Boolean? = null,
+            userUnblock: Boolean? = null,
+            pollVoteNew: Boolean? = null,
+            groupOfficersEdit: Boolean? = null,
+            groupChangeSettings: Boolean? = null,
+            groupChangePhoto: Boolean? = null,
+            vkPayTransaction: Boolean? = null,
+            appPayload: Boolean? = null
     ): JsonObject = Methods.setLongPollSettings.callSync(client, JsonObject()
             .put("group_id", groupId)
             .put("api_version", apiVersion)
@@ -1100,10 +1100,10 @@ class GroupsApi(private val client: Client) {
 
     fun setSettings(
             groupId: Int,
-            messages: Boolean?,
-            botsCapabilities: Boolean?,
-            botsStartButton: Boolean?,
-            botsAddToChat: Boolean?
+            messages: Boolean? = null,
+            botsCapabilities: Boolean? = null,
+            botsStartButton: Boolean? = null,
+            botsAddToChat: Boolean? = null
     ): JsonObject = Methods.setSettings.callSync(client, JsonObject()
             .put("group_id", groupId)
             .put("messages", messages?.asInt())

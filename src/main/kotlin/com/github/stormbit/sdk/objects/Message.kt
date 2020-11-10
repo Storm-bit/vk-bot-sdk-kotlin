@@ -83,9 +83,13 @@ class Message {
     private val docsToUpload = CopyOnWriteArrayList<JsonObject>()
 
     var stringPhotos = ArrayList<String>()
+        private set
     var stringDocs = ArrayList<String>()
+        private set
     var stringVideos = ArrayList<String>()
+        private set
     var stringAudios = ArrayList<String>()
+        private set
 
     /**
      * Constructor for sent message
@@ -449,23 +453,23 @@ class Message {
      */
     fun messageType(): MessageType? {
         return when {
-            isVoiceMessage() -> MessageType.VOICE
+            isVoiceMessage -> MessageType.VOICE
 
-            isStickerMessage() -> MessageType.STICKER
+            isStickerMessage -> MessageType.STICKER
 
-            isAudioMessage() -> MessageType.AUDIO
+            isAudioMessage -> MessageType.AUDIO
 
-            isVideoMessage() -> MessageType.VIDEO
+            isVideoMessage -> MessageType.VIDEO
 
-            isDocMessage() -> MessageType.DOC
+            isDocMessage -> MessageType.DOC
 
-            isWallMessage() -> MessageType.WALL
+            isWallMessage -> MessageType.WALL
 
-            isPhotoMessage() -> MessageType.PHOTO
+            isPhotoMessage -> MessageType.PHOTO
 
-            isLinkMessage() -> MessageType.PHOTO
+            isLinkMessage -> MessageType.PHOTO
 
-            isSimpleTextMessage() -> MessageType.SIMPLE_TEXT
+            isSimpleTextMessage -> MessageType.SIMPLE_TEXT
 
             else -> null
         }
@@ -474,17 +478,15 @@ class Message {
     /**
      * @return true if message has forwarded messages
      */
-    fun hasFwds(): Boolean {
-        var answer = false
-        if (attachmentsOfReceivedMessage!!.has("fwd")) answer = true
-        return answer
-    }
+    val hasFwds: Boolean
+        get() = attachmentsOfReceivedMessage!!.has("fwd")
+
 
     /**
      * @return array of forwarded messages or []
      */
     fun getForwardedMessages(): JsonArray {
-        if (hasFwds()) {
+        if (hasFwds) {
             val response = client.messages.getById(listOf(messageId!!))
 
             if (response.has("response") && response.getAsJsonObject("response").getAsJsonArray("items").getJsonObject(0).has("fwd_messages")) {
@@ -499,7 +501,7 @@ class Message {
      * @return JsonObject with reply message or {}
      */
     fun getReplyMessage(): JsonObject {
-        if (hasFwds()) {
+        if (hasFwds) {
             val response = client.messages.getById(listOf(messageId!!))
 
             if (response.has("response") && response.getAsJsonObject("response").getAsJsonArray("items").getJsonObject(0).has("reply_message")) {
@@ -513,8 +515,8 @@ class Message {
      * Get attachments from message
      * @return JSONArray attachments
      */
-    fun getAttachments(): JsonArray {
-        val response: JsonObject = if (isMessageFromChat()) {
+    private fun getAttachments(): JsonArray {
+        val response: JsonObject = if (isMessageFromChat) {
             client.messages.getByConversationMessageId(chatIdLong, listOf(messageId!!), groupId = client.id)
         } else {
             client.messages.getById(listOf(messageId!!))
@@ -574,23 +576,32 @@ class Message {
     /*
      * Priority: voice, sticker, gif, ... , simple text
      */
-    fun isPhotoMessage(): Boolean = getCountOfAttachmentsByType()["photo"]!! > 0
+    val isPhotoMessage: Boolean
+            get() = getCountOfAttachmentsByType()["photo"]!! > 0
 
-    fun isSimpleTextMessage(): Boolean = getCountOfAttachmentsByType()["summary"] == 0
+    val isSimpleTextMessage: Boolean
+            get() = getCountOfAttachmentsByType()["summary"] == 0
 
-    fun isVoiceMessage(): Boolean = getCountOfAttachmentsByType()["voice"]!! > 0
+    val isVoiceMessage: Boolean
+            get() = getCountOfAttachmentsByType()["voice"]!! > 0
 
-    fun isAudioMessage(): Boolean = getCountOfAttachmentsByType()["audio"]!! > 0
+    val isAudioMessage: Boolean
+            get() = getCountOfAttachmentsByType()["audio"]!! > 0
 
-    fun isVideoMessage(): Boolean = getCountOfAttachmentsByType()["video"]!! > 0
+    val isVideoMessage: Boolean
+            get() = getCountOfAttachmentsByType()["video"]!! > 0
 
-    fun isDocMessage(): Boolean = getCountOfAttachmentsByType()["doc"]!! > 0
+    val isDocMessage: Boolean
+            get() = getCountOfAttachmentsByType()["doc"]!! > 0
 
-    fun isWallMessage(): Boolean = getCountOfAttachmentsByType()["wall"]!! > 0
+    val isWallMessage: Boolean
+            get() = getCountOfAttachmentsByType()["wall"]!! > 0
 
-    fun isStickerMessage(): Boolean = getCountOfAttachmentsByType()["sticker"]!! > 0
+    val isStickerMessage: Boolean
+            get() = getCountOfAttachmentsByType()["sticker"]!! > 0
 
-    fun isLinkMessage(): Boolean = getCountOfAttachmentsByType()["link"]!! > 0
+    val isLinkMessage: Boolean
+            get() = getCountOfAttachmentsByType()["link"]!! > 0
 
     /**
      * Method helps to identify kind of message
@@ -714,9 +725,8 @@ class Message {
         return answer
     }
 
-    fun isMessageFromChat(): Boolean {
-        return chatId > 0 || chatIdLong > 0
-    }
+    val isMessageFromChat: Boolean
+        get() = chatId > 0 || chatIdLong > 0
 
     private fun setAttachments(attachments: JsonObject?) {
         if (attachments == null) return

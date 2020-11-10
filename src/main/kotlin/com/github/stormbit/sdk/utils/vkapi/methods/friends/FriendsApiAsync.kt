@@ -14,7 +14,7 @@ import com.google.gson.JsonObject
 class FriendsApiAsync(private var client: Client) {
     fun add(
             userId: Int,
-            text: String?,
+            text: String? = null,
             declineRequest: Boolean,
             callback: Callback<JsonObject?>
     ) = Methods.add.call(client, callback, JsonObject()
@@ -25,7 +25,7 @@ class FriendsApiAsync(private var client: Client) {
 
     fun addList(
             name: String,
-            userIds: List<Int>?,
+            userIds: List<Int>? = null,
             callback: Callback<JsonObject?>
     ) = Methods.addList.call(client, callback, JsonObject()
             .put("name", name)
@@ -59,7 +59,7 @@ class FriendsApiAsync(private var client: Client) {
 
     fun edit(
             userId: Int,
-            listIds: List<Int>?,
+            listIds: List<Int>? = null,
             callback: Callback<JsonObject?>
     ) = Methods.edit.call(client, callback, JsonObject()
             .put("user_id", userId)
@@ -69,7 +69,7 @@ class FriendsApiAsync(private var client: Client) {
     fun editList(
             listId: Int,
             userIds: List<Int>,
-            name: String?,
+            name: String? = null,
             callback: Callback<JsonObject?>
     ) = Methods.editList.call(client, callback, JsonObject()
             .put("list_id", listId)
@@ -79,9 +79,9 @@ class FriendsApiAsync(private var client: Client) {
 
     fun editList(
             listId: Int,
-            addUserIds: List<Int>?,
-            deleteUserIds: List<Int>?,
-            name: String?,
+            addUserIds: List<Int>? = null,
+            deleteUserIds: List<Int>? = null,
+            name: String? = null,
             callback: Callback<JsonObject?>
     ) = Methods.editList.call(client, callback, JsonObject()
             .put("list_id", listId)
@@ -91,9 +91,9 @@ class FriendsApiAsync(private var client: Client) {
     )
 
     fun get(
-            userId: Int?,
-            order: FriendsOrder?,
-            listId: Int?,
+            userId: Int? = null,
+            order: FriendsOrder? = null,
+            listId: Int? = null,
             count: Int,
             offset: Int,
             userFields: List<UserOptionalField>,
@@ -110,9 +110,9 @@ class FriendsApiAsync(private var client: Client) {
     )
 
     fun getIds(
-            userId: Int?,
-            order: FriendsOrder?,
-            listId: Int?,
+            userId: Int? = null,
+            order: FriendsOrder? = null,
+            listId: Int? = null,
             count: Int,
             offset: Int,
             callback: Callback<JsonObject?>
@@ -136,7 +136,7 @@ class FriendsApiAsync(private var client: Client) {
     )
 
     fun getLists(
-            userId: Int?,
+            userId: Int? = null,
             withSystem: Boolean,
             callback: Callback<JsonObject?>
     ) = Methods.getLists.call(client, callback, JsonObject()
@@ -146,9 +146,9 @@ class FriendsApiAsync(private var client: Client) {
 
     fun getMutual(
             targetUserId: Int,
-            sourceUserId: Int?,
+            sourceUserId: Int? = null,
             sortRandomly: Boolean,
-            count: Int?,
+            count: Int? = null,
             offset: Int,
             callback: Callback<JsonObject?>
     ) = Methods.getMutual.call(client, callback, JsonObject()
@@ -161,9 +161,9 @@ class FriendsApiAsync(private var client: Client) {
 
     fun getMutual(
             targetUserIds: List<Int>,
-            sourceUserId: Int?,
+            sourceUserId: Int? = null,
             sortRandomly: Boolean,
-            count: Int?,
+            count: Int? = null,
             offset: Int,
             callback: Callback<JsonObject?>
     ) = Methods.getMutual.call(client, callback, JsonObject()
@@ -175,10 +175,10 @@ class FriendsApiAsync(private var client: Client) {
     )
 
     fun getOnline(
-            userId: Int?,
-            listId: Int?,
+            userId: Int? = null,
+            listId: Int? = null,
             sortRandomly: Boolean,
-            count: Int?,
+            count: Int? = null,
             offset: Int,
             callback: Callback<JsonObject?>
     ) = Methods.getOnline.call(client, callback, JsonObject()
@@ -190,10 +190,10 @@ class FriendsApiAsync(private var client: Client) {
     )
 
     fun getOnlineWithOnlineFromMobile(
-            userId: Int?,
-            listId: Int?,
+            userId: Int? = null,
+            listId: Int? = null,
             sortRandomly: Boolean,
-            count: Int?,
+            count: Int? = null,
             offset: Int,
             callback: Callback<JsonObject?>
     ) = Methods.getOnline.call(client, callback, JsonObject()
@@ -310,7 +310,7 @@ class FriendsApiAsync(private var client: Client) {
 
     fun search(
             query: String,
-            userId: Int?,
+            userId: Int? = null,
             count: Int,
             offset: Int,
             userFields: List<UserOptionalField>,

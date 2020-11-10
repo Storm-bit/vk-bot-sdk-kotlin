@@ -20,7 +20,7 @@ class MessagesApi(private val client: Client) {
 
     fun allowMessagesFromGroup(
             groupId: Int,
-            key: String?
+            key: String? = null
     ): JsonObject = Methods.allowMessagesFromGroup.callSync(client, "group_id", groupId, "key", key)
 
     fun createChat(
@@ -54,7 +54,7 @@ class MessagesApi(private val client: Client) {
 
     fun deleteConversation(
             peerId: Int,
-            groupId: Int?
+            groupId: Int? = null
     ): JsonObject = Methods.deleteConversation.callSync(client, "peer_id", peerId, "group_id", groupId)
 
     fun deleteConversation(
@@ -68,7 +68,7 @@ class MessagesApi(private val client: Client) {
     fun edit(
             peerId: Int,
             messageId: Int,
-            message: String?,
+            message: String? = null,
             latitude: Int? = null,
             longitude: Int? = null,
             attachments: List<String>? = null,
@@ -261,7 +261,7 @@ class MessagesApi(private val client: Client) {
             userFields: List<ObjectField>,
             eventsLimit: Int,
             messagesLimit: Int,
-            maxMessageId: Int?,
+            maxMessageId: Int? = null,
             longPollVersion: Int,
             groupId: Int? = null
     ): JsonObject = Methods.getLongPollHistory.callSync(client, JsonObject()
@@ -294,7 +294,7 @@ class MessagesApi(private val client: Client) {
 
     fun getRecentCalls(
             count: Int,
-            startMessageId: Int?,
+            startMessageId: Int? = null,
             fields: List<ObjectField>,
             extended: Boolean
     ): JsonObject = Methods.getRecentCalls.callSync(client, JsonObject()
@@ -362,7 +362,7 @@ class MessagesApi(private val client: Client) {
 
     fun markAsRead(
             peerId: Int,
-            startMessageId: Int?,
+            startMessageId: Int? = null,
             groupId: Int? = null
     ): JsonObject = Methods.markAsRead.callSync(client, JsonObject()
             .put("peer_id", peerId)

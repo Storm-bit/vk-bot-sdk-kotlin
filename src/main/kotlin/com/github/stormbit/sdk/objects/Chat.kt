@@ -10,15 +10,15 @@ class Chat(private val client: Client, private val chatId: Int) {
         const val CHAT_PREFIX = 2000000000
     }
 
-    fun addUser(userId: Int, callbacks: Callback<JsonObject>? = null) = callbacks?.onResult(client.messages.addChatUser((chatId - CHAT_PREFIX), userId))
+    fun addUser(userId: Int, callback: Callback<JsonObject>? = null) = callback?.onResult(client.messages.addChatUser((chatId - CHAT_PREFIX), userId))
 
-    fun kickUser(userId: Int, callbacks: Callback<JsonObject>? = null) = callbacks?.onResult(client.messages.removeChatUser((chatId - CHAT_PREFIX), userId))
+    fun kickUser(userId: Int, callback: Callback<JsonObject>? = null) = callback?.onResult(client.messages.removeChatUser((chatId - CHAT_PREFIX), userId))
 
-    fun deletePhoto(callbacks: Callback<JsonObject>? = null) = callbacks?.onResult(client.messages.deleteChatPhoto((chatId - CHAT_PREFIX)))
+    fun deletePhoto(callback: Callback<JsonObject>? = null) = callback?.onResult(client.messages.deleteChatPhoto((chatId - CHAT_PREFIX)))
 
-    fun editTitle(newTitle: String, callbacks: Callback<JsonObject>? = null) = callbacks?.onResult(client.messages.editChat((chatId - CHAT_PREFIX), newTitle))
+    fun editTitle(newTitle: String, callback: Callback<JsonObject>? = null) = callback?.onResult(client.messages.editChat((chatId - CHAT_PREFIX), newTitle))
 
-    fun getUsers(callbacks: Callback<List<Int>>) = callbacks.onResult(client.messages.getChatUsers((chatId - CHAT_PREFIX)))
+    fun getUsers(callback: Callback<List<Int>>) = callback.onResult(client.messages.getChatUsers(chatId - CHAT_PREFIX))
 
     fun getChatInfo(callback: Callback<JsonObject>) = callback.onResult(client.messages.getChat(listOf(chatId)))
 }

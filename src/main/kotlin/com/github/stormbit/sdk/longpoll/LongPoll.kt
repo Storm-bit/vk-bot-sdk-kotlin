@@ -1,9 +1,8 @@
 package com.github.stormbit.sdk.longpoll
 
-import com.github.stormbit.sdk.callbacks.AbstractCallback
-import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.clients.Group
+import com.github.stormbit.sdk.events.Event
 import com.github.stormbit.sdk.longpoll.responses.GetLongpollServerResponse
 import com.github.stormbit.sdk.utils.Utils
 import com.github.stormbit.sdk.utils.Utils.Companion.toJsonObject
@@ -41,8 +40,7 @@ class LongPoll(private val client: Client) {
     @Volatile
     private var longpollIsOn = false
 
-    private val updatesHandler: UpdatesHandler = if (client is Group) UpdatesHandlerGroup(client) else UpdatesHandlerUser(client)
-
+    val updatesHandler: UpdatesHandler = if (client is Group) UpdatesHandlerGroup(client) else UpdatesHandlerUser(client)
 
     /**
      * If true, all updates from longpoll server
@@ -60,9 +58,7 @@ class LongPoll(private val client: Client) {
 
             try {
                 Thread.sleep(1000)
-            } catch (ignored: InterruptedException) {
-            }
-
+            } catch (ignored: InterruptedException) { }
         }
 
         if (!longpollIsOn) {
@@ -81,29 +77,9 @@ class LongPoll(private val client: Client) {
         longpollIsOn = false
     }
 
-    /**
-     * Add callback to the map
-     *
-     * @param name     Callback name
-     * @param callback Callback
-     */
-    fun registerCallback(name: String, callback: Callback<*>) = updatesHandler.registerCallback(name, callback)
-
-    /**
-     * Add callback to the map
-     *
-     * @param name     Callback name
-     * @param callback Callback
-     */
-    fun registerAbstractCallback(name: String, callback: AbstractCallback) = updatesHandler.registerAbstractCallback(name, callback)
-
-    /**
-     * Add callback to the map
-     *
-     * @param name     Callback name
-     * @param callback Callback
-     */
-    fun registerChatCallback(name: String, callback: AbstractCallback) = updatesHandler.registerChatCallback(name, callback)
+    inline fun <reified T : Event> registerEvent(noinline consumer: T.() -> Unit) {
+        updatesHandler.registerEvent(consumer)
+    }
 
     private fun setData(): Boolean {
 
@@ -241,7 +217,7 @@ class LongPoll(private val client: Client) {
 
                 if (response.has("pts")) pts = response.getInt("pts")
 
-                if (this.updatesHandler.callbacksCount() > 0 || this.updatesHandler.commandsCount() > 0 || this.updatesHandler.chatCallbacksCount() > 0) {
+                if (this.updatesHandler.eventsCount() > 0 || this.updatesHandler.commandsCount() > 0) {
                     if (response.has("ts") && response.has("updates")) {
                         this.updatesHandler.handle(response.getAsJsonArray("updates"))
                     } else {

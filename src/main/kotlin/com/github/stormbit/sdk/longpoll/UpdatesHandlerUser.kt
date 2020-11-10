@@ -1,17 +1,17 @@
 package com.github.stormbit.sdk.longpoll
 
-import com.github.stormbit.sdk.callbacks.CallbackDouble
-import com.github.stormbit.sdk.callbacks.CallbackFourth
-import com.github.stormbit.sdk.callbacks.CallbackTriple
 import com.github.stormbit.sdk.clients.Client
+import com.github.stormbit.sdk.events.EveryEvent
+import com.github.stormbit.sdk.events.TypingEvent
+import com.github.stormbit.sdk.events.chat.*
+import com.github.stormbit.sdk.events.friend.FriendOfflineEvent
+import com.github.stormbit.sdk.events.friend.FriendOnlineEvent
+import com.github.stormbit.sdk.events.message.*
 import com.github.stormbit.sdk.objects.Chat
 import com.github.stormbit.sdk.objects.Message
+import com.github.stormbit.sdk.utils.*
 import com.github.stormbit.sdk.utils.Utils.Companion.shift
 import com.github.stormbit.sdk.utils.Utils.Companion.toJsonObject
-import com.github.stormbit.sdk.utils.getInt
-import com.github.stormbit.sdk.utils.getJsonObject
-import com.github.stormbit.sdk.utils.getString
-import com.github.stormbit.sdk.utils.gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 
@@ -51,20 +51,18 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
                 handleEveryLongPollUpdate(currentUpdate)
             }
 
-            else -> {
-                handleEveryLongPollUpdate(currentUpdate)
-            }
+            else -> handleEveryLongPollUpdate(currentUpdate)
         }
     }
 
     /**
      * Handle chat events
      */
-    private fun handleChatEvents(updateObject: JsonArray) {
+    private fun handleChatEvents(updateObject: JsonArray): Boolean {
         val chatId = updateObject.getInt(3)
 
-        val attachments = if (updateObject.size() > 6) if (updateObject[6].toString().startsWith("{")) gson.toJsonTree(updateObject[6].toString()).asJsonObject else null else null
-                ?: return
+        val attachments = if (updateObject.size() > 5) if (updateObject[6].toString().startsWith("{")) updateObject[6].asJsonObject else null else null
+                ?: return false
 
         // Return if no attachments
         // Because there no events,
@@ -75,52 +73,47 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
             when (sourceAct) {
                 "chat_create" -> {
                     val title = attachments.getString("source_text")
-                    if (chatCallbacks.containsKey(Events.CHAT_CREATE.value)) {
-                        (chatCallbacks[Events.CHAT_CREATE.value] as CallbackTriple<String?, Int?, Int?>).onEvent(title, from, chatId)
-                    }
+                    events[Events.CHAT_CREATE.value]?.invoke(ChatCreateEvent(title, from, chatId))
                 }
                 "chat_title_update" -> {
                     val oldTitle = attachments.getString("source_old_text")
                     val newTitle = attachments.getString("source_text")
-                    if (chatCallbacks.containsKey(Events.CHAT_TITLE_CHANGE.value)) {
-                        (chatCallbacks[Events.CHAT_TITLE_CHANGE.value] as CallbackFourth<String?, String?, Int?, Int?>).onEvent(oldTitle, newTitle, from, chatId)
-                    }
+
+                    events[Events.CHAT_TITLE_CHANGE.value]?.invoke(ChatTitleChangeEvent(oldTitle, newTitle, from, chatId))
                 }
                 "chat_photo_update" -> {
                     val photo = gson.toJsonTree(client.messages.getById(listOf(updateObject.getInt(1))).getAsJsonObject("response").getAsJsonArray("items").getJsonObject(0).getAsJsonArray("attachments").getJsonObject(0).getAsJsonObject("photo")).asJsonObject
 
-                    if (chatCallbacks.containsKey(Events.CHAT_PHOTO_UPDATE.value)) {
-                        (chatCallbacks[Events.CHAT_PHOTO_UPDATE.value] as CallbackTriple<JsonObject?, Int?, Int?>).onEvent(photo, from, chatId)
-                    }
+                    events[Events.CHAT_PHOTO_UPDATE.value]?.invoke(ChatPhotoUpdateEvent(photo, from, chatId))
                 }
                 "chat_invite_user" -> {
-                    val user = Integer.valueOf(attachments.getString("source_mid"))
-                    if (chatCallbacks.containsKey(Events.CHAT_JOIN.value)) {
-                        (chatCallbacks[Events.CHAT_JOIN.value] as CallbackTriple<Int?, Int?, Int?>).onEvent(from, user, chatId)
-                    }
+                    val user = attachments.getString("source_mid").toInt()
+
+                    events[Events.CHAT_JOIN.value]?.invoke(ChatJoinEvent(from, user, chatId))
+
                 }
                 "chat_kick_user" -> {
-                    val user = Integer.valueOf(attachments.getString("source_mid"))
-                    if (chatCallbacks.containsKey(Events.CHAT_LEAVE.value)) {
-                        (chatCallbacks[Events.CHAT_LEAVE.value] as CallbackTriple<Int?, Int?, Int?>).onEvent(from, user, chatId)
-                    }
+                    val user = attachments.getString("source_mid").toInt()
+
+
+                    events[Events.CHAT_LEAVE.value]?.invoke(ChatLeaveEvent(from, user, chatId))
                 }
                 "chat_photo_remove" -> {
-                    if (chatCallbacks.containsKey(Events.CHAT_PHOTO_REMOVE.value)) {
-                        (chatCallbacks[Events.CHAT_PHOTO_REMOVE.value] as CallbackDouble<Int?, Int?>).onEvent(from, chatId)
-                    }
+                    events[Events.CHAT_PHOTO_REMOVE.value]?.invoke(ChatPhotoRemoveEvent(from, chatId))
                 }
             }
+
+            return true
         }
+
+        return false
     }
 
     /**
      * Handle every longpoll event
      */
     private fun handleEveryLongPollUpdate(updateObject: JsonArray) {
-        if (callbacks.containsKey(Events.EVERY.value)) {
-            callbacks[Events.EVERY.value]!!.onResult(updateObject)
-        }
+        events[Events.EVERY.value]?.invoke(EveryEvent(JsonObject().put("response", updateObject)))
     }
 
     private fun handleMessageUpdate(updateObject: JsonArray) {
@@ -135,9 +128,10 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
 
         val payload = JsonObject()
 
-        val title = updateObject.getJsonObject(6).getString("title")
+//        val title = updateObject.getJsonObject(6).getString("title")
+        val title = "..."
 
-        val attachments = if (updateObject.size() > 0) if (updateObject.get(7).toString().startsWith("{")) toJsonObject(updateObject[7].toString()) else null else null
+        val attachments = if (updateObject.size() > 0) if (updateObject.get(6).toString().startsWith("{")) toJsonObject(updateObject[6].toString()) else null else null
 
         val randomId = if (updateObject.size() > 7) updateObject.getInt(8) else 0
 
@@ -166,7 +160,7 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
             message.chatIdLong = Chat.CHAT_PREFIX + chatId
 
             // chat
-            handleChatEvents(updateObject)
+            messageIsAlreadyHandled = handleChatEvents(updateObject)
         }
 
         // check for commands
@@ -174,10 +168,8 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
             messageIsAlreadyHandled = handleCommands(message)
         }
 
-        if (message.hasFwds()) {
-            if (callbacks.containsKey(MessageEvents.MESSAGE_WITH_FORWARDS.value)) {
-                callbacks[MessageEvents.MESSAGE_WITH_FORWARDS.value]!!.onResult(message)
-            }
+        if (message.hasFwds) {
+            events[MessageEvents.MESSAGE_WITH_FORWARDS.value]?.invoke(MessageWithForwardsEvent(message))
             messageIsAlreadyHandled = true
 
             handleSendTyping(message)
@@ -186,64 +178,64 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
         if (!messageIsAlreadyHandled) {
             when (message.messageType()) {
                 Message.MessageType.VOICE -> {
-                    if (callbacks.containsKey(MessageEvents.VOICE_MESSAGE.value)) {
-                        callbacks[MessageEvents.VOICE_MESSAGE.value]!!.onResult(message)
+                    if (events.containsKey(MessageEvents.VOICE_MESSAGE.value)) {
+                        events[MessageEvents.VOICE_MESSAGE.value]?.invoke(VoiceMessageEvent(message))
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
                 Message.MessageType.STICKER -> {
-                    if (callbacks.containsKey(MessageEvents.STICKER_MESSAGE.value)) {
-                        callbacks[MessageEvents.STICKER_MESSAGE.value]!!.onResult(message)
+                    if (events.containsKey(MessageEvents.STICKER_MESSAGE.value)) {
+                        events[MessageEvents.STICKER_MESSAGE.value]?.invoke(StickerMessageEvent(message))
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
                 Message.MessageType.AUDIO -> {
-                    if (callbacks.containsKey(MessageEvents.AUDIO_MESSAGE.value)) {
-                        callbacks[MessageEvents.AUDIO_MESSAGE.value]!!.onResult(message)
+                    if (events.containsKey(MessageEvents.AUDIO_MESSAGE.value)) {
+                        events[MessageEvents.AUDIO_MESSAGE.value]?.invoke(AudioMessageEvent(message))
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
                 Message.MessageType.VIDEO -> {
-                    if (callbacks.containsKey(MessageEvents.VIDEO_MESSAGE.value)) {
-                        callbacks[MessageEvents.VIDEO_MESSAGE.value]!!.onResult(message)
+                    if (events.containsKey(MessageEvents.VIDEO_MESSAGE.value)) {
+                        events[MessageEvents.VIDEO_MESSAGE.value]?.invoke(VideoMessageEvent(message))
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
                 Message.MessageType.DOC -> {
-                    if (callbacks.containsKey(MessageEvents.DOC_MESSAGE.value)) {
-                        callbacks[MessageEvents.DOC_MESSAGE.value]!!.onResult(message)
+                    if (events.containsKey(MessageEvents.DOC_MESSAGE.value)) {
+                        events[MessageEvents.DOC_MESSAGE.value]?.invoke(DocMessageEvent(message))
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
                 Message.MessageType.WALL -> {
-                    if (callbacks.containsKey(MessageEvents.WALL_MESSAGE.value)) {
-                        callbacks[MessageEvents.WALL_MESSAGE.value]!!.onResult(message)
+                    if (events.containsKey(MessageEvents.WALL_MESSAGE.value)) {
+                        events[MessageEvents.WALL_MESSAGE.value]?.invoke(WallMessageEvent(message))
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
                 Message.MessageType.PHOTO -> {
-                    if (callbacks.containsKey(MessageEvents.PHOTO_MESSAGE.value)) {
-                        callbacks[MessageEvents.PHOTO_MESSAGE.value]!!.onResult(message)
+                    if (events.containsKey(MessageEvents.PHOTO_MESSAGE.value)) {
+                        events[MessageEvents.PHOTO_MESSAGE.value]?.invoke(PhotoMessageEvent(message))
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
                 Message.MessageType.LINK -> {
-                    if (callbacks.containsKey(MessageEvents.LINK_MESSAGE.value)) {
-                        callbacks[MessageEvents.LINK_MESSAGE.value]!!.onResult(message)
+                    if (events.containsKey(MessageEvents.LINK_MESSAGE.value)) {
+                        events[MessageEvents.LINK_MESSAGE.value]?.invoke(LinkMessageEvent(message))
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
                 }
                 Message.MessageType.SIMPLE_TEXT -> {
-                    if (callbacks.containsKey(MessageEvents.SIMPLE_TEXT_MESSAGE.value)) {
-                        callbacks[MessageEvents.SIMPLE_TEXT_MESSAGE.value]!!.onResult(message)
+                    if (events.containsKey(MessageEvents.SIMPLE_TEXT_MESSAGE.value)) {
+                        events[MessageEvents.SIMPLE_TEXT_MESSAGE.value]?.invoke(SimpleTextMessage(message))
                         messageIsAlreadyHandled = true
                         handleSendTyping(message)
                     }
@@ -251,32 +243,35 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
             }
         }
 
-        if (callbacks.containsKey(MessageEvents.MESSAGE.value) && !messageIsAlreadyHandled) {
-            callbacks[MessageEvents.MESSAGE.value]!!.onResult(message)
+        if (events.containsKey(MessageEvents.MESSAGE.value) && !messageIsAlreadyHandled) {
+            events[MessageEvents.MESSAGE.value]?.invoke(MessageNewEvent(message))
             handleSendTyping(message)
         }
 
-        if (callbacks.containsKey(MessageEvents.CHAT_MESSAGE.value) && !messageIsAlreadyHandled) {
-            callbacks[MessageEvents.CHAT_MESSAGE.value]!!.onResult(message)
+        if (message.isMessageFromChat) {
+            if (events.containsKey(MessageEvents.CHAT_MESSAGE.value) && !messageIsAlreadyHandled) {
+                events[MessageEvents.CHAT_MESSAGE.value]?.invoke(ChatMessageEvent(message))
+                handleSendTyping(message)
+            }
         }
     }
 
     private fun handleOnline(updateObject: JsonArray) {
-        val targetId = updateObject.getInt(1)
+        val userId = updateObject.getInt(1)
         val timestamp = updateObject.getInt(3)
 
 
-        if (callbacks.containsKey(Events.FRIEND_ONLINE.value)) {
-            (abstractCallbacks[Events.FRIEND_ONLINE.value] as CallbackDouble<Int, Int>).onEvent(targetId, timestamp)
+        if (events.containsKey(Events.FRIEND_ONLINE.value)) {
+            events[Events.FRIEND_ONLINE.value]?.invoke(FriendOnlineEvent(userId, timestamp))
         }
     }
 
     private fun handleOffline(updateObject: JsonArray) {
-        val targetId = updateObject.getInt(1)
+        val userId = updateObject.getInt(1)
         val timestamp = updateObject.getInt(3)
 
-        if (callbacks.containsKey(Events.FRIEND_OFFLINE.value)) {
-            (abstractCallbacks[Events.FRIEND_OFFLINE.value] as CallbackDouble<Int, Int>).onEvent(targetId, timestamp)
+        if (events.containsKey(Events.FRIEND_OFFLINE.value)) {
+            events[Events.FRIEND_OFFLINE.value]?.invoke(FriendOfflineEvent(userId, timestamp))
         }
     }
 
@@ -284,8 +279,8 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
      * Handle dialog with typing user
      */
     private fun handleTypingUpdate(updateObject: JsonArray) {
-        if (callbacks.containsKey(Events.TYPING.value)) {
-            callbacks[Events.TYPING.value]!!.onResult(updateObject.getInt(1))
+        if (events.containsKey(Events.TYPING.value)) {
+            events[Events.TYPING.value]?.invoke(TypingEvent(updateObject.getInt(1)))
         }
     }
 
@@ -300,7 +295,7 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
         for (command in client.commands) {
             for (element in command.commands) {
                 if (message.text.split(" ")[0].toLowerCase().contains(element.toLowerCase())) {
-                    command.callback.onResult(message)
+                    command.callback.invoke(MessageNewEvent(message))
                     done = true
                     handleSendTyping(message)
                 }
@@ -317,7 +312,7 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
 
         // Send typing
         if (sendTyping) {
-            if (!message.isMessageFromChat()) {
+            if (!message.isMessageFromChat) {
                 client.messages.setActivity(message.peerId, "typing")
             } else {
                 client.messages.setActivity(message.chatIdLong, "typing")

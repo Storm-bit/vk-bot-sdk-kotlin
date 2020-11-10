@@ -13,8 +13,8 @@ class LikesApi(private val client: Client) {
     fun add(
             type: LikeType,
             itemId: Int,
-            ownerId: Int?,
-            accessKey: String?
+            ownerId: Int? = null,
+            accessKey: String? = null
     ): JsonObject = Methods.add.callSync(client, JsonObject()
             .put("type", type.value)
             .put("owner_id", ownerId)
@@ -25,7 +25,7 @@ class LikesApi(private val client: Client) {
     fun delete(
             type: LikeType,
             itemId: Int,
-            ownerId: Int?
+            ownerId: Int? = null
     ): JsonObject = Methods.delete.callSync(client, JsonObject()
             .put("type", type.value)
             .put("owner_id", ownerId)
@@ -35,8 +35,8 @@ class LikesApi(private val client: Client) {
     fun getList(
             type: LikeType,
             itemId: Int,
-            ownerId: Int?,
-            pageUrl: String?,
+            ownerId: Int? = null,
+            pageUrl: String? = null,
             filter: LikesFilter,
             onlyFriends: Boolean,
             offset: Int,
@@ -58,8 +58,8 @@ class LikesApi(private val client: Client) {
     fun getListIds(
             type: LikeType,
             itemId: Int,
-            ownerId: Int?,
-            pageUrl: String?,
+            ownerId: Int? = null,
+            pageUrl: String? = null,
             filter: LikesFilter,
             onlyFriends: Boolean,
             offset: Int,
@@ -80,8 +80,8 @@ class LikesApi(private val client: Client) {
     fun isLiked(
             type: LikeType,
             itemId: Int,
-            ownerId: Int?,
-            userId: Int?
+            ownerId: Int? = null,
+            userId: Int? = null
     ): JsonObject = Methods.isLiked.callSync(client, JsonObject()
             .put("type", type.value)
             .put("owner_id", ownerId)

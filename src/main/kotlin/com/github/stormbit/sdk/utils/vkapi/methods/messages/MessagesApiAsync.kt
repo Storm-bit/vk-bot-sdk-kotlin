@@ -23,7 +23,7 @@ class MessagesApiAsync(private val client: Client) {
 
     fun allowMessagesFromGroup(
             groupId: Int,
-            key: String?,
+            key: String? = null,
             callback: Callback<JsonObject?>
     ) = Methods.allowMessagesFromGroup.call(client, callback,  "group_id", groupId, "key", key)
 
@@ -37,7 +37,7 @@ class MessagesApiAsync(private val client: Client) {
             messageIds: List<Int>,
             markAsSpam: Boolean,
             deleteForAll: Boolean,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.delete.call(client, callback, "message_ids", messageIds.joinToString(","), "spam", markAsSpam.asInt(), "delete_for_all", deleteForAll.asInt(), "group_id", groupId)
 
@@ -51,7 +51,7 @@ class MessagesApiAsync(private val client: Client) {
 
     fun deleteChatPhoto(
             chatId: Int,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.deleteChatPhoto.call(client, callback, "chat_id", chatId, "group_id", groupId)
 
@@ -63,7 +63,7 @@ class MessagesApiAsync(private val client: Client) {
 
     fun deleteConversation(
             peerId: Int,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.deleteConversation.call(client, callback, "peer_id", peerId, "group_id", groupId)
 
@@ -80,13 +80,13 @@ class MessagesApiAsync(private val client: Client) {
     fun edit(
             peerId: Int,
             messageId: Int,
-            message: String?,
-            latitude: Int?,
-            longitude: Int?,
-            attachments: List<String>?,
+            message: String? = null,
+            latitude: Int? = null,
+            longitude: Int? = null,
+            attachments: List<String>? = null,
             keepForwardMessages: Boolean,
             keepSnippets: Boolean,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.edit.call(client, callback, JsonObject()
             .put("peer_id", peerId)
@@ -103,10 +103,10 @@ class MessagesApiAsync(private val client: Client) {
     fun edit(
             peerId: Int,
             messageId: Int,
-            message: String?,
-            latitude: Int?,
-            longitude: Int?,
-            attachments: List<String>?,
+            message: String? = null,
+            latitude: Int? = null,
+            longitude: Int? = null,
+            attachments: List<String>? = null,
             keepForwardMessages: Boolean,
             keepSnippets: Boolean,
             callback: Callback<JsonObject?>
@@ -151,10 +151,10 @@ class MessagesApiAsync(private val client: Client) {
 
     fun getById(
             messageIds: List<Int>,
-            previewLength: Int?,
-            extended: Boolean?,
-            fields: List<ObjectField>?,
-            groupId: Int?,
+            previewLength: Int? = null,
+            extended: Boolean? = null,
+            fields: List<ObjectField>? = null,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.getById.call(client, callback, JsonObject()
             .put("message_ids", messageIds.joinToString(","))
@@ -203,7 +203,7 @@ class MessagesApiAsync(private val client: Client) {
     fun getConversationMembers(
             peerId: Int,
             fields: List<ObjectField>,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.getConversationMembers.call(client, callback, JsonObject()
             .put("peer_id", peerId)
@@ -226,10 +226,10 @@ class MessagesApiAsync(private val client: Client) {
             offset: Int,
             count: Int,
             filter: ConversationFilter,
-            startMessageId: Int?,
+            startMessageId: Int? = null,
             extended: Boolean,
             fields: List<ObjectField>,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.getConversations.call(client, callback, JsonObject()
             .put("offset", offset)
@@ -245,7 +245,7 @@ class MessagesApiAsync(private val client: Client) {
             offset: Int,
             count: Int,
             filter: ConversationFilter,
-            startMessageId: Int?,
+            startMessageId: Int? = null,
             extended: Boolean,
             fields: List<ObjectField>,
             callback: Callback<JsonObject?>
@@ -264,7 +264,7 @@ class MessagesApiAsync(private val client: Client) {
             peerIds: List<Int>,
             extended: Boolean,
             fields: List<ObjectField>,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.getConversationsById.call(client, callback, JsonObject()
             .put("peer_ids", peerIds.joinToString(","))
@@ -294,7 +294,7 @@ class MessagesApiAsync(private val client: Client) {
             reverse: Boolean,
             extended: Boolean,
             fields: List<ObjectField>,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.getHistory.call(client, callback, JsonObject()
             .put("peer_id", peerId)
@@ -331,11 +331,11 @@ class MessagesApiAsync(private val client: Client) {
     fun getHistoryAttachments(
             peerId: Int,
             mediaType: AttachmentType,
-            startFrom: Int?,
+            startFrom: Int? = null,
             count: Int,
             withPhotoSizes: Boolean,
             fields: List<ObjectField>,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.getHistoryAttachments.call(client, callback, JsonObject()
             .put("peer_id", peerId)
@@ -350,7 +350,7 @@ class MessagesApiAsync(private val client: Client) {
     fun getHistoryAttachments(
             peerId: Int,
             mediaType: AttachmentType,
-            startFrom: Int?,
+            startFrom: Int? = null,
             count: Int,
             withPhotoSizes: Boolean,
             fields: List<ObjectField>,
@@ -369,11 +369,11 @@ class MessagesApiAsync(private val client: Client) {
     fun getImportantMessages(
             count: Int,
             offset: Int,
-            startMessageId: Int?,
+            startMessageId: Int? = null,
             previewLength: Int,
             extended: Boolean,
             fields: List<ObjectField>,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.getImportantMessages.call(client, callback, JsonObject()
             .put("count", count)
@@ -388,7 +388,7 @@ class MessagesApiAsync(private val client: Client) {
     fun getImportantMessages(
             count: Int,
             offset: Int,
-            startMessageId: Int?,
+            startMessageId: Int? = null,
             previewLength: Int,
             extended: Boolean,
             fields: List<ObjectField>,
@@ -407,7 +407,7 @@ class MessagesApiAsync(private val client: Client) {
     fun getInviteLink(
             peerId: Int,
             generateNewLink: Boolean,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.getInviteLink.call(client, callback, JsonObject()
             .put("peer_id", peerId)
@@ -439,9 +439,9 @@ class MessagesApiAsync(private val client: Client) {
             userFields: List<ObjectField>,
             eventsLimit: Int,
             messagesLimit: Int,
-            maxMessageId: Int?,
+            maxMessageId: Int? = null,
             longPollVersion: Int,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.getLongPollHistory.call(client, callback, JsonObject()
             .put("ts", ts)
@@ -470,7 +470,7 @@ class MessagesApiAsync(private val client: Client) {
             userFields: List<ObjectField>,
             eventsLimit: Int,
             messagesLimit: Int,
-            maxMessageId: Int?,
+            maxMessageId: Int? = null,
             longPollVersion: Int,
             callback: Callback<JsonObject?>
     ) = getLongPollHistory(
@@ -490,7 +490,7 @@ class MessagesApiAsync(private val client: Client) {
     fun getLongPollServer(
             needPts: Boolean,
             longPollVersion: Int,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>,
     ) = Methods.getLongPollServer.call(client, callback, JsonObject()
             .put("need_pts", needPts.asInt())
@@ -511,7 +511,7 @@ class MessagesApiAsync(private val client: Client) {
 
     fun getRecentCalls(
             count: Int,
-            startMessageId: Int?,
+            startMessageId: Int? = null,
             fields: List<ObjectField>,
             extended: Boolean,
             callback: Callback<JsonObject?>
@@ -587,8 +587,8 @@ class MessagesApiAsync(private val client: Client) {
 
     fun markAsRead(
             peerId: Int,
-            startMessageId: Int?,
-            groupId: Int?,
+            startMessageId: Int? = null,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.markAsRead.call(client, callback, JsonObject()
             .put("peer_id", peerId)
@@ -598,7 +598,7 @@ class MessagesApiAsync(private val client: Client) {
 
     fun markAsRead(
             peerId: Int,
-            startMessageId: Int?,
+            startMessageId: Int? = null,
             callback: Callback<JsonObject?>
     ) = markAsRead(
             peerId = peerId,
@@ -610,7 +610,7 @@ class MessagesApiAsync(private val client: Client) {
     fun pin(
             peerId: Int,
             messageId: Int,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.pin.call(client, callback, JsonObject()
             .put("peer_id", peerId)
@@ -632,7 +632,7 @@ class MessagesApiAsync(private val client: Client) {
     fun removeChatUser(
             chatId: Int,
             memberId: Int,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.removeChatUser.call(client, callback, JsonObject()
             .put("chat_id", chatId)
@@ -653,7 +653,7 @@ class MessagesApiAsync(private val client: Client) {
 
     fun restore(
             messageId: Int,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.restore.call(client, callback, JsonObject()
             .put("message_id", messageId)
@@ -671,12 +671,12 @@ class MessagesApiAsync(private val client: Client) {
 
     fun search(
             query: String,
-            peerId: Int?,
-            maxDate: GMTDate?,
+            peerId: Int? = null,
+            maxDate: GMTDate? = null,
             previewLength: Int,
             offset: Int,
             count: Int,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.search.call(client, callback, JsonObject()
             .put("q", query)
@@ -690,8 +690,8 @@ class MessagesApiAsync(private val client: Client) {
 
     fun search(
             query: String,
-            peerId: Int?,
-            maxDate: GMTDate?,
+            peerId: Int? = null,
+            maxDate: GMTDate? = null,
             previewLength: Int,
             offset: Int,
             count: Int,
@@ -709,12 +709,12 @@ class MessagesApiAsync(private val client: Client) {
 
     fun searchExtended(
             query: String,
-            peerId: Int?,
-            maxDate: GMTDate?,
+            peerId: Int? = null,
+            maxDate: GMTDate? = null,
             previewLength: Int,
             offset: Int,
             count: Int,
-            groupId: Int?,
+            groupId: Int? = null,
             fields: List<ObjectField>,
             callback: Callback<JsonObject?>
     ) = Methods.search.call(client, callback, JsonObject()
@@ -731,8 +731,8 @@ class MessagesApiAsync(private val client: Client) {
 
     fun searchExtended(
             query: String,
-            peerId: Int?,
-            maxDate: GMTDate?,
+            peerId: Int? = null,
+            maxDate: GMTDate? = null,
             previewLength: Int,
             offset: Int,
             count: Int,
@@ -755,7 +755,7 @@ class MessagesApiAsync(private val client: Client) {
             count: Int,
             extended: Boolean,
             fields: List<ObjectField>,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.searchConversations.call(client, callback, JsonObject()
             .put("q", query)
@@ -870,7 +870,7 @@ class MessagesApiAsync(private val client: Client) {
     fun setActivity(
             peerId: Int,
             type: String,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.setActivity.call(client, callback, JsonObject()
             .put("peer_id", peerId)
@@ -900,7 +900,7 @@ class MessagesApiAsync(private val client: Client) {
 
     fun unpin(
             peerId: Int,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.unpin.call(client, callback, JsonObject()
             .put("peer_id", peerId)

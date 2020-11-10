@@ -14,8 +14,8 @@ class LikesApiAsync(private val client: Client) {
     fun add(
             type: LikeType,
             itemId: Int,
-            ownerId: Int?,
-            accessKey: String?,
+            ownerId: Int? = null,
+            accessKey: String? = null,
             callback: Callback<JsonObject?>
     ) = Methods.add.call(client, callback, JsonObject()
             .put("type", type.value)
@@ -27,7 +27,7 @@ class LikesApiAsync(private val client: Client) {
     fun delete(
             type: LikeType,
             itemId: Int,
-            ownerId: Int?,
+            ownerId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.delete.call(client, callback, JsonObject()
             .put("type", type.value)
@@ -38,8 +38,8 @@ class LikesApiAsync(private val client: Client) {
     fun getList(
             type: LikeType,
             itemId: Int,
-            ownerId: Int?,
-            pageUrl: String?,
+            ownerId: Int? = null,
+            pageUrl: String? = null,
             filter: LikesFilter,
             onlyFriends: Boolean,
             offset: Int,
@@ -62,8 +62,8 @@ class LikesApiAsync(private val client: Client) {
     fun getListIds(
             type: LikeType,
             itemId: Int,
-            ownerId: Int?,
-            pageUrl: String?,
+            ownerId: Int? = null,
+            pageUrl: String? = null,
             filter: LikesFilter,
             onlyFriends: Boolean,
             offset: Int,
@@ -85,8 +85,8 @@ class LikesApiAsync(private val client: Client) {
     fun isLiked(
             type: LikeType,
             itemId: Int,
-            ownerId: Int?,
-            userId: Int?,
+            ownerId: Int? = null,
+            userId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.isLiked.call(client, callback, JsonObject()
             .put("type", type.value)

@@ -36,7 +36,7 @@ class DocsApiAsync(private val client: Client) {
     fun edit(
             docId: Int,
             title: String,
-            ownerId: Int?,
+            ownerId: Int? = null,
             tags: List<String>? = null,
             callback: Callback<JsonObject?>
     ) = Methods.edit.call(client, callback, JsonObject()
@@ -47,7 +47,7 @@ class DocsApiAsync(private val client: Client) {
     )
 
     fun get(
-            ownerId: Int?,
+            ownerId: Int? = null,
             count: Int,
             offset: Int,
             type: Document.Type? = null,
@@ -79,21 +79,21 @@ class DocsApiAsync(private val client: Client) {
     )
 
     fun getTypes(
-            ownerId: Int?,
+            ownerId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.getTypes.call(client, callback, JsonObject()
             .put("owner_id", ownerId)
     )
 
     fun getUploadServer(
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.getUploadServer.call(client, callback, JsonObject()
             .put("group_id", groupId)
     )
 
     fun getWallUploadServer(
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.getWallUploadServer.call(client, callback, JsonObject()
             .put("group_id", groupId)

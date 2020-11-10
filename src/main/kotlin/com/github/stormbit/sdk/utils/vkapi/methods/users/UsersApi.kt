@@ -43,7 +43,7 @@ class UsersApi(private val client: Client) {
     }
 
     fun getFollowers(
-            userId: Int?,
+            userId: Int? = null,
             offset: Int,
             count: Int,
             userFields: List<UserOptionalField>,
@@ -59,7 +59,7 @@ class UsersApi(private val client: Client) {
     fun getNearby(
             latitude: Double,
             longitude: Double,
-            accuracy: Int?,
+            accuracy: Int? = null,
             timeout: Int,
             radius: NearbyRadius,
             userFields: List<UserOptionalField>,
@@ -77,7 +77,7 @@ class UsersApi(private val client: Client) {
     )
 
     fun getSubscriptions(
-            userId: Int?,
+            userId: Int? = null,
             offset: Int,
             count: Int,
             fields: List<ObjectField>
@@ -90,13 +90,13 @@ class UsersApi(private val client: Client) {
     )
 
     fun getSubscriptionsIds(
-            userId: Int?
+            userId: Int? = null
     ): JsonObject = Methods.getSubscriptions.callSync(client, JsonObject()
             .put("user_id", userId)
     )
 
     fun isAppUser(
-            userId: Int?
+            userId: Int? = null
     ): JsonObject = Methods.isAppUser.callSync(client, JsonObject()
             .put("user_id", userId)
     )
@@ -104,7 +104,7 @@ class UsersApi(private val client: Client) {
     fun report(
             userId: Int,
             complaintType: UserReportComplaintType,
-            comment: String?
+            comment: String? = null
     ): JsonObject = Methods.report.callSync(client, JsonObject()
             .put("user_id", userId)
             .put("type", complaintType.value)
@@ -112,39 +112,39 @@ class UsersApi(private val client: Client) {
     )
 
     fun search(
-            query: String?,
+            query: String? = null,
             sort: UserSearchSort,
             offset: Int,
             count: Int,
             userFields: List<UserOptionalField>,
-            cityId: Int?,
-            countryId: Int?,
-            hometown: String?,
-            universityCountryId: Int?,
-            universityId: Int?,
-            universityYear: Int?,
-            universityFacultyId: Int?,
-            universityChairId: Int?,
+            cityId: Int? = null,
+            countryId: Int? = null,
+            hometown: String? = null,
+            universityCountryId: Int? = null,
+            universityId: Int? = null,
+            universityYear: Int? = null,
+            universityFacultyId: Int? = null,
+            universityChairId: Int? = null,
             sex: Sex,
             relationStatus: RelationStatus,
-            ageFrom: Int?,
-            ageTo: Int?,
-            birthDay: Int?,
-            birthMonth: Int?,
-            birthYear: Int?,
+            ageFrom: Int? = null,
+            ageTo: Int? = null,
+            birthDay: Int? = null,
+            birthMonth: Int? = null,
+            birthYear: Int? = null,
             onlyOnline: Boolean,
             onlyWithPhoto: Boolean,
-            schoolCountryId: Int?,
-            schoolCityId: Int?,
-            schoolClassId: Int?,
-            schoolId: Int?,
-            schoolYear: Int?,
-            religion: String?,
-            interests: String?,
-            companyName: String?,
-            positionName: String?,
-            groupId: Int?,
-            fromList: List<UsersListType>?
+            schoolCountryId: Int? = null,
+            schoolCityId: Int? = null,
+            schoolClassId: Int? = null,
+            schoolId: Int? = null,
+            schoolYear: Int? = null,
+            religion: String? = null,
+            interests: String? = null,
+            companyName: String? = null,
+            positionName: String? = null,
+            groupId: Int? = null,
+            fromList: List<UsersListType>? = null
     ): JsonObject = Methods.search.callSync(client, JsonObject()
             .put("q", query)
             .put("sort", sort.value)

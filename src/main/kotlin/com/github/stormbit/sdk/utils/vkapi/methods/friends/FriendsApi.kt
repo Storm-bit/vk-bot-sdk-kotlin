@@ -13,8 +13,8 @@ import com.google.gson.JsonObject
 class FriendsApi(private var client: Client) {
     fun add(
             userId: Int,
-            text: String?,
-            declineRequest: Boolean
+            declineRequest: Boolean,
+            text: String? = null,
     ): JsonObject = Methods.add.callSync(client, JsonObject()
             .put("user_id", userId)
             .put("text", text)
@@ -23,7 +23,7 @@ class FriendsApi(private var client: Client) {
 
     fun addList(
             name: String,
-            userIds: List<Int>?
+            userIds: List<Int>? = null
     ): JsonObject = Methods.addList.callSync(client, JsonObject()
             .put("name", name)
             .put("user_ids", userIds?.joinToString(","))
@@ -53,7 +53,7 @@ class FriendsApi(private var client: Client) {
 
     fun edit(
             userId: Int,
-            listIds: List<Int>?
+            listIds: List<Int>? = null
     ): JsonObject = Methods.edit.callSync(client, JsonObject()
             .put("user_id", userId)
             .put("list_ids", listIds?.joinToString(","))
@@ -62,7 +62,7 @@ class FriendsApi(private var client: Client) {
     fun editList(
             listId: Int,
             userIds: List<Int>,
-            name: String?
+            name: String? = null
     ): JsonObject = Methods.editList.callSync(client, JsonObject()
             .put("list_id", listId)
             .put("user_ids", userIds.joinToString(","))
@@ -71,9 +71,9 @@ class FriendsApi(private var client: Client) {
 
     fun editList(
             listId: Int,
-            addUserIds: List<Int>?,
-            deleteUserIds: List<Int>?,
-            name: String?
+            addUserIds: List<Int>? = null,
+            deleteUserIds: List<Int>? = null,
+            name: String? = null
     ): JsonObject = Methods.editList.callSync(client, JsonObject()
             .put("list_id", listId)
             .put("add_user_ids", addUserIds?.joinToString(","))
@@ -82,9 +82,9 @@ class FriendsApi(private var client: Client) {
     )
 
     fun get(
-            userId: Int?,
-            order: FriendsOrder?,
-            listId: Int?,
+            userId: Int? = null,
+            order: FriendsOrder? = null,
+            listId: Int? = null,
             count: Int,
             offset: Int,
             userFields: List<UserOptionalField>,
@@ -100,9 +100,9 @@ class FriendsApi(private var client: Client) {
     )
 
     fun getIds(
-            userId: Int?,
-            order: FriendsOrder?,
-            listId: Int?,
+            userId: Int? = null,
+            order: FriendsOrder? = null,
+            listId: Int? = null,
             count: Int,
             offset: Int
     ): JsonObject = Methods.get.callSync(client, JsonObject()
@@ -124,7 +124,7 @@ class FriendsApi(private var client: Client) {
     )
 
     fun getLists(
-            userId: Int?,
+            userId: Int? = null,
             withSystem: Boolean
     ): JsonObject = Methods.getLists.callSync(client, JsonObject()
             .put("user_id", userId)
@@ -133,9 +133,9 @@ class FriendsApi(private var client: Client) {
 
     fun getMutual(
             targetUserId: Int,
-            sourceUserId: Int?,
+            sourceUserId: Int? = null,
             sortRandomly: Boolean,
-            count: Int?,
+            count: Int? = null,
             offset: Int
     ): JsonObject = Methods.getMutual.callSync(client, JsonObject()
             .put("target_uid", targetUserId)
@@ -147,9 +147,9 @@ class FriendsApi(private var client: Client) {
 
     fun getMutual(
             targetUserIds: List<Int>,
-            sourceUserId: Int?,
+            sourceUserId: Int? = null,
             sortRandomly: Boolean,
-            count: Int?,
+            count: Int? = null,
             offset: Int
     ): JsonObject = Methods.getMutual.callSync(client, JsonObject()
             .put("target_uids", targetUserIds.joinToString(","))
@@ -160,10 +160,10 @@ class FriendsApi(private var client: Client) {
     )
 
     fun getOnline(
-            userId: Int?,
-            listId: Int?,
+            userId: Int? = null,
+            listId: Int? = null,
             sortRandomly: Boolean,
-            count: Int?,
+            count: Int? = null,
             offset: Int
     ): JsonObject = Methods.getOnline.callSync(client, JsonObject()
             .put("user_id", userId)
@@ -174,10 +174,10 @@ class FriendsApi(private var client: Client) {
     )
 
     fun getOnlineWithOnlineFromMobile(
-            userId: Int?,
-            listId: Int?,
+            userId: Int? = null,
+            listId: Int? = null,
             sortRandomly: Boolean,
-            count: Int?,
+            count: Int? = null,
             offset: Int
     ): JsonObject = Methods.getOnline.callSync(client, JsonObject()
             .put("user_id", userId)
@@ -284,7 +284,7 @@ class FriendsApi(private var client: Client) {
 
     fun search(
             query: String,
-            userId: Int?,
+            userId: Int? = null,
             count: Int,
             offset: Int,
             userFields: List<UserOptionalField>,

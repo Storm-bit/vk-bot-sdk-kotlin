@@ -22,9 +22,9 @@ class WallApiAsync(private val client: Client) {
 
     fun createComment(
             postId: Int,
-            ownerId: Int?,
+            ownerId: Int? = null,
             fromGroup: Int = 0,
-            message: String?,
+            message: String? = null,
             replyToCommentId: Int? = null,
             attachments: List<CommentAttachment>? = null,
             stickerId: Int? = null,
@@ -43,12 +43,12 @@ class WallApiAsync(private val client: Client) {
 
     fun createComment(
             postId: Int,
-            ownerId: Int?,
-            message: String?,
-            replyToCommentId: Int?,
-            attachments: List<MessageAttachment>?,
-            stickerId: Int?,
-            guid: String?,
+            ownerId: Int? = null,
+            message: String? = null,
+            replyToCommentId: Int? = null,
+            attachments: List<MessageAttachment>? = null,
+            stickerId: Int? = null,
+            guid: String? = null,
             callback: Callback<JsonObject?>
     ) = Methods.createComment.call(client, callback, JsonObject()
             .put("post_id", postId)
@@ -62,7 +62,7 @@ class WallApiAsync(private val client: Client) {
 
     fun delete(
             postId: Int,
-            ownerId: Int?,
+            ownerId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.delete.call(client, callback, JsonObject()
             .put("post_id", postId)
@@ -71,7 +71,7 @@ class WallApiAsync(private val client: Client) {
 
     fun deleteComment(
             commentId: Int,
-            ownerId: Int?,
+            ownerId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.deleteComment.call(client, callback, JsonObject()
             .put("comment_id", commentId)
@@ -80,20 +80,20 @@ class WallApiAsync(private val client: Client) {
 
     fun edit(
             postId: Int,
-            ownerId: Int?,
-            friendsOnly: Boolean?,
-            message: String?,
-            attachments: List<MessageAttachment>?,
-            attachmentLink: String?,
-            servicesForExport: List<String>?,
-            signed: Boolean?,
-            publishDate: GMTDate?,
-            latitude: Double?,
-            longitude: Double?,
-            placeId: Int?,
-            markAsAds: Boolean?,
-            closeComments: Boolean?,
-            posterBackgroundId: Int?,
+            ownerId: Int? = null,
+            friendsOnly: Boolean? = null,
+            message: String? = null,
+            attachments: List<MessageAttachment>? = null,
+            attachmentLink: String? = null,
+            servicesForExport: List<String>? = null,
+            signed: Boolean? = null,
+            publishDate: GMTDate? = null,
+            latitude: Double? = null,
+            longitude: Double? = null,
+            placeId: Int? = null,
+            markAsAds: Boolean? = null,
+            closeComments: Boolean? = null,
+            posterBackgroundId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.edit.call(client, callback, JsonObject()
             .put("post_id", postId)
@@ -114,17 +114,17 @@ class WallApiAsync(private val client: Client) {
 
     fun editAdsStealth(
             postId: Int,
-            ownerId: Int?,
-            message: String?,
-            attachments: List<MessageAttachment>?,
-            attachmentLink: String?,
+            ownerId: Int? = null,
+            message: String? = null,
+            attachments: List<MessageAttachment>? = null,
+            attachmentLink: String? = null,
             signed: Boolean,
-            latitude: Double?,
-            longitude: Double?,
-            placeId: Int?,
-            linkButton: LinkButtonType?,
-            linkTitle: String?,
-            linkImage: String?,
+            latitude: Double? = null,
+            longitude: Double? = null,
+            placeId: Int? = null,
+            linkButton: LinkButtonType? = null,
+            linkTitle: String? = null,
+            linkImage: String? = null,
             callback: Callback<JsonObject?>
     ) = Methods.editAdsStealth.call(client, callback, JsonObject()
             .put("post_id", postId)
@@ -142,9 +142,9 @@ class WallApiAsync(private val client: Client) {
 
     fun editComment(
             commentId: Int,
-            ownerId: Int?,
-            message: String?,
-            attachments: List<CommentAttachment>?,
+            ownerId: Int? = null,
+            message: String? = null,
+            attachments: List<CommentAttachment>? = null,
             callback: Callback<JsonObject?>
     ) = Methods.editComment.call(client, callback, JsonObject()
             .put("comment_id", commentId)
@@ -154,7 +154,7 @@ class WallApiAsync(private val client: Client) {
     )
 
     fun get(
-            ownerId: Int?,
+            ownerId: Int? = null,
             offset: Int,
             count: Int,
             filter: WallPostFilter,
@@ -193,7 +193,7 @@ class WallApiAsync(private val client: Client) {
 
     fun getComment(
             commentId: Int,
-            ownerId: Int?,
+            ownerId: Int? = null,
             extended: Boolean,
             fields: List<ObjectField>,
             callback: Callback<JsonObject?>
@@ -206,10 +206,10 @@ class WallApiAsync(private val client: Client) {
 
     fun getComments(
             postId: Int,
-            ownerId: Int?,
-            commentId: Int?,
+            ownerId: Int? = null,
+            commentId: Int? = null,
             needLikes: Boolean,
-            startCommentId: Int?,
+            startCommentId: Int? = null,
             threadItemsCount: Int,
             offset: Int,
             count: Int,
@@ -235,7 +235,7 @@ class WallApiAsync(private val client: Client) {
 
     fun getReposts(
             postId: Int,
-            ownerId: Int?,
+            ownerId: Int? = null,
             offset: Int,
             count: Int,
             callback: Callback<JsonObject?>
@@ -257,7 +257,7 @@ class WallApiAsync(private val client: Client) {
 
     fun pin(
             postId: Int,
-            ownerId: Int?,
+            ownerId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.pin.call(client, callback, JsonObject()
             .put("post_id", postId)
@@ -265,20 +265,20 @@ class WallApiAsync(private val client: Client) {
     )
 
     fun post(
-            ownerId: Int?,
+            ownerId: Int? = null,
             friendsOnly: Boolean,
             fromGroup: Boolean,
-            message: String?,
-            attachments: List<MessageAttachment>?,
-            attachmentLink: String?,
-            servicesForExport: List<String>?,
+            message: String? = null,
+            attachments: List<MessageAttachment>? = null,
+            attachmentLink: String? = null,
+            servicesForExport: List<String>? = null,
             signed: Boolean,
-            publishDate: GMTDate?,
-            latitude: Double?,
-            longitude: Double?,
-            placeId: Int?,
-            postId: Int?,
-            guid: String?,
+            publishDate: GMTDate? = null,
+            latitude: Double? = null,
+            longitude: Double? = null,
+            placeId: Int? = null,
+            postId: Int? = null,
+            guid: String? = null,
             markAsAds: Boolean,
             closeComments: Boolean,
             callback: Callback<JsonObject?>
@@ -302,17 +302,17 @@ class WallApiAsync(private val client: Client) {
 
     fun postAdsStealth(
             ownerId: Int,
-            message: String?,
-            attachments: List<MessageAttachment>?,
-            attachmentLink: String?,
+            message: String? = null,
+            attachments: List<MessageAttachment>? = null,
+            attachmentLink: String? = null,
             signed: Boolean,
-            latitude: Double?,
-            longitude: Double?,
-            placeId: Int?,
-            guid: String?,
-            linkButton: LinkButtonType?,
-            linkTitle: String?,
-            linkImage: String?,
+            latitude: Double? = null,
+            longitude: Double? = null,
+            placeId: Int? = null,
+            guid: String? = null,
+            linkButton: LinkButtonType? = null,
+            linkTitle: String? = null,
+            linkImage: String? = null,
             callback: Callback<JsonObject?>
     ) = Methods.postAdsStealth.call(client, callback, JsonObject()
             .put("owner_id", ownerId)
@@ -352,8 +352,8 @@ class WallApiAsync(private val client: Client) {
 
     fun repost(
             repostObject: MessageAttachment,
-            message: String?,
-            groupId: Int?,
+            message: String? = null,
+            groupId: Int? = null,
             markAsAds: Boolean,
             callback: Callback<JsonObject?>
     ) = Methods.repost.call(client, callback, JsonObject()
@@ -365,7 +365,7 @@ class WallApiAsync(private val client: Client) {
 
     fun restore(
             postId: Int,
-            ownerId: Int?,
+            ownerId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.restore.call(client, callback, JsonObject()
             .put("post_id", postId)
@@ -374,7 +374,7 @@ class WallApiAsync(private val client: Client) {
 
     fun restoreComment(
             commentId: Int,
-            ownerId: Int?,
+            ownerId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.restoreComment.call(client, callback, JsonObject()
             .put("comment_id", commentId)
@@ -383,7 +383,7 @@ class WallApiAsync(private val client: Client) {
 
     fun search(
             query: String,
-            ownerId: Int?,
+            ownerId: Int? = null,
             ownersOnly: Boolean,
             count: Int,
             offset: Int,
@@ -402,7 +402,7 @@ class WallApiAsync(private val client: Client) {
 
     fun unpin(
             postId: Int,
-            ownerId: Int?,
+            ownerId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.unpin.call(client, callback, JsonObject()
             .put("post_id", postId)

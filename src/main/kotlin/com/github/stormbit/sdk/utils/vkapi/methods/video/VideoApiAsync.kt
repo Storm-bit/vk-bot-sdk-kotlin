@@ -15,7 +15,7 @@ class VideoApiAsync(private val client: Client) {
     fun add(
             videoId: Int,
             ownerId: Int,
-            targetId: Int?,
+            targetId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.add.call(client, callback, JsonObject()
             .put("video_id", videoId)
@@ -26,7 +26,7 @@ class VideoApiAsync(private val client: Client) {
     fun addAlbum(
             title: String,
             privacy: PrivacySettings,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.addAlbum.call(client, callback, JsonObject()
             .put("title", title)
@@ -38,7 +38,7 @@ class VideoApiAsync(private val client: Client) {
             videoId: Int,
             ownerId: Int,
             albumIds: List<VideoAlbumType>,
-            targetId: Int?,
+            targetId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.addToAlbum.call(client, callback, JsonObject()
             .put("video_id", videoId)
@@ -49,12 +49,12 @@ class VideoApiAsync(private val client: Client) {
 
     fun createComment(
             videoId: Int,
-            ownerId: Int?,
-            message: String?,
-            attachments: List<CommentAttachment>?,
-            stickerId: Int?,
+            ownerId: Int? = null,
+            message: String? = null,
+            attachments: List<CommentAttachment>? = null,
+            stickerId: Int? = null,
             fromGroup: Boolean,
-            guid: String?,
+            guid: String? = null,
             callback: Callback<JsonObject?>
     ) = Methods.createComment.call(client, callback, JsonObject()
             .put("video_id", videoId)
@@ -68,8 +68,8 @@ class VideoApiAsync(private val client: Client) {
 
     fun delete(
             videoId: Int,
-            ownerId: Int?,
-            targetId: Int?,
+            ownerId: Int? = null,
+            targetId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.delete.call(client, callback, JsonObject()
             .put("video_id", videoId)
@@ -79,7 +79,7 @@ class VideoApiAsync(private val client: Client) {
 
     fun deleteAlbum(
             albumId: Int,
-            groupId: Int?,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.deleteAlbum.call(client, callback, JsonObject()
             .put("album_id", albumId)
@@ -88,7 +88,7 @@ class VideoApiAsync(private val client: Client) {
 
     fun deleteComment(
             commentId: Int,
-            ownerId: Int?,
+            ownerId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.deleteComment.call(client, callback, JsonObject()
             .put("comment_id", commentId)
@@ -97,13 +97,13 @@ class VideoApiAsync(private val client: Client) {
 
     fun edit(
             videoId: Int,
-            ownerId: Int?,
-            name: String?,
-            description: String?,
-            privacyView: PrivacySettings?,
-            privacyComment: PrivacySettings?,
-            disableComments: Boolean?,
-            enableRepeat: Boolean?,
+            ownerId: Int? = null,
+            name: String? = null,
+            description: String? = null,
+            privacyView: PrivacySettings? = null,
+            privacyComment: PrivacySettings? = null,
+            disableComments: Boolean? = null,
+            enableRepeat: Boolean? = null,
             callback: Callback<JsonObject?>
     ) = Methods.edit.call(client, callback, JsonObject()
             .put("video_id", videoId)
@@ -119,8 +119,8 @@ class VideoApiAsync(private val client: Client) {
     fun editAlbum(
             albumId: Int,
             title: String,
-            privacy: PrivacySettings?,
-            groupId: Int?,
+            privacy: PrivacySettings? = null,
+            groupId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.editAlbum.call(client, callback, JsonObject()
             .put("album_id", albumId)
@@ -131,9 +131,9 @@ class VideoApiAsync(private val client: Client) {
 
     fun editComment(
             commentId: Int,
-            ownerId: Int?,
-            message: String?,
-            attachments: List<CommentAttachment>?,
+            ownerId: Int? = null,
+            message: String? = null,
+            attachments: List<CommentAttachment>? = null,
             callback: Callback<JsonObject?>
     ) = Methods.editComment.call(client, callback, JsonObject()
             .put("comment_id", commentId)
@@ -143,9 +143,9 @@ class VideoApiAsync(private val client: Client) {
     )
 
     fun get(
-            ownerId: Int?,
-            videos: List<Media>?,
-            albumId: Int?,
+            ownerId: Int? = null,
+            videos: List<Media>? = null,
+            albumId: Int? = null,
             count: Int,
             offset: Int,
             extended: Boolean,
@@ -161,7 +161,7 @@ class VideoApiAsync(private val client: Client) {
 
     fun getAlbumById(
             albumId: Int,
-            ownerId: Int?,
+            ownerId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.getAlbumById.call(client, callback, JsonObject()
             .put("album_id", albumId)
@@ -169,7 +169,7 @@ class VideoApiAsync(private val client: Client) {
     )
 
     fun getAlbums(
-            ownerId: Int?,
+            ownerId: Int? = null,
             offset: Int,
             count: Int,
             extended: Boolean,
@@ -186,7 +186,7 @@ class VideoApiAsync(private val client: Client) {
     fun getAlbumsIdsByVideo(
             videoId: Int,
             ownerId: Int,
-            targetId: Int?,
+            targetId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.getAlbumsByVideo.call(client, callback, JsonObject()
             .put("video_id", videoId)
@@ -198,7 +198,7 @@ class VideoApiAsync(private val client: Client) {
     fun getAlbumsByVideo(
             videoId: Int,
             ownerId: Int,
-            targetId: Int?,
+            targetId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.getAlbumsByVideo.call(client, callback, JsonObject()
             .put("video_id", videoId)
@@ -209,9 +209,9 @@ class VideoApiAsync(private val client: Client) {
 
     fun getComments(
             videoId: Int,
-            ownerId: Int?,
+            ownerId: Int? = null,
             needLikes: Boolean,
-            startCommentId: Int?,
+            startCommentId: Int? = null,
             offset: Int,
             count: Int,
             sort: CommentsSort,
@@ -234,7 +234,7 @@ class VideoApiAsync(private val client: Client) {
             videoId: Int,
             ownerId: Int,
             albumIds: List<VideoAlbumType>,
-            targetId: Int?,
+            targetId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.removeFromAlbum.call(client, callback, JsonObject()
             .put("video_id", videoId)
@@ -245,9 +245,9 @@ class VideoApiAsync(private val client: Client) {
 
     fun reorderAlbums(
             albumId: Int,
-            before: Int?,
-            after: Int?,
-            ownerId: Int?,
+            before: Int? = null,
+            after: Int? = null,
+            ownerId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.reorderAlbums.call(client, callback, JsonObject()
             .put("album_id", albumId)
@@ -260,9 +260,9 @@ class VideoApiAsync(private val client: Client) {
             videoId: Int,
             ownerId: Int,
             albumId: Int,
-            before: Media?,
-            after: Media?,
-            targetId: Int?,
+            before: Media? = null,
+            after: Media? = null,
+            targetId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.reorderVideos.call(client, callback, JsonObject()
             .put("video_id", videoId)
@@ -279,8 +279,8 @@ class VideoApiAsync(private val client: Client) {
             videoId: Int,
             ownerId: Int,
             reason: PostReportComplaintType,
-            comment: String?,
-            searchQuery: String?,
+            comment: String? = null,
+            searchQuery: String? = null,
             callback: Callback<JsonObject?>
     ) = Methods.report.call(client, callback, JsonObject()
             .put("video_id", videoId)
@@ -303,7 +303,7 @@ class VideoApiAsync(private val client: Client) {
 
     fun restore(
             videoId: Int,
-            ownerId: Int?,
+            ownerId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.restore.call(client, callback, JsonObject()
             .put("video_id", videoId)
@@ -312,7 +312,7 @@ class VideoApiAsync(private val client: Client) {
 
     fun restoreComment(
             commentId: Int,
-            ownerId: Int?,
+            ownerId: Int? = null,
             callback: Callback<JsonObject?>
     ) = Methods.restoreComment.call(client, callback, JsonObject()
             .put("comment_id", commentId)
@@ -320,13 +320,13 @@ class VideoApiAsync(private val client: Client) {
     )
 
     fun save(
-            name: String?,
-            description: String?,
+            name: String? = null,
+            description: String? = null,
             isPrivate: Boolean,
             publishOnWall: Boolean,
-            link: String?,
-            groupId: Int?,
-            albumId: VideoAlbumType?,
+            link: String? = null,
+            groupId: Int? = null,
+            albumId: VideoAlbumType? = null,
             privacyView: PrivacySettings,
             privacyComment: PrivacySettings,
             disableComments: Boolean,
@@ -353,12 +353,12 @@ class VideoApiAsync(private val client: Client) {
             sort: VideoSearchSort,
             onlyHd: Boolean,
             disableSafeSearch: Boolean,
-            filters: List<VideoSearchFilter>?,
+            filters: List<VideoSearchFilter>? = null,
             searchOwn: Boolean,
             offset: Int,
             count: Int,
-            longerThan: Int?,
-            shorterThan: Int?,
+            longerThan: Int? = null,
+            shorterThan: Int? = null,
             extended: Boolean,
             callback: Callback<JsonObject?>
     ) = Methods.search.call(client, callback, JsonObject()

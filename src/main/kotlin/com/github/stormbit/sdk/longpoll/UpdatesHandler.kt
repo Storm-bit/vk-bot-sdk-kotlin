@@ -1,27 +1,22 @@
 package com.github.stormbit.sdk.longpoll
 
-import com.github.stormbit.sdk.callbacks.AbstractCallback
-import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.clients.Client.Companion.scheduler
+import com.github.stormbit.sdk.events.Event
 import com.google.gson.JsonArray
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeUnit
 
 @Suppress("unused")
 abstract class UpdatesHandler(private val client: Client) : Thread() {
-    @Volatile
-    protected var queue = Queue()
+    @Volatile protected var queue = Queue()
 
-    @Volatile
     var sendTyping = false
 
     /**
      * Maps with callbacks
      */
-    protected val callbacks = ConcurrentHashMap<String, Callback<Any>>()
-    protected val chatCallbacks = ConcurrentHashMap<String, AbstractCallback>()
-    protected val abstractCallbacks = ConcurrentHashMap<String, AbstractCallback>()
+    val events = ConcurrentHashMap<String, Event.() -> Unit>()
 
     fun handle(updates: JsonArray) {
         this.queue.putAll(updates)
@@ -31,28 +26,22 @@ abstract class UpdatesHandler(private val client: Client) : Thread() {
         scheduler.scheduleWithFixedDelay(this::handleCurrentUpdate, 0, 1, TimeUnit.MILLISECONDS)
     }
 
+    inline fun <reified T : Event> registerEvent(noinline callback: T.() -> Unit) {
+        var parts = Regex("[A-Z][^A-Z]*").findAll(T::class.simpleName!!).map { it.value.toLowerCase() }.toList()
+
+        parts = parts.subList(0, parts.size-1)
+
+        val eventName = parts.joinToString("_")
+
+        events[eventName] = callback as Event.() -> Unit
+    }
+
     /**
      * Handle one event from longpoll server
      */
     abstract fun handleCurrentUpdate()
 
-    fun registerCallback(name: String, callback: Callback<*>) {
-        this.callbacks[name] = callback as Callback<Any>
-    }
-
-    fun registerChatCallback(name: String, chatCallback: AbstractCallback) {
-        this.chatCallbacks[name] = chatCallback
-    }
-
-    fun registerAbstractCallback(name: String, abstractCallback: AbstractCallback) {
-        this.abstractCallbacks[name] = abstractCallback
-    }
-
-    fun callbacksCount(): Int = this.callbacks.size
-
-    fun abstractCallbacksCount(): Int = this.abstractCallbacks.size
-
-    fun chatCallbacksCount(): Int = this.chatCallbacks.size
+    fun eventsCount(): Int = this.events.size
 
     fun commandsCount(): Int = this.client.commands.size
 }
