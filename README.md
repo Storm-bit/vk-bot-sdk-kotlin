@@ -1,8 +1,6 @@
-# vk-bot-sdk-kotlin
+# VK Bot SDK Kotlin
 
 ## SDK for conveniently work with VK api
-
-As a basis, I took the old library from @petersamokhin and redid it.
 
 ## Examples:
 **User echo bot**
@@ -72,3 +70,5 @@ class ExampleGroup {
     }
 }
 ```
+
+As a basis, I took the old library from @petersamokhin and redid it.
