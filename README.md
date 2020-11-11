@@ -71,4 +71,4 @@ class ExampleGroup {
 }
 ```
 
-As a basis, I took the old library from @petersamokhin and redid it.
+As a basis, I took the old [library](https://github.com/vksdk/vk-sdk-kotlin/tree/old-vk-bot-java-sdk) from @petersamokhin and redid it.
