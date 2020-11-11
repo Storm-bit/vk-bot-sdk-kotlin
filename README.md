@@ -1,6 +1,6 @@
 # VK Bot SDK Kotlin
 
-## SDK for conveniently work with VK api
+**SDK for conveniently work with VK api**
 
 ## Examples:
 **User echo bot**
