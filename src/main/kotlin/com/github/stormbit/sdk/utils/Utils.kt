@@ -24,16 +24,21 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
+import org.apache.http.client.utils.URLEncodedUtils
+import org.apache.http.message.BasicNameValuePair
+import org.apache.tika.metadata.Metadata
+import org.apache.tika.parser.AutoDetectParser
+import org.apache.tika.sax.BodyContentHandler
+import org.jsoup.Jsoup
 import java.io.*
-import java.net.HttpURLConnection
-import java.net.URL
-import java.net.URLConnection
-import java.net.URLEncoder
+import java.lang.Thread.sleep
+import java.net.*
 import java.util.*
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.collections.HashMap
 import kotlin.collections.set
 import kotlin.reflect.KClass
+
 
 internal class CustomizedObjectTypeAdapter : TypeAdapter<Any?>() {
     private val delegate = Gson().getAdapter(Any::class.java)
@@ -212,10 +217,19 @@ class Utils {
         }
 
         fun getHash(auth: Auth, method: String) {
-            val html = auth.session.get("https://vk.com/dev/$method").send().readToText()
-            val hash_0 = regexSearch("onclick=\"Dev.methodRun\\('(.+?)', this\\);", html, 1)
+            val cookies = hashMapOf<String, String>()
 
-            check(hash_0!!.isNotEmpty()) { "Method is not valid" }
+            auth.session.sessionCookies().forEach {
+                cookies[it.name()] = it.value()
+            }
+
+            sleep(1000)
+
+            val response = Jsoup.connect("https://vk.com/dev/$method")
+                    .userAgent(Auth.STRING_USER_AGENT)
+                    .cookies(cookies).execute()
+
+            val hash_0 = regexSearch("onclick=\"Dev.methodRun\\('(.+?)', this\\);", response.body(), 1)
 
             hashes.addProperty(method, hash_0)
         }
@@ -261,9 +275,14 @@ class Utils {
         fun getMimeType(bytes: ByteArray?): String {
             val `is`: InputStream = BufferedInputStream(ByteArrayInputStream(bytes))
 
-            var mimeType = URLConnection.guessContentTypeFromStream(`is`)
+            val contenthandler = BodyContentHandler()
+            val metadata = Metadata()
+            val parser = AutoDetectParser()
+            parser.parse(`is`, contenthandler, metadata)
 
-            mimeType = mimeType.substring(mimeType.lastIndexOf('/') + 1).replace("jpeg", "jpg")
+            val contentType = metadata.get(Metadata.CONTENT_TYPE)
+
+            val mimeType = contentType.substring(contentType.lastIndexOf('/') + 1).replace("jpeg", "jpg")
 
             return mimeType
         }

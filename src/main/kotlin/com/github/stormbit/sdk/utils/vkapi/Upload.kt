@@ -9,6 +9,7 @@ import com.github.stormbit.sdk.utils.getInt
 import com.github.stormbit.sdk.utils.getJsonObject
 import com.github.stormbit.sdk.utils.getString
 import com.github.stormbit.sdk.utils.vkapi.docs.DocTypes
+import com.github.stormbit.sdk.utils.vkapi.methods.PrivacySettings
 import com.google.gson.JsonObject
 import com.google.gson.JsonParseException
 import net.dongliu.requests.Requests
@@ -161,6 +162,127 @@ class Upload(private val client: Client) {
             val attach = "photo${ownerId}_${id}"
 
             callback.onResult(attach)
+        }
+    }
+
+    /**
+     * @param video String URL, link to vk photo or path to file
+     * @param peerId peer id
+     * @param callback callback
+     */
+    fun uploadVideoAsync(video: String, name: String, isPrivate: Boolean, callback: Callback<String?>) {
+        var type: String? = null
+        val videoFile = File(video)
+
+        if (videoFile.exists()) {
+            type = "fromFile"
+        }
+
+        var videoUrl: URL? = null
+
+        if (type == null) {
+            try {
+                videoUrl = URL(video)
+                type = "fromUrl"
+            } catch (ignored: MalformedURLException) {
+                log.error("Error when trying add photo to message: file not found, or url is bad. Your param: {}", video)
+                callback.onResult(null)
+                return
+            }
+        }
+
+        val videoBytes: ByteArray?
+
+        when (type) {
+            "fromFile" -> {
+                videoBytes = try {
+                    Files.readAllBytes(Paths.get(videoFile.toURI()))
+                } catch (ignored: IOException) {
+                    log.error("Error when reading file {}", videoFile.absolutePath)
+                    callback.onResult(null)
+                    return
+                }
+            }
+
+            "fromUrl" -> {
+                try {
+                    videoBytes = Utils.toByteArray(videoUrl!!)
+                } catch (e: IOException) {
+                    log.error("Error {} occurred when reading URL {}", e.toString(), video)
+                    callback.onResult(null)
+                    return
+                }
+            }
+
+            else -> {
+                log.error("Bad 'photo' string: path to file, URL or already uploaded 'photo()_()' was expected.")
+                callback.onResult(null)
+                return
+            }
+        }
+
+        uploadVideoAsync(videoBytes, name, isPrivate, callback)
+    }
+
+    /**
+     * Async uploading photos
+     * @param videoBytes Photo bytes
+     * @param name Video name
+     * @param isPrivate is video private
+     * @param callback callback
+     */
+    fun uploadVideoAsync(videoBytes: ByteArray?, name: String, isPrivate: Boolean, callback: Callback<String?>) {
+        if (videoBytes != null) {
+
+            var response = client.videos.save(name, disableComments = true, privacyView = PrivacySettings(), privacyComment = PrivacySettings(), isPrivate = isPrivate, publishOnWall = false)
+
+            if (response.toString().equals(null, ignoreCase = true)) {
+                log.error("Can't get messages upload server, aborting. Photo wont be attached to message.")
+                callback.onResult(null)
+                return
+            }
+
+            response = response.get("response").asJsonObject
+
+            val ownerId = response.getString("owner_id")
+            val accessKey = response.getString("access_key")
+            val uploadUrl = response.getString("upload_url")
+
+            val mimeType: String
+
+            mimeType = try {
+                Utils.getMimeType(videoBytes)
+            } catch (e: IOException) {
+                log.error(e.message)
+                callback.onResult(null)
+                return
+            }
+
+            val uploadVideoResponse = Requests
+                    .post(uploadUrl)
+                    .multiPartBody(Part.file("video_file", "video.$mimeType", videoBytes))
+                    .send().readToText()
+
+            if (uploadVideoResponse.length < 2 || uploadVideoResponse.contains("error") || !uploadVideoResponse.contains("video_id")) {
+                log.error("Photo won't uploaded: {}", uploadVideoResponse)
+                callback.onResult(null)
+                return
+            }
+
+            val getVideoResponse: JsonObject
+
+            getVideoResponse = try {
+                toJsonObject(uploadVideoResponse)
+            } catch (ignored: JsonParseException) {
+                log.error("Bad response of uploading photo: {}", uploadVideoResponse)
+                callback.onResult(null)
+                return
+            }
+
+            val id = getVideoResponse.getInt("video_id")
+            val attach = "video${ownerId}_${id}_$accessKey"
+
+            return callback.onResult(attach)
         }
     }
 
@@ -864,6 +986,119 @@ class Upload(private val client: Client) {
             return if (saveMessagesDocResponse.has("response")) "doc" + saveMessagesDocResponse.getAsJsonArray("response").getJsonObject(0).getInt("owner_id") + "_" + saveMessagesDocResponse.getAsJsonArray("response").getJsonObject(0).getInt("id") else ""
         } else {
             log.error("Got file or url of doc to be uploaded, but some error occurred and read 0 bytes.")
+        }
+
+        return null
+    }
+
+    /**
+     * @param video String URL, link to vk photo or path to file
+     * @param name Video name
+     */
+    fun uploadVideo(video: String, name: String, isPrivate: Boolean): String? {
+        var type: String? = null
+        val videoFile = File(video)
+
+        if (videoFile.exists()) {
+            type = "fromFile"
+        }
+
+        var videoUrl: URL? = null
+
+        if (type == null) {
+            try {
+                videoUrl = URL(video)
+                type = "fromUrl"
+            } catch (ignored: MalformedURLException) {
+                log.error("Error when trying add photo to message: file not found, or url is bad. Your param: {}", video)
+                return null
+            }
+        }
+
+        val videoBytes: ByteArray?
+
+        when (type) {
+            "fromFile" -> {
+                videoBytes = try {
+                    Files.readAllBytes(Paths.get(videoFile.toURI()))
+                } catch (ignored: IOException) {
+                    log.error("Error when reading file {}", videoFile.absolutePath)
+                    return null
+                }
+            }
+
+            "fromUrl" -> {
+                try {
+                    videoBytes = Utils.toByteArray(videoUrl!!)
+                } catch (e: IOException) {
+                    log.error("Error {} occurred when reading URL {}", e.toString(), video)
+                    return null
+                }
+            }
+
+            else -> {
+                log.error("Bad 'photo' string: path to file, URL or already uploaded 'photo()_()' was expected.")
+                return null
+            }
+        }
+
+        return uploadVideo(videoBytes, name, isPrivate)
+    }
+
+    /**
+     * Async uploading photos
+     * @param videoBytes Photo bytes
+     * @param name Video name
+     * @param isPrivate is video private
+     */
+    fun uploadVideo(videoBytes: ByteArray?, name: String, isPrivate: Boolean): String? {
+        if (videoBytes != null) {
+
+            var response = client.videos.save(name, disableComments = true, privacyView = PrivacySettings(), privacyComment = PrivacySettings(), isPrivate = isPrivate, publishOnWall = false)
+
+            if (response.toString().equals(null, ignoreCase = true)) {
+                log.error("Can't get messages upload server, aborting. Photo wont be attached to message.")
+                return null
+            }
+
+            response = response.get("response").asJsonObject
+
+            val ownerId = response.getString("owner_id")
+            val accessKey = response.getString("access_key")
+            val uploadUrl = response.getString("upload_url")
+
+            val mimeType: String
+
+            mimeType = try {
+                Utils.getMimeType(videoBytes)
+            } catch (e: IOException) {
+                log.error(e.message)
+                return null
+            }
+
+            val uploadVideoResponse = Requests
+                    .post(uploadUrl)
+                    .multiPartBody(Part.file("video_file", "video.$mimeType", videoBytes))
+                    .send().readToText()
+
+            if (uploadVideoResponse.length < 2 || uploadVideoResponse.contains("error") || !uploadVideoResponse.contains("video_id")) {
+                log.error("Photo won't uploaded: {}", uploadVideoResponse)
+                return null
+            }
+
+            val getVideoResponse: JsonObject
+
+            getVideoResponse = try {
+                toJsonObject(uploadVideoResponse)
+            } catch (ignored: JsonParseException) {
+                log.error("Bad response of uploading photo: {}", uploadVideoResponse)
+                return null
+            }
+
+            val id = getVideoResponse.getInt("video_id")
+            val attach = "video${ownerId}_${id}_$accessKey"
+
+            return attach
         }
 
         return null

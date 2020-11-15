@@ -128,10 +128,9 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
 
         val payload = JsonObject()
 
-//        val title = updateObject.getJsonObject(6).getString("title")
-        val title = "..."
+        val title = if (updateObject.size() > 5) updateObject.getJsonObject(6).getString("title") else " ... "
 
-        val attachments = if (updateObject.size() > 0) if (updateObject.get(6).toString().startsWith("{")) toJsonObject(updateObject[6].toString()) else null else null
+        val attachments = if (updateObject.size() > 6) if (updateObject.get(7).toString().startsWith("{")) toJsonObject(updateObject[7].toString()) else null else null
 
         val randomId = if (updateObject.size() > 7) updateObject.getInt(8) else 0
 

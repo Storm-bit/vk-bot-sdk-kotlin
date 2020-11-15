@@ -305,9 +305,9 @@ class VideoApi(private val client: Client) {
             albumId: VideoAlbumType? = null,
             privacyView: PrivacySettings,
             privacyComment: PrivacySettings,
-            disableComments: Boolean,
-            enableRepeat: Boolean,
-            enableCompression: Boolean
+            disableComments: Boolean = false,
+            enableRepeat: Boolean = false,
+            enableCompression: Boolean = false
     ): JsonObject = Methods.save.callSync(client, JsonObject()
             .put("name", name)
             .put("description", description)

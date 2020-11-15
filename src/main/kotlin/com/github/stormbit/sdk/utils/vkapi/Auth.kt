@@ -27,7 +27,9 @@ class Auth {
     private val cookiesMap = HashMap<String, Any>()
     private val cookiesFile = File("cookies.json")
 
-    private val STRING_USER_AGENT = "Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36"
+    companion object {
+        val STRING_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36"
+    }
     private val USER_AGENT = Header("User-Agent", STRING_USER_AGENT)
     private val FORM_ID = "quick_login_form"
 
