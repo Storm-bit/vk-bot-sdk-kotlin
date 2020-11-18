@@ -24,12 +24,8 @@ import kotlinx.serialization.descriptors.buildClassSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
-import org.apache.http.client.utils.URLEncodedUtils
-import org.apache.http.message.BasicNameValuePair
-import org.apache.tika.metadata.Metadata
-import org.apache.tika.parser.AutoDetectParser
-import org.apache.tika.sax.BodyContentHandler
 import org.jsoup.Jsoup
+import org.overviewproject.mime_types.MimeTypeDetector
 import java.io.*
 import java.lang.Thread.sleep
 import java.net.*
@@ -43,7 +39,6 @@ import kotlin.reflect.KClass
 internal class CustomizedObjectTypeAdapter : TypeAdapter<Any?>() {
     private val delegate = Gson().getAdapter(Any::class.java)
 
-    @Throws(IOException::class)
     override fun write(out: JsonWriter, value: Any?) {
         delegate.write(out, value)
     }
@@ -58,7 +53,6 @@ internal class CustomizedObjectTypeAdapter : TypeAdapter<Any?>() {
         }
     }
 
-    @Throws(IOException::class)
     override fun read(reader: JsonReader): Any? {
         return when (reader.peek()) {
             JsonToken.BEGIN_ARRAY -> {
@@ -193,9 +187,7 @@ class Utils {
          * @return JSONObject query
          */
         fun explodeQuery(query: String): JsonObject {
-            var query = query
-
-            query = URLEncoder.encode(query, "UTF-8")
+            val query = URLEncoder.encode(query, "UTF-8")
 
             val map: MutableMap<String, Any> = HashMap()
 
@@ -229,17 +221,13 @@ class Utils {
                     .userAgent(Auth.STRING_USER_AGENT)
                     .cookies(cookies).execute()
 
-            val hash_0 = regexSearch("onclick=\"Dev.methodRun\\('(.+?)', this\\);", response.body(), 1)
+            val hash = regexSearch(Regex("onclick=\"Dev.methodRun\\('(.+?)', this\\);"), response.body(), 1)
 
-            hashes.addProperty(method, hash_0)
+            hashes.addProperty(method, hash)
         }
 
         fun regexSearch(pattern: Regex, string: String, group: Int = 0): String? {
             return pattern.find(string)?.groups?.get(group)?.value
-        }
-
-        fun regexSearch(pattern: String, string: String, group: Int = 0): String? {
-            return Regex(pattern).find(string)?.groups?.get(group)?.value
         }
 
         fun getId(client: Client): Int {
@@ -250,8 +238,6 @@ class Utils {
 
         fun guessFileNameByContentType(contentType: String): String {
             var contentType = contentType
-
-            contentType = contentType
                     .replace("mpeg", "mp3")
                     .replace("svg+xml", "svg")
                     .replace("javascript", "js")
@@ -271,16 +257,11 @@ class Utils {
             return "$mainType.$subType"
         }
 
-        @Throws(IOException::class)
         fun getMimeType(bytes: ByteArray?): String {
             val `is`: InputStream = BufferedInputStream(ByteArrayInputStream(bytes))
 
-            val contenthandler = BodyContentHandler()
-            val metadata = Metadata()
-            val parser = AutoDetectParser()
-            parser.parse(`is`, contenthandler, metadata)
-
-            val contentType = metadata.get(Metadata.CONTENT_TYPE)
+            val mimeTypeDetector = MimeTypeDetector()
+            val contentType = mimeTypeDetector.detectMimeType("file", `is`)
 
             val mimeType = contentType.substring(contentType.lastIndexOf('/') + 1).replace("jpeg", "jpg")
 
@@ -293,23 +274,19 @@ class Utils {
             }
         }
 
-        @Throws(IOException::class)
         fun copy(input: InputStream, output: OutputStream): Int {
             val count = copyLarge(input, output)
             return if (count > 2147483647L) -1 else count.toInt()
         }
 
-        @Throws(IOException::class)
         fun copyLarge(input: InputStream, output: OutputStream): Long {
             return copy(input, output, 4096)
         }
 
-        @Throws(IOException::class)
         fun copy(input: InputStream, output: OutputStream, bufferSize: Int): Long {
             return copyLarge(input, output, ByteArray(bufferSize))
         }
 
-        @Throws(IOException::class)
         fun copyLarge(input: InputStream, output: OutputStream, buffer: ByteArray): Long {
             var n: Int
 
@@ -327,7 +304,6 @@ class Utils {
          * Methods from commons-lang library of Apache
          * Added to not use the library for several methods
          */
-        @Throws(IOException::class)
         fun toByteArray(url: URL): ByteArray {
             val conn = url.openConnection()
             val var2: ByteArray
@@ -339,7 +315,6 @@ class Utils {
             return var2
         }
 
-        @Throws(IOException::class)
         fun toByteArray(urlConn: URLConnection): ByteArray {
             val inputStream = urlConn.getInputStream()
             val var2 = toByteArray(inputStream)
@@ -347,7 +322,6 @@ class Utils {
             return var2
         }
 
-        @Throws(IOException::class)
         fun toByteArray(input: InputStream): ByteArray {
             val output = ByteArrayOutputStream()
             copy(input, output)
