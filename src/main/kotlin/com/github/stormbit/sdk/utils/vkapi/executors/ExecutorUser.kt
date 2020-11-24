@@ -24,7 +24,7 @@ class ExecutorUser(auth: Auth) : Executor(auth) {
         data.put("al", 1)
         data.put("hash", Utils.hashes.get(method))
         data.put("method", method)
-        data.put("param_v", Utils.version)
+        data.put("param_v", Utils.VK_API_VERSION)
 
         for (key in params.keySet()) {
             data.put("param_$key", params[key])

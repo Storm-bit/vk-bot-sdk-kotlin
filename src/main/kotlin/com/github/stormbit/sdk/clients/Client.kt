@@ -11,6 +11,7 @@ import com.github.stormbit.sdk.utils.vkapi.Auth
 import com.github.stormbit.sdk.utils.vkapi.Session
 import com.github.stormbit.sdk.utils.vkapi.apis.APIGroup
 import com.github.stormbit.sdk.utils.vkapi.apis.APIUser
+import com.github.stormbit.sdk.utils.vkapi.apis.APIVkUser
 import com.github.stormbit.sdk.utils.vkapi.methods.likes.LikesApi
 import com.github.stormbit.sdk.utils.vkapi.methods.docs.DocsApi
 import com.github.stormbit.sdk.utils.vkapi.methods.docs.DocsApiAsync
@@ -81,9 +82,20 @@ abstract class Client {
 
     constructor(login: String, password: String, saveCookie: Boolean = false, loadFromCookie: Boolean = false, twoFactorListener: Auth.TwoFactorListener? = null, captchaListener: Auth.CaptchaListener? = null) {
         this.auth = Auth(login, password, saveCookie, loadFromCookie, twoFactorListener, captchaListener)
+        this.auth.auth()
         this.http = this.auth.session
 
         this.api = APIUser(this)
+        this.id = Utils.getId(this)
+        this.longPoll = LongPoll(this)
+    }
+
+    constructor(login: String, password: String, twoFactorListener: Auth.TwoFactorListener? = null, captchaListener: Auth.CaptchaListener? = null) {
+        this.auth = Auth(login, password, twoFactorListener, captchaListener)
+        this.token = this.auth.authViaVK()
+        this.http = this.auth.session
+
+        this.api = APIVkUser(this)
         this.id = Utils.getId(this)
         this.longPoll = LongPoll(this)
     }

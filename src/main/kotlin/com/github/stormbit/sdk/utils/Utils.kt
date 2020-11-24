@@ -116,7 +116,7 @@ val gson = GsonBuilder()
 class Utils {
     companion object {
         val hashes = JsonObject()
-        const val version = 5.122
+        const val VK_API_VERSION = 5.122
         const val userApiUrl = "https://vk.com/dev"
 
         val RE_CAPTCHAID = Regex("onLoginCaptcha\\('(\\d+)'")
@@ -415,3 +415,4 @@ inline val Int.isGroupId: Boolean get() = this < 0
 inline val Int.isChatPeerId: Boolean get() = this > Chat.CHAT_PREFIX
 inline val Int.isEmailPeerId: Boolean get() = this < 0 && (-this).isChatPeerId
 inline val Int.isUserPeerId: Boolean get() = !isGroupId && !isChatPeerId && !isEmailPeerId
+fun Boolean.toInt() = if (this) 1 else 0

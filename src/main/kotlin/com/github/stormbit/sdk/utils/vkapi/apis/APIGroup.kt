@@ -131,7 +131,7 @@ class APIGroup(private val client: Client) : API(ExecutorGroup(client, client.au
 
                 if (good) {
                     val data = JsonObject()
-                    data.put("v", Utils.version)
+                    data.put("v", Utils.VK_API_VERSION)
                     data.put("access_token", client.token!!)
 
                     for (key in parameters.keySet()) {

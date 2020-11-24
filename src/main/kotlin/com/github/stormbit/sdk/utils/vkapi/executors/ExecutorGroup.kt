@@ -18,7 +18,7 @@ class ExecutorGroup(private val client: Client, auth: Auth) : Executor(auth) {
         val params = call.params
 
         val data = JsonObject()
-        data.put("v", Utils.version)
+        data.put("v", Utils.VK_API_VERSION)
         data.put("access_token", client.token!!)
 
         for (key in params.keySet()) {

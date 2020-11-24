@@ -6,6 +6,7 @@ import com.github.stormbit.sdk.utils.*
 import com.github.stormbit.sdk.utils.Utils.Companion.map
 import com.github.stormbit.sdk.utils.Utils.Companion.toJsonObject
 import com.github.stormbit.sdk.utils.vkapi.API
+import com.github.stormbit.sdk.utils.vkapi.Auth
 import com.github.stormbit.sdk.utils.vkapi.calls.CallAsync
 import com.github.stormbit.sdk.utils.vkapi.executors.ExecutorUser
 import com.google.gson.JsonObject
@@ -16,7 +17,7 @@ import java.util.*
  *
  * API for users
  */
-class APIUser(private val client: Client) : API(ExecutorUser(client.auth)) {
+class APIVkUser(private val client: Client) : API(ExecutorUser(client.auth)) {
 
     override fun call(method: String, params: Any?, callback: Callback<JsonObject?>) {
         try {
@@ -120,26 +121,25 @@ class APIUser(private val client: Client) : API(ExecutorUser(client.auth)) {
                 }
 
                 if (good) {
-                    if (!Utils.hashes.has(method)) {
-                        Utils.getHash(client.auth, method)
-                    }
 
-                    val data = JsonObject()
-                    data.put("act", "a_run_method")
-                    data.put("al", 1)
-                    data.put("hash", Utils.hashes.getString(method))
-                    data.put("method", method)
-                    data.put("param_v", Utils.VK_API_VERSION)
+                    val prms = JsonObject().apply {
+                        put("access_token", client.token)
+                        put("receipt", Auth.RECEIPT)
+                        put("v", Utils.VK_API_VERSION)
+
+                    }
 
                     for (key in parameters.keySet()) {
-                        data.put("param_$key", parameters[key])
+                        prms.put(key, parameters[key])
                     }
 
-                    val responseString: String = client.auth.session.post(Utils.userApiUrl)
-                            .body(data.map())
-                            .send().readToText().replace("[<!>]".toRegex(), "").substring(2)
+                    val responseString: String = client.auth.session.post(Auth.BASE_API_URL + method)
+                            .body(prms.map())
+                            .headers(Auth.HEADER)
+                            .timeout(Auth.TIME_OUT)
+                            .send().readToText()
 
-                    return toJsonObject(toJsonObject(responseString).getAsJsonArray("payload").getJsonArray(1).getString(0))
+                    return toJsonObject(responseString)
                 }
             }
         } catch (e: Exception) {

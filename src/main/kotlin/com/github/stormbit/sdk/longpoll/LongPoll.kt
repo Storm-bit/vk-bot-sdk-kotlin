@@ -35,7 +35,7 @@ class LongPoll(private val client: Client) {
 
     private var version = 3
     private val isNeedPts = true
-    private val apiVersion = Utils.version
+    private val apiVersion = Utils.VK_API_VERSION
 
     @Volatile
     private var longpollIsOn = false
