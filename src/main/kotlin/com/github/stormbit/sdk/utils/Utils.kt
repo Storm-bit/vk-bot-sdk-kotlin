@@ -218,10 +218,11 @@ class Utils {
             sleep(1000)
 
             val response = Jsoup.connect("https://vk.com/dev/$method")
-                    .userAgent(Auth.STRING_USER_AGENT)
-                    .cookies(cookies).execute()
+                .userAgent(Auth.STRING_USER_AGENT)
+                .ignoreContentType(true)
+                .cookies(cookies).execute().body()
 
-            val hash = regexSearch(Regex("onclick=\"Dev.methodRun\\('(.+?)', this\\);"), response.body(), 1)
+            val hash = regexSearch(Regex("onclick=\"Dev.methodRun\\('(.+?)', this\\);"), response, 1)
 
             hashes.addProperty(method, hash)
         }
