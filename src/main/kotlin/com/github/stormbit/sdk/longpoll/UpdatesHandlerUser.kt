@@ -1,6 +1,7 @@
 package com.github.stormbit.sdk.longpoll
 
 import com.github.stormbit.sdk.clients.Client
+import com.github.stormbit.sdk.events.CommandEvent
 import com.github.stormbit.sdk.events.EveryEvent
 import com.github.stormbit.sdk.events.TypingEvent
 import com.github.stormbit.sdk.events.chat.*
@@ -128,8 +129,6 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
 
         val payload = JsonObject()
 
-        val title = if (updateObject.size() > 5) updateObject.getJsonObject(6).getString("title") else " ... "
-
         val attachments = if (updateObject.size() > 6) if (updateObject.get(7).toString().startsWith("{")) toJsonObject(updateObject[7].toString()) else null else null
 
         val randomId = if (updateObject.size() > 7) updateObject.getInt(8) else 0
@@ -137,9 +136,8 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
         // Check for chat
         if (peerId > Chat.CHAT_PREFIX) {
             chatId = peerId - Chat.CHAT_PREFIX
-            if (attachments != null) {
-                peerId = attachments.getString("from").toInt()
-            }
+
+            peerId = updateObject.getJsonObject(6).getInt("from")
         }
 
         val message = Message(
@@ -148,7 +146,7 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
                 peerId,
                 timestamp,
                 messageText,
-                title,
+                " ... ",
                 attachments,
                 randomId,
                 payload
@@ -291,10 +289,12 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
     private fun handleCommands(message: Message): Boolean {
         var done = false
 
+        val words = message.text.split(" ")
+
         for (command in client.commands) {
             for (element in command.commands) {
-                if (message.text.split(" ")[0].toLowerCase().contains(element.toLowerCase())) {
-                    command.callback.invoke(MessageNewEvent(message))
+                if (words[0].toLowerCase().contains(element.toLowerCase())) {
+                    command.callback.invoke(CommandEvent(words.subList(1, words.size), message))
                     done = true
                     handleSendTyping(message)
                 }

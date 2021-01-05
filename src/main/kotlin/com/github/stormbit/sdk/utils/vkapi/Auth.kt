@@ -42,7 +42,7 @@ class Auth {
         private const val HOST_OAUTH_PROXY = "vk-oauth-proxy.xtrafrancyz.net"
         private const val BASE_PROXY_OAUTH_URL = "https://$HOST_OAUTH_PROXY/"
         private val client_keys = listOf(
-                listOf(2274003, "hHbZxrka2uZ6jB1inYsH")
+            listOf(2274003, "hHbZxrka2uZ6jB1inYsH")
         )
     }
 
@@ -73,6 +73,7 @@ class Auth {
 
         if (isLoadFromCookie && cookiesFile.exists()) {
             val json = toJsonObject(cookiesFile.readText())
+
             val cookieList = json.getAsJsonArray("cookies").map {
                 (it as JsonObject)
                 Cookie(it.getString("domain"), it.getString("path"), it.getString("name"), it.getString("value"), it.getLong("expiry"), it.getBoolean("secure"), it.getBoolean("hostOnly"))
@@ -83,8 +84,8 @@ class Auth {
         }
 
         val data = session.get("https://vk.com/")
-                .headers(USER_AGENT)
-                .send().readToText()
+            .headers(USER_AGENT)
+            .send().readToText()
 
         val form = Jsoup.parse(data).getElementById(FORM_ID) as FormElement
 
@@ -97,9 +98,9 @@ class Auth {
         params.putAll(parameters)
 
         var response = session.post(form.attr("action"))
-                .headers(USER_AGENT)
-                .body(params)
-                .send().readToText()
+            .headers(USER_AGENT)
+            .body(params)
+            .send().readToText()
 
         when {
             response.contains("act=authcheck") -> {
@@ -116,8 +117,8 @@ class Auth {
 
                 val code = captchaListener?.onCaptcha(captcha) ?: throw CaptchaException("Captcha listener is required")
                 auth(mapOf(
-                        "captcha_sid" to captchaSid,
-                        "captcha_key" to code
+                    "captcha_sid" to captchaSid,
+                    "captcha_key" to code
                 ))
             }
             response.contains("onLoginReCaptcha(") -> {
@@ -128,8 +129,8 @@ class Auth {
 
                 val code = captchaListener?.onCaptcha(captcha) ?: throw CaptchaException("Captcha listener is required")
                 auth(mapOf(
-                        "captcha_sid" to captchaSid,
-                        "captcha_key" to code
+                    "captcha_sid" to captchaSid,
+                    "captcha_key" to code
                 ))
             }
             response.contains("onLoginFailed(4") -> throw NotValidAuthorization("Incorrect login or password")
@@ -155,22 +156,22 @@ class Auth {
     private fun oauth(parameters: Map<String, Any> = HashMap()): JsonObject {
 
         val prms = hashMapOf(
-                "grant_type" to "password",
-                "client_id" to client_keys[0][0],
-                "client_secret" to client_keys[0][1],
-                "username" to login,
-                "password" to password,
-                "v" to Utils.VK_API_VERSION,
-                "2fa_supported" to "1",
+            "grant_type" to "password",
+            "client_id" to client_keys[0][0],
+            "client_secret" to client_keys[0][1],
+            "username" to login,
+            "password" to password,
+            "v" to Utils.VK_API_VERSION,
+            "2fa_supported" to "1",
         )
 
         prms.putAll(parameters)
 
         val responseString = Requests.get(BASE_PROXY_OAUTH_URL + "token")
-                .body(prms)
-                .headers(HEADER)
-                .timeout(TIME_OUT)
-                .send().readToText()
+            .body(prms)
+            .headers(HEADER)
+            .timeout(TIME_OUT)
+            .send().readToText()
 
         val response = JsonParser.parseString(responseString).asJsonObject
 
@@ -183,16 +184,16 @@ class Auth {
 
                 val code = captchaListener?.onCaptcha(captcha) ?: throw CaptchaException("Captcha listener is required")
                 return oauth(mapOf(
-                        "captcha_sid" to captchaSid,
-                        "captcha_key" to code
+                    "captcha_sid" to captchaSid,
+                    "captcha_key" to code
                 ))
             } else if ("need_validation" == response["error"].asString) {
                 if ("2fa_sms" in response.toString()) {
                     val pair = twoFactorListener?.twoFactor() ?: throw TwoFactorException("Two Factor listener is not initialized")
 
                     return oauth(mapOf(
-                            "code" to pair.first,
-                            "remember" to pair.second.toInt()
+                        "code" to pair.first,
+                        "remember" to pair.second.toInt()
                     ))
                 } else if ("ban_info" in response.toString()) {
                     // TODO
@@ -202,8 +203,8 @@ class Auth {
                     val pair = twoFactorListener?.twoFactor() ?: throw TwoFactorException("Two Factor listener is not initialized")
 
                     return oauth(mapOf(
-                            "code" to pair.first,
-                            "remember" to pair.second.toInt()
+                        "code" to pair.first,
+                        "remember" to pair.second.toInt()
                     ))
                 }
             } else {
@@ -216,16 +217,16 @@ class Auth {
 
     private fun refreshToken(access_token: String): JsonObject {
         val params = mapOf(
-                "access_token" to access_token,
-                "receipt" to RECEIPT,
-                "v" to Utils.VK_API_VERSION
+            "access_token" to access_token,
+            "receipt" to RECEIPT,
+            "v" to Utils.VK_API_VERSION
         )
 
         val response = JsonParser.parseString(Requests.get(BASE_API_URL + "auth.refreshToken")
-                .body(params)
-                .headers(HEADER)
-                .timeout(TIME_OUT)
-                .send().readToText()).asJsonObject
+            .body(params)
+            .headers(HEADER)
+            .timeout(TIME_OUT)
+            .send().readToText()).asJsonObject
 
         if ("error" in response.toString()) {
             throw Exception("Error: ${response["error_description"]}")
@@ -247,9 +248,9 @@ class Auth {
         values["hash"] = authHash
 
         val resp = session.post("https://vk.com/al_login.php")
-                .headers(USER_AGENT)
-                .body(values)
-                .send().readToText()
+            .headers(USER_AGENT)
+            .body(values)
+            .send().readToText()
 
         val data = toJsonObject(resp.replace("[<!>-]".toRegex(), ""))
         val status = data.getAsJsonArray("payload").getInt(0)
@@ -259,6 +260,7 @@ class Auth {
                 val path = data.getAsJsonArray("payload").getJsonArray(1).getString(0).replace("[\\\\\"]".toRegex(), "")
                 return session.get("https://vk.com/$path").send().readToText()
             }
+
             listOf(0, 8).contains(status) -> return passTwoFactor(response)
 
             status == 2 -> throw TwoFactorException("ReCaptcha required")
@@ -275,8 +277,8 @@ class Auth {
         passwordField.`val`(password)
 
         form.submit()
-                .userAgent(STRING_USER_AGENT)
-                .execute()
+            .userAgent(STRING_USER_AGENT)
+            .execute()
     }
 
     fun interface TwoFactorListener {

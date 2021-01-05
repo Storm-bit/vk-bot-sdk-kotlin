@@ -139,8 +139,8 @@ class APIGroup(private val client: Client) : API(ExecutorGroup(client, client.au
                     }
 
                     val responseString: String = client.auth.session.post("https://api.vk.com/method/$method")
-                            .body(data.map())
-                            .send().readToText().replace("[<!>]".toRegex(), "")
+                        .body(data.map())
+                        .send().readToText().replace("[<!>]".toRegex(), "")
 
                     return toJsonObject(responseString)
                 }

@@ -3,22 +3,21 @@ package com.github.stormbit.sdk.objects
 import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.clients.Group
+import com.github.stormbit.sdk.objects.attachments.*
 import com.github.stormbit.sdk.utils.*
 import com.github.stormbit.sdk.utils.vkapi.API
 import com.github.stormbit.sdk.utils.vkapi.Upload
 import com.github.stormbit.sdk.utils.vkapi.docs.DocTypes
 import com.github.stormbit.sdk.utils.vkapi.keyboard.Keyboard
-import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.regex.Pattern
 
-@Suppress("unused", "MemberVisibilityCanBePrivate")
+@Suppress("unused", "MemberVisibilityCanBePrivate", "RegExpDuplicateCharacterInClass")
 class Message {
     private val log = LoggerFactory.getLogger(Message::class.java)
-    private val gson = Gson()
 
     var messageId: Int? = null
         private set
@@ -37,6 +36,7 @@ class Message {
     var peerId: Int = 0
     var randomId: Int = 0
     var stickerId: Int = 0
+    var replyTo: Int? = null
 
     var keyboard: Keyboard? = null
 
@@ -81,15 +81,6 @@ class Message {
     private var forwardedMessages: CopyOnWriteArrayList<String> = CopyOnWriteArrayList()
     private val photosToUpload = CopyOnWriteArrayList<String>()
     private val docsToUpload = CopyOnWriteArrayList<JsonObject>()
-
-    var stringPhotos = ArrayList<String>()
-        private set
-    var stringDocs = ArrayList<String>()
-        private set
-    var stringVideos = ArrayList<String>()
-        private set
-    var stringAudios = ArrayList<String>()
-        private set
 
     /**
      * Constructor for sent message
@@ -210,6 +201,17 @@ class Message {
      */
     fun text(text: String): Message {
         this.text = text
+        return this
+    }
+
+    /**
+     * Reply to message
+     *
+     * @param messageId Id of the message you want to reply to
+     * @return this
+     */
+    fun replyTo(messageId: Int?): Message {
+        this.replyTo = messageId
         return this
     }
 
@@ -399,7 +401,8 @@ class Message {
                 stickerId = stickerId,
                 payload = payload.toString(),
                 attachments = attachments,
-                keyboard = keyboard)
+                keyboard = keyboard,
+                replyToMessageId = replyTo)
     }
 
     fun send(callback: Callback<JsonObject>? = null) {
@@ -442,7 +445,8 @@ class Message {
                 stickerId = stickerId,
                 payload = payload.toString(),
                 attachments = attachments,
-                keyboard = keyboard)
+                keyboard = keyboard,
+                replyToMessageId = replyTo)
 
         callback?.onResult(response)
     }
@@ -511,21 +515,18 @@ class Message {
         return JsonObject()
     }
 
-    /**
-     * Get attachments from message
-     * @return JSONArray attachments
-     */
-    private fun getAttachments(): JsonArray {
+    @Suppress("UNCHECKED_CAST")
+    @PublishedApi
+    internal fun <T : Attachment> getAttachments(type: Class<T>): List<T> {
         val response: JsonObject = if (isMessageFromChat) {
-            client.messages.getByConversationMessageId(chatIdLong, listOf(messageId!!), groupId = client.id)
+            if (client is Group) {
+                client.messages.getByConversationMessageId(chatIdLong, listOf(messageId!!), groupId = client.id)
+            } else {
+                client.messages.getByConversationMessageId(chatIdLong, listOf(messageId!!))
+            }
         } else {
             client.messages.getById(listOf(messageId!!))
         }
-
-        val stringPhotos = ArrayList<String>()
-        val stringDocs = ArrayList<String>()
-        val stringVideos = ArrayList<String>()
-        val stringAudios = ArrayList<String>()
 
         if (response.has("response") && response.getAsJsonObject("response").getAsJsonArray("items").size() > 0) {
             val items = response.getAsJsonObject("response").getAsJsonArray("items")
@@ -533,44 +534,57 @@ class Message {
             if (items.getJsonObject(0).has("attachments")) {
                 val attachs = items.getJsonObject(0).getAsJsonArray("attachments")
 
-                for (item in attachs) {
-                    if (item is JsonObject) {
-                        if (item.has("type")) {
-                            when (item.getString("type")) {
-                                "photo" -> {
-                                    val photo = item.getAsJsonObject("photo")
-                                    stringPhotos.add("photo${photo.getInt("owner_id")}_${photo.getInt("id")}")
-                                }
-
-                                "doc" -> {
-                                    val doc = item.getAsJsonObject("doc")
-                                    stringDocs.add("doc${doc.getInt("owner_id")}_${doc.getInt("id")}")
-                                }
-
-                                "video" -> {
-                                    val video = item.getAsJsonObject("video")
-                                    stringVideos.add("video${video.getInt("owner_id")}_${video.getInt("id")}")
-                                }
-
-                                "audio" -> {
-                                    val audio = item.getAsJsonObject("audio")
-                                    stringAudios.add("audio${audio.getInt("owner_id")}_${audio.getInt("id")}")
-                                }
-                            }
-                        }
+                return when (type) {
+                    AudioAttachment::class.java -> {
+                        attachs
+                            .filter { it.asJsonObject.getString("type") == "audio" }
+                            .map { it.asJsonObject.getAsJsonObject("audio") }
+                            .map { gson.fromJson(it, type) } as List<T>
                     }
+
+                    PhotoAttachment::class.java -> {
+                        attachs
+                            .filter { it.asJsonObject.getString("type") == "photo" }
+                            .map { it.asJsonObject.getAsJsonObject("photo") }
+                            .map { gson.fromJson(it, type) } as List<T>
+                    }
+
+                    DocAttachment::class.java -> {
+                        attachs
+                            .filter { it.asJsonObject.getString("type") == "doc" }
+                            .map { it.asJsonObject.getAsJsonObject("doc") }
+                            .map { gson.fromJson(it, type) } as List<T>
+                    }
+
+                    VoiceAttachment::class.java -> {
+                        attachs
+                            .filter { it.asJsonObject.getString("type") == "audio_message" }
+                            .map { it.asJsonObject.getAsJsonObject("audio_message") }
+                            .map { gson.fromJson(it, type) } as List<T>
+                    }
+
+                    VideoAttachment::class.java -> {
+                        attachs
+                            .filter { it.asJsonObject.getString("type") == "video" }
+                            .map { it.asJsonObject.getAsJsonObject("video") }
+                            .map { gson.fromJson(it, type) } as List<T>
+                    }
+
+                    else -> emptyList()
                 }
-
-                this.stringPhotos = stringPhotos
-                this.stringDocs = stringDocs
-                this.stringVideos = stringVideos
-                this.stringAudios = stringAudios
-
-                return attachs
             }
         }
 
-        return JsonArray()
+        return emptyList()
+    }
+
+    /**
+     * Get attachments from message
+     *
+     * @return JSONArray attachments
+     */
+    inline fun <reified T : Attachment> getAttachments(): List<T> {
+        return getAttachments(T::class.java)
     }
 
     /*
@@ -703,28 +717,6 @@ class Message {
         return answer
     }
 
-    /* Public getters */
-
-    fun getPhotos(): JsonArray? {
-        val attachments = getAttachments()
-        val answer = JsonArray()
-        for (i in 0 until attachments.size()) {
-            if (attachments.getJsonObject(i).getString("type").contains("photo")) answer.add(attachments.getJsonObject(i).getAsJsonObject("photo"))
-        }
-        return answer
-    }
-
-    /* Private setters */
-
-    fun getVoiceMessage(): JsonObject? {
-        val attachments = getAttachments()
-        var answer: JsonObject? = JsonObject()
-        for (i in 0 until attachments.size()) {
-            if (attachments.getJsonObject(i).getString("type").contains("doc") && attachments.getJsonObject(i).getAsJsonObject("doc").toString().contains("waveform")) answer = attachments.getJsonObject(i).getAsJsonObject("doc")
-        }
-        return answer
-    }
-
     val isMessageFromChat: Boolean
         get() = chatId > 0 || chatIdLong > 0
 
@@ -733,7 +725,7 @@ class Message {
         attachmentsOfReceivedMessage = attachments
     }
 
-    private fun getForwardedMessagesIds(): Array<String?>? {
+    private fun getForwardedMessagesIds(): Array<String?> {
         return if (attachmentsOfReceivedMessage!!.has("fwd")) {
             attachmentsOfReceivedMessage!!.getString("fwd").split(",".toRegex()).toTypedArray()
         } else arrayOf()

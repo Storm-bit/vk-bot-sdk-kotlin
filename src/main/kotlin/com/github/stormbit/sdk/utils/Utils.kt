@@ -109,9 +109,8 @@ internal val json = Json {
 private val adapter = CustomizedObjectTypeAdapter()
 
 val gson = GsonBuilder()
-        .serializeNulls()
-        .registerTypeAdapterFactory(CustomizedObjectTypeAdapter.FACTORY)
-        .setPrettyPrinting().create()
+    .registerTypeAdapterFactory(CustomizedObjectTypeAdapter.FACTORY)
+    .create()
 
 class Utils {
     companion object {

@@ -136,8 +136,8 @@ class APIUser(private val client: Client) : API(ExecutorUser(client.auth)) {
                     }
 
                     val responseString: String = client.auth.session.post(Utils.userApiUrl)
-                            .body(data.map())
-                            .send().readToText().replace("[<!>]".toRegex(), "").substring(2)
+                        .body(data.map())
+                        .send().readToText().replace("[<!>]".toRegex(), "").substring(2)
 
                     return toJsonObject(toJsonObject(responseString).getAsJsonArray("payload").getJsonArray(1).getString(0))
                 }

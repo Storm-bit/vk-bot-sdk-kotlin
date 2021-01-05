@@ -106,9 +106,7 @@ class Upload(private val client: Client) {
 
             val uploadUrl = toJsonObject(response.toString()).getString("upload_url")
 
-            val mimeType: String
-
-            mimeType = try {
+            val mimeType: String = try {
                 Utils.getMimeType(photoBytes)
             } catch (e: IOException) {
                 log.error(e.message)
@@ -117,9 +115,9 @@ class Upload(private val client: Client) {
             }
 
             val uploadFileResponse = Requests
-                    .post(uploadUrl)
-                    .multiPartBody(Part.file("photo", "image.$mimeType", photoBytes))
-                    .send().readToText()
+                .post(uploadUrl)
+                .multiPartBody(Part.file("photo", "image.$mimeType", photoBytes))
+                .send().readToText()
 
             if (uploadFileResponse.length < 2 || uploadFileResponse.contains("error") || !uploadFileResponse.contains("photo")) {
                 log.error("Photo wan't uploaded: {}", uploadFileResponse)
@@ -127,9 +125,7 @@ class Upload(private val client: Client) {
                 return
             }
 
-            val getPhotoStringResponse: JsonObject
-
-            getPhotoStringResponse = try {
+            val getPhotoStringResponse: JsonObject = try {
                 toJsonObject(uploadFileResponse)
             } catch (ignored: JsonParseException) {
                 log.error("Bad response of uploading photo: {}", uploadFileResponse)
@@ -167,8 +163,9 @@ class Upload(private val client: Client) {
 
     /**
      * @param video String URL, link to vk photo or path to file
-     * @param peerId peer id
-     * @param callback callback
+     * @param name Video name
+     * @param isPrivate Is video private
+     * @param callback Callback
      */
     fun uploadVideoAsync(video: String, name: String, isPrivate: Boolean, callback: Callback<String?>) {
         var type: String? = null
@@ -228,13 +225,13 @@ class Upload(private val client: Client) {
      * Async uploading photos
      * @param videoBytes Photo bytes
      * @param name Video name
-     * @param isPrivate is video private
-     * @param callback callback
+     * @param isPrivate Is video private
+     * @param callback Callback
      */
     fun uploadVideoAsync(videoBytes: ByteArray?, name: String, isPrivate: Boolean, callback: Callback<String?>) {
         if (videoBytes != null) {
 
-            var response = client.videos.save(name, disableComments = true, privacyView = PrivacySettings(), privacyComment = PrivacySettings(), isPrivate = isPrivate, publishOnWall = false)
+            var response = client.video.save(name, disableComments = true, privacyView = PrivacySettings(), privacyComment = PrivacySettings(), isPrivate = isPrivate, publishOnWall = false)
 
             if (response.toString().equals(null, ignoreCase = true)) {
                 log.error("Can't get messages upload server, aborting. Photo wont be attached to message.")
@@ -248,9 +245,7 @@ class Upload(private val client: Client) {
             val accessKey = response.getString("access_key")
             val uploadUrl = response.getString("upload_url")
 
-            val mimeType: String
-
-            mimeType = try {
+            val mimeType: String = try {
                 Utils.getMimeType(videoBytes)
             } catch (e: IOException) {
                 log.error(e.message)
@@ -259,9 +254,9 @@ class Upload(private val client: Client) {
             }
 
             val uploadVideoResponse = Requests
-                    .post(uploadUrl)
-                    .multiPartBody(Part.file("video_file", "video.$mimeType", videoBytes))
-                    .send().readToText()
+                .post(uploadUrl)
+                .multiPartBody(Part.file("video_file", "video.$mimeType", videoBytes))
+                .send().readToText()
 
             if (uploadVideoResponse.length < 2 || uploadVideoResponse.contains("error") || !uploadVideoResponse.contains("video_id")) {
                 log.error("Photo won't uploaded: {}", uploadVideoResponse)
@@ -269,9 +264,7 @@ class Upload(private val client: Client) {
                 return
             }
 
-            val getVideoResponse: JsonObject
-
-            getVideoResponse = try {
+            val getVideoResponse: JsonObject = try {
                 toJsonObject(uploadVideoResponse)
             } catch (ignored: JsonParseException) {
                 log.error("Bad response of uploading photo: {}", uploadVideoResponse)
@@ -362,9 +355,9 @@ class Upload(private val client: Client) {
             val uploadUrl = toJsonObject(response.toString()).getString("upload_url")
 
             val uploadFileResponse = Requests
-                    .post(uploadUrl)
-                    .multiPartBody(Part.file("file", fileNameField, docBytes))
-                    .send().readToText()
+                .post(uploadUrl)
+                .multiPartBody(Part.file("file", fileNameField, docBytes))
+                .send().readToText()
 
             if (uploadFileResponse.length < 2 || uploadFileResponse.contains("error") || !uploadFileResponse.contains("file")) {
                 log.error("Doc won't uploaded: {}", uploadFileResponse)
@@ -372,9 +365,7 @@ class Upload(private val client: Client) {
                 return
             }
 
-            val getFileStringResponse: JsonObject
-
-            getFileStringResponse = try {
+            val getFileStringResponse: JsonObject = try {
                 toJsonObject(uploadFileResponse)
             } catch (ignored: JsonParseException) {
                 log.error("Bad response of uploading file: {}", uploadFileResponse)
@@ -488,9 +479,7 @@ class Upload(private val client: Client) {
 
             val uploadUrl = toJsonObject(response.toString()).getString("upload_url")
 
-            val mimeType: String
-
-            mimeType = try {
+            val mimeType: String = try {
                 Utils.getMimeType(photoBytes)
             } catch (e: IOException) {
                 log.error(e.message)
@@ -499,9 +488,9 @@ class Upload(private val client: Client) {
             }
 
             val responseUploadFileString = Requests
-                    .post(uploadUrl)
-                    .multiPartBody(Part.file("file", "photo.$mimeType", photoBytes))
-                    .send().readToText()
+                .post(uploadUrl)
+                .multiPartBody(Part.file("file", "photo.$mimeType", photoBytes))
+                .send().readToText()
 
             if (responseUploadFileString.length < 2 || responseUploadFileString.contains("error") || !responseUploadFileString.contains("response")) {
                 log.error("Photo wan't uploaded: {}", responseUploadFileString)
@@ -509,9 +498,7 @@ class Upload(private val client: Client) {
                 return
             }
 
-            val getPhotoStringResponse: JsonObject
-
-            getPhotoStringResponse = try {
+            val getPhotoStringResponse: JsonObject = try {
                 toJsonObject(responseUploadFileString)
             } catch (ignored: JsonParseException) {
                 log.error("Bad response of uploading photo: {}", responseUploadFileString)
@@ -590,9 +577,7 @@ class Upload(private val client: Client) {
 
         val uploadUrl = toJsonObject(response.toString()).getString("upload_url")
 
-        val mimeType: String
-
-        mimeType = try {
+        val mimeType: String = try {
             Utils.getMimeType(bytes)
         } catch (e: IOException) {
             log.error(e.message)
@@ -686,9 +671,7 @@ class Upload(private val client: Client) {
 
             val uploadUrl = toJsonObject(response.toString()).getString("upload_url")
 
-            val mimeType: String
-
-            mimeType = try {
+            val mimeType: String = try {
                 Utils.getMimeType(photoBytes)
             } catch (e: IOException) {
                 log.error(e.message)
@@ -697,18 +680,16 @@ class Upload(private val client: Client) {
 
             // Uploading the photo
             val uploadFileStringResponse = Requests
-                    .post(uploadUrl)
-                    .multiPartBody(Part.file("photo", "image.$mimeType", photoBytes))
-                    .send().readToText()
+                .post(uploadUrl)
+                .multiPartBody(Part.file("photo", "image.$mimeType", photoBytes))
+                .send().readToText()
 
             if (uploadFileStringResponse.length < 2 || uploadFileStringResponse.contains("error") || !uploadFileStringResponse.contains("photo")) {
                 log.error("Photo wan't uploaded: {}", uploadFileStringResponse)
                 return null
             }
 
-            val getPhotoStringResponse: JsonObject
-
-            getPhotoStringResponse = try {
+            val getPhotoStringResponse: JsonObject = try {
                 toJsonObject(uploadFileStringResponse)
             } catch (ignored: JsonParseException) {
                 log.error("Bad response of uploading photo: {}", uploadFileStringResponse)
@@ -815,9 +796,7 @@ class Upload(private val client: Client) {
 
             val uploadUrl = response.getString("upload_url")
 
-            val mimeType: String
-
-            mimeType = try {
+            val mimeType: String = try {
                 Utils.getMimeType(photoBytes)
             } catch (e: IOException) {
                 log.error(e.message)
@@ -825,18 +804,16 @@ class Upload(private val client: Client) {
             }
 
             val uploadFileStringResponse = Requests
-                    .post(uploadUrl)
-                    .multiPartBody(Part.file("photo", "image.$mimeType", photoBytes))
-                    .send().readToText()
+                .post(uploadUrl)
+                .multiPartBody(Part.file("photo", "image.$mimeType", photoBytes))
+                .send().readToText()
 
             if (uploadFileStringResponse.length < 2 || uploadFileStringResponse.contains("error") || !uploadFileStringResponse.contains("photo")) {
                 log.error("Photo wan't uploaded: {}", uploadFileStringResponse)
                 return null
             }
 
-            val getPhotoStringResponse: JsonObject
-
-            getPhotoStringResponse = try {
+            val getPhotoStringResponse: JsonObject = try {
                 toJsonObject(uploadFileStringResponse)
             } catch (ignored: JsonParseException) {
                 log.error("Bad response of uploading photo: {}", uploadFileStringResponse)
@@ -957,13 +934,11 @@ class Upload(private val client: Client) {
 
             // Uploading the photo
             val uploadingOfDocResponseString = Requests
-                    .post(uploadUrl)
-                    .multiPartBody(Part.file("file", fileNameField, docBytes))
-                    .send().readToText()
+                .post(uploadUrl)
+                .multiPartBody(Part.file("file", fileNameField, docBytes))
+                .send().readToText()
 
-            val uploadingOfDocResponse: JsonObject
-
-            uploadingOfDocResponse = try {
+            val uploadingOfDocResponse: JsonObject = try {
                 toJsonObject(uploadingOfDocResponseString)
             } catch (e: JsonParseException) {
                 log.error("Bad response of uploading doc: {}, error: {}", uploadingOfDocResponseString, e.toString())
@@ -971,9 +946,8 @@ class Upload(private val client: Client) {
             }
 
             // Getting necessary params
-            val file: String
 
-            file = if (uploadingOfDocResponse.has("file")) {
+            val file: String = if (uploadingOfDocResponse.has("file")) {
                 uploadingOfDocResponse.getString("file")
             } else {
                 log.error("No 'file' param in response {}", uploadingOfDocResponseString)
@@ -1054,7 +1028,14 @@ class Upload(private val client: Client) {
     fun uploadVideo(videoBytes: ByteArray?, name: String, isPrivate: Boolean): String? {
         if (videoBytes != null) {
 
-            var response = client.videos.save(name, disableComments = true, privacyView = PrivacySettings(), privacyComment = PrivacySettings(), isPrivate = isPrivate, publishOnWall = false)
+            var response = client.video.save(
+                name,
+                disableComments = true,
+                privacyView = PrivacySettings(),
+                privacyComment = PrivacySettings(),
+                isPrivate = isPrivate,
+                publishOnWall = false
+            )
 
             if (response.toString().equals(null, ignoreCase = true)) {
                 log.error("Can't get messages upload server, aborting. Photo wont be attached to message.")
@@ -1067,9 +1048,7 @@ class Upload(private val client: Client) {
             val accessKey = response.getString("access_key")
             val uploadUrl = response.getString("upload_url")
 
-            val mimeType: String
-
-            mimeType = try {
+            val mimeType: String = try {
                 Utils.getMimeType(videoBytes)
             } catch (e: IOException) {
                 log.error(e.message)
@@ -1077,18 +1056,19 @@ class Upload(private val client: Client) {
             }
 
             val uploadVideoResponse = Requests
-                    .post(uploadUrl)
-                    .multiPartBody(Part.file("video_file", "video.$mimeType", videoBytes))
-                    .send().readToText()
+                .post(uploadUrl)
+                .multiPartBody(Part.file("video_file", "video.$mimeType", videoBytes))
+                .send().readToText()
 
-            if (uploadVideoResponse.length < 2 || uploadVideoResponse.contains("error") || !uploadVideoResponse.contains("video_id")) {
+            if (uploadVideoResponse.length < 2 || uploadVideoResponse.contains("error") || !uploadVideoResponse.contains(
+                    "video_id"
+                )
+            ) {
                 log.error("Photo won't uploaded: {}", uploadVideoResponse)
                 return null
             }
 
-            val getVideoResponse: JsonObject
-
-            getVideoResponse = try {
+            val getVideoResponse: JsonObject = try {
                 toJsonObject(uploadVideoResponse)
             } catch (ignored: JsonParseException) {
                 log.error("Bad response of uploading photo: {}", uploadVideoResponse)
@@ -1096,9 +1076,8 @@ class Upload(private val client: Client) {
             }
 
             val id = getVideoResponse.getInt("video_id")
-            val attach = "video${ownerId}_${id}_$accessKey"
 
-            return attach
+            return "video${ownerId}_${id}_$accessKey"
         }
 
         return null

@@ -1,7 +1,7 @@
 package com.github.stormbit.sdk.clients
 
+import com.github.stormbit.sdk.events.CommandEvent
 import com.github.stormbit.sdk.events.Event
-import com.github.stormbit.sdk.events.message.MessageNewEvent
 import com.github.stormbit.sdk.longpoll.LongPoll
 import com.github.stormbit.sdk.objects.Chat
 import com.github.stormbit.sdk.objects.Message
@@ -56,7 +56,7 @@ abstract class Client {
     val groups = GroupsApi(this)
     val users = UsersApi(this)
     val photos = PhotosApi(this)
-    val videos = VideoApi(this)
+    val video = VideoApi(this)
     val docs = DocsApi(this)
     val friends = FriendsApi(this)
     val likes = LikesApi(this)
@@ -66,7 +66,7 @@ abstract class Client {
     val groupsAsync = GroupsApiAsync(this)
     val usersAsync = UsersApiAsync(this)
     val photosAsync = PhotosApiAsync(this)
-    val videosAsync = VideoApiAsync(this)
+    val videoAsync = VideoApiAsync(this)
     val docsAsync = DocsApiAsync(this)
     val friendsAsync = FriendsApiAsync(this)
     val likesAsync = LikesApiAsync(this)
@@ -129,11 +129,11 @@ abstract class Client {
     fun enableTyping(enable: Boolean) = this.longPoll.enableTyping(enable)
 
     /* Commands */
-    fun onCommand(command: String, callback: MessageNewEvent.() -> Unit) = this.commands.add(Command(command, callback))
+    fun onCommand(command: String, callback: CommandEvent.() -> Unit) = this.commands.add(Command(command, callback))
 
-    fun onCommand(vararg commands: String, callback: MessageNewEvent.() -> Unit) = this.commands.add(Command(commands.toList(), callback))
+    fun onCommand(vararg commands: String, callback: CommandEvent.() -> Unit) = this.commands.add(Command(commands.toList(), callback))
 
-    fun onCommand(list: List<String>, callback: MessageNewEvent.() -> Unit) = this.commands.add(Command(list, callback))
+    fun onCommand(list: List<String>, callback: CommandEvent.() -> Unit) = this.commands.add(Command(list, callback))
 
 
     inline fun <reified T : Event> on(noinline callback: T.() -> Unit) = this.longPoll.registerEvent(callback)
@@ -148,25 +148,23 @@ abstract class Client {
 
     class Command {
         val commands: Array<String>
-        val callback: MessageNewEvent.() -> Unit
+        val callback: CommandEvent.() -> Unit
 
-        constructor(commands: Array<String>, callback: MessageNewEvent.() -> Unit) {
+        constructor(commands: Array<String>, callback: CommandEvent.() -> Unit) {
             this.commands = commands
             this.callback = callback
         }
 
-        constructor(command: String, callback: MessageNewEvent.() -> Unit) {
+        constructor(command: String, callback: CommandEvent.() -> Unit) {
             this.commands = arrayOf(command)
             this.callback = callback
         }
 
-        constructor(command: List<String>, callback: MessageNewEvent.() -> Unit) {
+        constructor(command: List<String>, callback: CommandEvent.() -> Unit) {
             this.commands = command.toTypedArray()
             this.callback = callback
         }
     }
 
-    override fun toString(): String {
-        return "{\"id\": $id}"
-    }
+    override fun toString(): String = "{\"id\": $id}"
 }

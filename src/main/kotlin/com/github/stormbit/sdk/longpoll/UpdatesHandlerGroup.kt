@@ -223,10 +223,12 @@ class UpdatesHandlerGroup(private val client: Client) : UpdatesHandler(client) {
     private fun handleCommands(message: Message): Boolean {
         var done = false
 
+        val words = message.text.split(" ")
+
         for (command in client.commands) {
             for (element in command.commands) {
-                if (message.text.split(" ")[0].toLowerCase().contains(element.toLowerCase())) {
-                    command.callback.invoke(MessageNewEvent(message))
+                if (words[0].toLowerCase().contains(element.toLowerCase())) {
+                    command.callback.invoke(CommandEvent(words.subList(1, words.size), message))
                     done = true
                     handleSendTyping(message)
                 }
