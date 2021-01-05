@@ -570,6 +570,13 @@ class Message {
                             .map { gson.fromJson(it, type) } as List<T>
                     }
 
+                    StickerAttachment::class.java -> {
+                        attachs
+                            .filter { it.asJsonObject.getString("type") == "sticker" }
+                            .map { it.asJsonObject.getAsJsonObject("sticker") }
+                            .map { gson.fromJson(it, type) } as List<T>
+                    }
+
                     else -> emptyList()
                 }
             }
