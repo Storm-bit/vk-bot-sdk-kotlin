@@ -4,16 +4,18 @@ import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.clients.Group
 import com.github.stormbit.sdk.objects.attachments.*
+import com.github.stormbit.sdk.objects.attachments.Voice
+import com.github.stormbit.sdk.objects.models.Keyboard
+import com.github.stormbit.sdk.objects.models.MessagePayload
 import com.github.stormbit.sdk.utils.*
-import com.github.stormbit.sdk.utils.vkapi.API
-import com.github.stormbit.sdk.utils.vkapi.Upload
-import com.github.stormbit.sdk.utils.vkapi.docs.DocTypes
-import com.github.stormbit.sdk.utils.vkapi.keyboard.Keyboard
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
+import com.github.stormbit.sdk.vkapi.API
+import com.github.stormbit.sdk.vkapi.methods.Attachment
+import com.github.stormbit.sdk.objects.attachments.AttachmentType
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 import org.slf4j.LoggerFactory
 import java.util.concurrent.CopyOnWriteArrayList
-import java.util.regex.Pattern
+import com.github.stormbit.sdk.objects.models.Message as MessageModel
 
 @Suppress("unused", "MemberVisibilityCanBePrivate", "RegExpDuplicateCharacterInClass")
 class Message {
@@ -40,10 +42,7 @@ class Message {
 
     var keyboard: Keyboard? = null
 
-    private var payload: JsonObject? = JsonObject()
-        private set(value) {
-            field = value ?: JsonObject()
-        }
+    var payload: MessagePayload = MessagePayload("{}")
 
     var text: String = ""
 
@@ -58,8 +57,6 @@ class Message {
         }
         private set
 
-    var title: String = ""
-
     private lateinit var api: API
     private lateinit var upload: Upload
     private lateinit var client: Client
@@ -67,20 +64,15 @@ class Message {
     /**
      * Attachments in format of received event from longpoll server
      *
-     * More: [link](https://vk.com/dev/using_longpoll_2)
+     * @see: https://vk.com/dev/using_longpoll_2
      */
-    var attachmentsOfReceivedMessage: JsonObject? = JsonObject()
-        private set(value) {
-            field = value ?: JsonObject()
-        }
+    var attachments = Attachments()
 
     /**
      * Attachments in format [photo62802565_456241137, photo111_111, doc100_500]
      */
-    private var attachments: CopyOnWriteArrayList<String> = CopyOnWriteArrayList()
-    private var forwardedMessages: CopyOnWriteArrayList<String> = CopyOnWriteArrayList()
-    private val photosToUpload = CopyOnWriteArrayList<String>()
-    private val docsToUpload = CopyOnWriteArrayList<JsonObject>()
+    private val attachmentsToUpload = CopyOnWriteArrayList<String>()
+    private val forwardedMessages = CopyOnWriteArrayList<Int>()
 
     /**
      * Constructor for sent message
@@ -95,51 +87,85 @@ class Message {
      * @param peerId peer id
      * @param timestamp timestamp
      * @param text message text
-     * @param attachments message attachments
+     * @param attachments message items
      * @param randomId random id
      */
-    constructor(client: Client, messageId: Int, peerId: Int, timestamp: Int, text: String, title: String, attachments: JsonObject?, randomId: Int, payload: JsonObject?) {
+    constructor(client: Client, messageId: Int, peerId: Int, timestamp: Int, text: String, attachments: Attachments, randomId: Int, payload: MessagePayload) {
         this.messageId = messageId
         this.peerId = peerId
         this.timestamp = timestamp
         this.text = text
-        this.attachmentsOfReceivedMessage = attachments
+        this.attachments = attachments
+        this.stickerId = attachments.getStickerId()
         this.randomId = randomId
         this.payload = payload
-        this.title = title
         this.client = client
 
         this.api = client.api
         this.upload = Upload(client)
     }
 
-    constructor(client: Client, json: JsonObject) {
-        this.client = client
-        this.api = client.api
-        this.upload = Upload(client)
+    constructor(message: MessageModel) {
+        this.messageId = message.id
+        this.peerId = message.peerId
+        this.timestamp = message.date
+        this.text = message.text
+        this.randomId = message.randomId ?: 0
 
-        this.messageId = json.getInt("id")
-        this.peerId = json.getInt("from_id")
-        this.timestamp = json.getInt("date")
-        this.text = json.getString("text")
-        this.randomId = json.getInt("random_id")
-        this.payload = if (json.has("payload")) gson.toJsonTree(json.getString("payload")).asJsonObject else JsonObject()
-        this.title = " ... "
-        val attachments = if (json.getAsJsonArray("attachments").size() > 0) json.getAsJsonArray("attachments").getJsonObject(0) else JsonObject()
+        if (message.attachments.isNotEmpty()) {
+            val attachs = ArrayList<Attachments.Item>()
 
-        // Check for chat
-        if (this.peerId > Chat.CHAT_PREFIX) {
-            this.chatId = this.peerId - Chat.CHAT_PREFIX
-            if (attachments.keySet().size > 0) {
-                this.peerId = attachments.getString("from").toInt()
+            message.attachments.forEach {
+                var attach: String? = null
+                var type: AttachmentType? = null
+
+                if (it.photo != null) {
+                    attach = it.photo.mediaString
+                    type = it.type
+                }
+
+                if (it.video != null) {
+                    attach = it.video.mediaString
+                    type = it.type
+                }
+
+                if (it.audio != null) {
+                    attach = it.audio.mediaString
+                    type = it.type
+                }
+
+                if (it.document != null) {
+                    attach = it.document.mediaString
+                    type = it.type
+                }
+
+                if (it.voice != null) {
+                    attach = it.voice.mediaString
+                    type = it.type
+                }
+
+                if (it.sticker != null) {
+                    attach = "sticker"
+                    type = it.type
+                }
+
+                attachs.add(Attachments.Item(attach!!, type!!.value))
             }
-            this.messageId = json.getInt("conversation_message_id")
+
+            this.attachments = Attachments(attachs, message.forwardedMessages.isNotEmpty())
         }
 
-        this.attachmentsOfReceivedMessage = attachments
+        if (message.payload != null) this.payload = message.payload
 
-        if (chatId > 0) {
-            this.chatIdLong = Chat.CHAT_PREFIX + chatId
+        if (this.peerId > Chat.CHAT_PREFIX) {
+            this.chatId = this.peerId - Chat.CHAT_PREFIX
+            this.peerId = message.fromId
+
+            this.messageId = message.conversationMessageId
+        }
+
+        if (this.chatId > 0) {
+            this.chatIdLong = this.chatId + Chat.CHAT_PREFIX
         }
     }
 
@@ -188,7 +214,7 @@ class Message {
      * @param ids message ids
      * @return this
      */
-    fun forwardedMessages(vararg ids: String): Message {
+    fun forwardedMessages(vararg ids: Int): Message {
         forwardedMessages.addAllAbsent(ids.toList())
         return this
     }
@@ -216,17 +242,6 @@ class Message {
     }
 
     /**
-     * Message title (bold text)
-     *
-     * @param title message title
-     * @return this
-     */
-    fun title(title: String): Message {
-        this.title = title
-        return this
-    }
-
-    /**
      * Message keyboard
      *
      * @param keyboard keyboard
@@ -238,15 +253,17 @@ class Message {
     }
 
     /**
-     * Message attachments
-     * @param attachments attachments
+     * Message items
+     * @param attachments items
      * @return this
      */
     fun attachments(vararg attachments: String): Message {
-        if (attachments.size > 10) log.error("Trying to send message with illegal count of attachments: {} (> 10)", attachments.size) else if (attachments.size == 1 && attachments[0].contains(",")) {
-            this.attachments.addAllAbsent(listOf(*attachments[0].split(",".toRegex()).toTypedArray()))
+        if (attachments.size > 10) {
+            log.error("Trying to send message with illegal count of items: ${attachments.size} (> 10)")
+        } else if (attachments.size == 1 && attachments[0].contains(",")) {
+            this.attachmentsToUpload.addAllAbsent(listOf(*attachments[0].split(",".toRegex()).toTypedArray()))
         } else {
-            this.attachments.addAllAbsent(listOf(*attachments))
+            this.attachmentsToUpload.addAllAbsent(listOf(*attachments))
         }
         return this
     }
@@ -254,7 +271,7 @@ class Message {
     /**
      * Message random_id
      *
-     * @param randomId random_id
+     * @param randomId random id
      * @return this
      */
     fun randomId(randomId: Int): Message {
@@ -265,7 +282,7 @@ class Message {
     /**
      * Message sticker_id
      *
-     * @param stickerId sticker_id
+     * @param stickerId sticker id
      * @return this
      */
     fun stickerId(stickerId: Int): Message {
@@ -274,181 +291,65 @@ class Message {
     }
 
     /**
-     * @param photo String URL, link to vk doc or path to file
+     * @param photo Photo link
      * @return this
      */
     fun photo(photo: String): Message {
         if (Regex("[https://vk.com]?photo-?\\d+_\\d+").matches(photo)) {
-            attachments.add(photo.substring(photo.lastIndexOf("photo")))
+            attachmentsToUpload.add(photo.substring(photo.lastIndexOf("photo")))
             return this
         }
 
-        attachments.add(upload.uploadPhoto(photo, peerId))
         return this
     }
 
     /**
-     * Synchronous adding doc to the message
+     * Attach doc to message
      *
-     * @param doc String URL, link to vk doc or path to file
+     * @param doc Doc link
      * @return this
      */
     fun doc(doc: String): Message {
-        val docAsAttach = upload.uploadDoc(doc, peerId, DocTypes.DOC)
-        if (docAsAttach != null) attachments.add(docAsAttach)
-        return this
-    }
-
-    /**
-     * Attach photo to message
-     *
-     *
-     * Works slower that sync photo adding, but will be called from execute
-     *
-     * @param photo Photo link: url, from disk or already uploaded to VK as photo{owner_id}_{id}
-     * @return this
-     */
-    fun photoAsync(photo: String): Message {
-
-        // Use already loaded photo
-        if (Pattern.matches("[htps:/vk.com]?photo-?\\d+_\\d+", photo)) {
-            attachments.add(photo.substring(photo.lastIndexOf("photo")))
-            return this
+        if (Regex("[https:/vk.com]?doc-?\\d+_\\d+").matches(doc)) {
+            attachmentsToUpload.add(doc)
         }
 
-        // Use photo from url of disc
-        photosToUpload.add(photo)
         return this
-    }
-
-    /**
-     * Attach doc to message
-     *
-     * @param doc Doc link: url, from disk or already uploaded to VK as doc{owner_id}_{id}
-     * @param type type
-     * @return this
-     */
-    fun docAsync(doc: String, type: DocTypes): Message {
-
-        // Use already loaded photo
-        if (Pattern.matches("[htps:/vk.com]?doc-?\\d+_\\d+", doc)) {
-            attachments.add(doc)
-            return this
-        }
-
-        docsToUpload.add(JsonObject().put("doc", doc).put("type", type.type))
-        return this
-    }
-
-    /**
-     * Attach doc to message
-     *
-     * @param doc Doc link: url, from disk or already uploaded to VK as doc{owner_id}_{id}
-     * @return this
-     */
-    fun docAsync(doc: String): Message {
-        this.docAsync(doc, DocTypes.DOC)
-        return this
-    }
-
-    /**
-     * Send voice message
-     *
-     * @param doc      URL or path to file
-     * @param callback response will returns to callback
-     */
-    fun sendVoiceMessage(doc: String, callback: Callback<JsonObject>?) {
-        val docAsAttach = upload.uploadDoc(doc, peerId, DocTypes.AUDIO_MESSAGE)
-        if (docAsAttach != null) attachments.add(docAsAttach)
-        send(callback)
     }
 
     /**
      * Send the message
-     *
      */
-    fun sendAsync(): JsonObject? {
-        if (photosToUpload.size > 0) {
-            val photo = photosToUpload[0]
-            photosToUpload.removeAt(0)
-
-            val response = upload.uploadPhoto(photo, peerId)
-            if (response != null) {
-                attachments.addIfAbsent(response.toString())
-                sendAsync()
-            } else log.error("Some error occurred when uploading photo.")
-
-            return null
-        }
-
-        if (docsToUpload.size > 0) {
-            val doc = docsToUpload[0]
-            docsToUpload.removeAt(0)
-
-            val response = upload.uploadDoc(doc.getString("doc"), peerId)
-            if (response != null) {
-                attachments.addIfAbsent(response.toString())
-                sendAsync()
-            } else log.error("Some error occurred when uploading photo.")
-
-            return null
-        }
-
+    fun send(): Int? {
         return client.messages.send(
-                peerId = peerId,
-                randomId = randomId,
-                text = text,
-                stickerId = stickerId,
-                payload = payload.toString(),
-                attachments = attachments,
-                keyboard = keyboard,
-                replyToMessageId = replyTo)
+            peerId = peerId,
+            randomId = randomId,
+            text = text,
+            stickerId = stickerId,
+            payload = payload,
+            attachments = attachmentsToUpload,
+            keyboard = keyboard,
+            replyToMessageId = replyTo,
+            forwardedMessages = forwardedMessages
+        )
     }
 
-    fun send(callback: Callback<JsonObject>? = null) {
-        if (photosToUpload.size > 0) {
-            val photo = photosToUpload[0]
-            photosToUpload.removeAt(0)
-
-            upload.uploadPhotoAsync(photo, peerId) { response: Any? ->
-                if (response != null) {
-                    attachments.addIfAbsent(response.toString())
-                    send(callback)
-                } else {
-                    log.error("Some error occurred when uploading photo.")
-                }
-            }
-
-            return
-        }
-
-        if (docsToUpload.size > 0) {
-            val doc = docsToUpload[0]
-            docsToUpload.removeAt(0)
-
-            upload.uploadDocAsync(doc.getString("doc"), peerId) { response ->
-                if (response != null) {
-                    attachments.addIfAbsent(response.toString())
-                    send(callback)
-                } else {
-                    log.error("Some error occurred when uploading doc.")
-                }
-            }
-
-            return
-        }
-
-        val response = client.messages.send(
-                peerId = peerId,
-                randomId = randomId,
-                text = text,
-                stickerId = stickerId,
-                payload = payload.toString(),
-                attachments = attachments,
-                keyboard = keyboard,
-                replyToMessageId = replyTo)
-
-        callback?.onResult(response)
+    /**
+     * Send the message async
+     */
+    fun sendAsync(callback: Callback<Int?>? = null) {
+        client.messagesAsync.send(
+            peerId = peerId,
+            randomId = randomId,
+            text = text,
+            stickerId = stickerId,
+            payload = payload,
+            attachments = attachmentsToUpload,
+            keyboard = keyboard,
+            replyToMessageId = replyTo,
+            forwardedMessages = forwardedMessages,
+            callback = callback
+        )
     }
 
     /**
@@ -482,99 +383,83 @@ class Message {
     /**
      * @return true if message has forwarded messages
      */
-    val hasFwds: Boolean
-        get() = attachmentsOfReceivedMessage!!.has("fwd")
-
+    val hasFwds: Boolean = attachments.hasFwd
 
     /**
      * @return array of forwarded messages or []
      */
-    fun getForwardedMessages(): JsonArray {
+    fun getForwardedMessages(): List<MessageModel.Forward> {
         if (hasFwds) {
-            val response = client.messages.getById(listOf(messageId!!))
-
-            if (response.has("response") && response.getAsJsonObject("response").getAsJsonArray("items").getJsonObject(0).has("fwd_messages")) {
-                return response.getAsJsonObject("response").getAsJsonArray("items").getJsonObject(0).getAsJsonArray("fwd_messages")
-            }
+            return client.messages.getById(listOf(messageId!!))!!.items[0].forwardedMessages
         }
 
-        return JsonArray()
+        return emptyList()
     }
 
     /**
      * @return JsonObject with reply message or {}
      */
-    fun getReplyMessage(): JsonObject {
+    fun getReplyMessage(): MessageModel.Forward? {
         if (hasFwds) {
             val response = client.messages.getById(listOf(messageId!!))
 
-            if (response.has("response") && response.getAsJsonObject("response").getAsJsonArray("items").getJsonObject(0).has("reply_message")) {
-                return response.getAsJsonObject("response").getAsJsonArray("items").getJsonObject(0).getAsJsonObject("reply_message")
-            }
+            return response!!.items[0].replyMessage!!
         }
-        return JsonObject()
+
+        return null
     }
 
-    @Suppress("UNCHECKED_CAST")
+    /**
+     * @param T Attachment type: Audio, Video, Photo, Voice, Document
+     * @return List of T
+     */
     @PublishedApi
+    @Suppress("UNCHECKED_CAST")
     internal fun <T : Attachment> getAttachments(type: Class<T>): List<T> {
-        val response: JsonObject = if (isMessageFromChat) {
+        val messages: List<MessageModel> = if (isMessageFromChat) {
             if (client is Group) {
-                client.messages.getByConversationMessageId(chatIdLong, listOf(messageId!!), groupId = client.id)
+                client.messages.getByConversationMessageId(chatIdLong, listOf(messageId!!), groupId = client.id)!!
             } else {
-                client.messages.getByConversationMessageId(chatIdLong, listOf(messageId!!))
+                client.messages.getByConversationMessageId(chatIdLong, listOf(messageId!!))!!
             }
         } else {
-            client.messages.getById(listOf(messageId!!))
+            client.messages.getById(listOf(messageId!!))!!.items
         }
 
-        if (response.has("response") && response.getAsJsonObject("response").getAsJsonArray("items").size() > 0) {
-            val items = response.getAsJsonObject("response").getAsJsonArray("items")
+        if (messages.isNotEmpty()) {
 
-            if (items.getJsonObject(0).has("attachments")) {
-                val attachs = items.getJsonObject(0).getAsJsonArray("attachments")
+            if (messages[0].attachments.isNotEmpty()) {
+                val attachs = messages[0].attachments
 
                 return when (type) {
-                    AudioAttachment::class.java -> {
+                    Audio::class.java -> {
                         attachs
-                            .filter { it.asJsonObject.getString("type") == "audio" }
-                            .map { it.asJsonObject.getAsJsonObject("audio") }
-                            .map { gson.fromJson(it, type) } as List<T>
+                            .filter { it.type == AttachmentType.AUDIO }
+                            .map { it.audio!! } as List<T>
                     }
 
-                    PhotoAttachment::class.java -> {
+                    Photo::class.java -> {
                         attachs
-                            .filter { it.asJsonObject.getString("type") == "photo" }
-                            .map { it.asJsonObject.getAsJsonObject("photo") }
-                            .map { gson.fromJson(it, type) } as List<T>
+                            .filter { it.type == AttachmentType.PHOTO }
+                            .map { it.photo!! } as List<T>
                     }
 
-                    DocAttachment::class.java -> {
+                    Document::class.java -> {
                         attachs
-                            .filter { it.asJsonObject.getString("type") == "doc" }
-                            .map { it.asJsonObject.getAsJsonObject("doc") }
-                            .map { gson.fromJson(it, type) } as List<T>
+                            .filter { it.type == AttachmentType.DOC }
+                            .map { it.document!! } as List<T>
                     }
 
-                    VoiceAttachment::class.java -> {
+                    Voice::class.java -> {
                         attachs
-                            .filter { it.asJsonObject.getString("type") == "audio_message" }
-                            .map { it.asJsonObject.getAsJsonObject("audio_message") }
-                            .map { gson.fromJson(it, type) } as List<T>
+                            .filter { it.type == AttachmentType.VOICE }
+                            .map { it.voice!! } as List<T>
                     }
 
-                    VideoAttachment::class.java -> {
+                    Video::class.java -> {
                         attachs
-                            .filter { it.asJsonObject.getString("type") == "video" }
-                            .map { it.asJsonObject.getAsJsonObject("video") }
-                            .map { gson.fromJson(it, type) } as List<T>
-                    }
-
-                    StickerAttachment::class.java -> {
-                        attachs
-                            .filter { it.asJsonObject.getString("type") == "sticker" }
-                            .map { it.asJsonObject.getAsJsonObject("sticker") }
-                            .map { gson.fromJson(it, type) } as List<T>
+                            .filter { it.type == AttachmentType.VIDEO }
+                            .map { it.video!! } as List<T>
                     }
 
                     else -> emptyList()
@@ -586,9 +471,9 @@ class Message {
     }
 
     /**
-     * Get attachments from message
+     * Get items from message
      *
-     * @return JSONArray attachments
+     * @return JSONArray items
      */
     inline fun <reified T : Attachment> getAttachments(): List<T> {
         return getAttachments(T::class.java)
@@ -597,37 +482,28 @@ class Message {
     /*
      * Priority: voice, sticker, gif, ... , simple text
      */
-    val isPhotoMessage: Boolean
-            get() = getCountOfAttachmentsByType()["photo"]!! > 0
+    val isPhotoMessage: Boolean get() = getCountOfAttachmentsByType()["photo"]!! > 0
 
-    val isSimpleTextMessage: Boolean
-            get() = getCountOfAttachmentsByType()["summary"] == 0
+    val isSimpleTextMessage: Boolean get() = getCountOfAttachmentsByType()["summary"] == 0
 
-    val isVoiceMessage: Boolean
-            get() = getCountOfAttachmentsByType()["voice"]!! > 0
+    val isVoiceMessage: Boolean get() = getCountOfAttachmentsByType()["voice"]!! > 0
 
-    val isAudioMessage: Boolean
-            get() = getCountOfAttachmentsByType()["audio"]!! > 0
+    val isAudioMessage: Boolean get() = getCountOfAttachmentsByType()["audio"]!! > 0
 
-    val isVideoMessage: Boolean
-            get() = getCountOfAttachmentsByType()["video"]!! > 0
+    val isVideoMessage: Boolean get() = getCountOfAttachmentsByType()["video"]!! > 0
 
-    val isDocMessage: Boolean
-            get() = getCountOfAttachmentsByType()["doc"]!! > 0
+    val isDocMessage: Boolean get() = getCountOfAttachmentsByType()["doc"]!! > 0
 
-    val isWallMessage: Boolean
-            get() = getCountOfAttachmentsByType()["wall"]!! > 0
+    val isWallMessage: Boolean get() = getCountOfAttachmentsByType()["wall"]!! > 0
 
-    val isStickerMessage: Boolean
-            get() = getCountOfAttachmentsByType()["sticker"]!! > 0
+    val isStickerMessage: Boolean get() = getCountOfAttachmentsByType()["sticker"]!! > 0
 
-    val isLinkMessage: Boolean
-            get() = getCountOfAttachmentsByType()["link"]!! > 0
+    val isLinkMessage: Boolean get() = getCountOfAttachmentsByType()["link"]!! > 0
 
     /**
      * Method helps to identify kind of message
      *
-     * @return Map: key=type of attachment, value=count of attachments, key=summary - value=count of all attachments.
+     * @return Map: key=type of attachment, value=count of items, key=summary - value=count of all items.
      */
     fun getCountOfAttachmentsByType(): HashMap<String, Int> {
         var photo = 0
@@ -636,6 +512,8 @@ class Message {
         var doc = 0
         var wall = 0
         var link = 0
+        var voice = 0
+        var sticker = 0
 
         val answer = HashMap<String, Int>()
 
@@ -649,67 +527,26 @@ class Message {
         answer["voice"] = 0
         answer["summary"] = 0
 
-        if (attachmentsOfReceivedMessage.toString().contains("sticker")) {
-            answer["sticker"] = 1
-            answer["summary"] = 1
-            return answer
-        } else {
-            if (attachmentsOfReceivedMessage.toString().contains("audiomsg")) {
-                answer["voice"] = 1
-                answer["summary"] = 1
-                return answer
-            } else {
-                if (client is Group) {
-                    for (key in attachmentsOfReceivedMessage!!.keySet()) {
-                        if (key == "type") {
-                            when (val value = attachmentsOfReceivedMessage!!.getString(key)) {
-                                "photo" -> {
-                                    answer[value] = ++photo
-                                }
-                                "video" -> {
-                                    answer[value] = ++video
-                                }
-                                "audio" -> {
-                                    answer[value] = ++audio
-                                }
-                                "doc" -> {
-                                    answer[value] = ++doc
-                                }
-                                "wall" -> {
-                                    answer[value] = ++wall
-                                }
-                                "link" -> {
-                                    answer[value] = ++link
-                                }
-                            }
-                        }
-                    }
-                } else {
-                    for (key in attachmentsOfReceivedMessage!!.keySet()) {
-                        if (key.contains("type")) {
-                            when (val value = attachmentsOfReceivedMessage!!.getString(key)) {
-                                "photo" -> {
-                                    answer[value] = ++photo
-                                }
-                                "video" -> {
-                                    answer[value] = ++video
-                                }
-                                "audio" -> {
-                                    answer[value] = ++audio
-                                }
-                                "doc" -> {
-                                    answer[value] = ++doc
-                                }
-                                "wall" -> {
-                                    answer[value] = ++wall
-                                }
-                                "link" -> {
-                                    answer[value] = ++link
-                                }
-                            }
-                        }
-                    }
-                }
+        for (index in attachments.items.indices) {
+            val attach = attachments.items[index]
+
+            when (val value = attach.typeAttachment) {
+                "photo"   -> answer[value] = ++photo
+
+                "video"   -> answer[value] = ++video
+
+                "audio"   -> answer[value] = ++audio
+
+                "doc"     -> answer[value] = ++doc
+
+                "wall"    -> answer[value] = ++wall
+
+                "link"    -> answer[value] = ++link
+
+                "voice"   -> answer[value] = ++voice
+
+                "sticker" -> answer[value] = ++sticker
+
             }
         }
 
@@ -727,15 +564,18 @@ class Message {
     val isMessageFromChat: Boolean
         get() = chatId > 0 || chatIdLong > 0
 
-    private fun setAttachments(attachments: JsonObject?) {
-        if (attachments == null) return
-        attachmentsOfReceivedMessage = attachments
-    }
+    private fun getForwardedMessagesIds(): List<Int> {
+        val messages: List<MessageModel> = if (isMessageFromChat) {
+            if (client is Group) {
+                client.messages.getByConversationMessageId(chatIdLong, listOf(messageId!!), groupId = client.id)!!
+            } else {
+                client.messages.getByConversationMessageId(chatIdLong, listOf(messageId!!))!!
+            }
+        } else {
+            client.messages.getById(listOf(messageId!!))!!.items
+        }
 
-    private fun getForwardedMessagesIds(): Array<String?> {
-        return if (attachmentsOfReceivedMessage!!.has("fwd")) {
-            attachmentsOfReceivedMessage!!.getString("fwd").split(",".toRegex()).toTypedArray()
-        } else arrayOf()
+        return messages[0].forwardedMessages.map { it.id!! }
     }
 
     private fun getSenderType(peerId: Int): MessageFrom? {
@@ -754,8 +594,8 @@ class Message {
                 ",\"timestamp\":" + timestamp +
                 ",\"random_id\":" + randomId +
                 ",\"text\":\"" + text + '\"' +
-                ",\"attachments\":" + attachmentsOfReceivedMessage.toString() +
-                ",\"payload\":" + payload.toString() +
+                ",\"items\":" + attachments.toString() +
+                ",\"payload\":" + payload.value +
                 '}'
     }
 
@@ -775,5 +615,29 @@ class Message {
         USER,
         GROUP,
         CHAT
+    }
+
+    @Serializable
+    data class Attachments(
+        @SerialName("items") val items: List<Item> = emptyList(),
+        @SerialName("fwd") val hasFwd: Boolean = false,
+        @SerialName("from") val from: Int? = null) {
+
+        @Serializable
+        data class Item(
+            @SerialName("attach") val attach: String,
+            @SerialName("attach_type") val typeAttachment: String,
+            @SerialName("attach_kind") val kind: String? = null
+        )
+
+        fun toArray(): Array<String> {
+            return items.filter { it.typeAttachment != "sticker" }.map { it.typeAttachment + it.attach }.toTypedArray()
+        }
+
+        fun getStickerId(): Int {
+            val list = items.filter { it.typeAttachment == "sticker" }
+
+            return if (list.isNotEmpty()) return list[0].attach.toInt() else 0
+        }
     }
 }

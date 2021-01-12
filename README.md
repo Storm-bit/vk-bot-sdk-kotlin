@@ -24,9 +24,14 @@
                 }
     
                 val client = User(login, password, twoFactorListener = twoFactorHandler, captchaListener = captchaHandler)
-    
-                client.longPoll.enableTyping(true)
-    
+                client.auth()
+                
+                client.startLongPoll() // Start long poll listening
+
+                // get users by ids
+                val users = client.users.getById(listOf(1, 2, 3))!!
+                
+                // register long poll event
                 client.on<MessageNewEvent> {
                     client.sendMessage {
                         text = message.text
@@ -50,23 +55,24 @@ class ExampleGroup {
             BasicConfigurator.configure()
 
             val client = Group(token, id)
+            client.auth()
+            
+            client.startLongPoll() // Start long poll listening
 
+            // register long poll event
             client.on<MessageNewEvent> {
                 client.sendMessage {
                     peerId = message.peerId
                     text = message.text
 
                     keyboard = KeyboardBuilder {
-                        buttonsRow {
+                        buttons {
                             defaultButton("Press me!")
                         }
                     }.build()
-
                 }
             }
         }
     }
 }
 ```
-
-As a basis, I took the old [library](https://github.com/vksdk/vk-sdk-kotlin/tree/old-vk-bot-java-sdk) from @petersamokhin and redid it.

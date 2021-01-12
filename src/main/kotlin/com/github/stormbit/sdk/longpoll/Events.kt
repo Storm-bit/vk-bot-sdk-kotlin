@@ -19,6 +19,8 @@ enum class Events(val value: String) {
     CHAT_TITLE_CHANGE("chat_title_change"),
     CHAT_JOIN("chat_join"),
     CHAT_LEAVE("chat_leave"),
+    CHAT_UNPIN_MESSAGE("chat_unpin_message"),
+    CHAT_PIN_MESSAGE("chat_pin_message"),
 
     PHOTO_NEW("photo_new"),
     PHOTO_COMMENT_NEW("photo_comment_new"),

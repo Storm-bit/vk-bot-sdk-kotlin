@@ -2,23 +2,41 @@ package com.github.stormbit.sdk.objects
 
 import com.github.stormbit.sdk.callbacks.Callback
 import com.github.stormbit.sdk.clients.Client
-import com.google.gson.JsonObject
+import com.github.stormbit.sdk.objects.models.Chat
+import com.github.stormbit.sdk.vkapi.methods.messages.ChatChangePhotoResponse
 
 @Suppress("unused")
-class Chat(private val client: Client, private val chatId: Int) {
+class Chat(private val client: Client, private var chatId: Int) {
     companion object {
         const val CHAT_PREFIX = 2000000000
     }
 
-    fun addUser(userId: Int, callback: Callback<JsonObject>? = null) = callback?.onResult(client.messages.addChatUser((chatId - CHAT_PREFIX), userId))
+    init {
+        chatId = if (chatId > CHAT_PREFIX) chatId - CHAT_PREFIX else chatId
+    }
 
-    fun kickUser(userId: Int, callback: Callback<JsonObject>? = null) = callback?.onResult(client.messages.removeChatUser((chatId - CHAT_PREFIX), userId))
+    fun addUser(userId: Int): Int? = client.messages.addChatUser(chatId, userId)
 
-    fun deletePhoto(callback: Callback<JsonObject>? = null) = callback?.onResult(client.messages.deleteChatPhoto((chatId - CHAT_PREFIX)))
+    fun kickUser(userId: Int): Int? = client.messages.removeChatUser(chatId, userId)
 
-    fun editTitle(newTitle: String, callback: Callback<JsonObject>? = null) = callback?.onResult(client.messages.editChat((chatId - CHAT_PREFIX), newTitle))
+    fun deletePhoto(): ChatChangePhotoResponse? = client.messages.deleteChatPhoto(chatId)
 
-    fun getUsers(callback: Callback<List<Int>>) = callback.onResult(client.messages.getChatUsers(chatId - CHAT_PREFIX))
+    fun editTitle(newTitle: String): Int? = client.messages.editChat(chatId, newTitle)
 
-    fun getChatInfo(callback: Callback<JsonObject>) = callback.onResult(client.messages.getChat(listOf(chatId)))
+    fun getUsers(): List<Int>? = client.messages.getChatUsers(chatId)
+
+    fun getChatInfo(): List<Chat>? = client.messages.getChat(listOf(chatId))
+
+
+    fun addUserAsync(userId: Int, callback: Callback<Int?>? = null) = client.messagesAsync.addChatUser(chatId, userId, callback = callback)
+
+    fun kickUserAsync(userId: Int, callback: Callback<Int?>? = null) = client.messagesAsync.removeChatUser(chatId, userId, callback = callback)
+
+    fun deletePhotoAsync(callback: Callback<ChatChangePhotoResponse?>? = null) = client.messagesAsync.deleteChatPhoto(chatId, callback = callback)
+
+    fun editTitleAsync(newTitle: String, callback: Callback<Int?>? = null) = client.messagesAsync.editChat(chatId, newTitle, callback = callback)
+
+    fun getUsersAsync(callback: Callback<List<Int>?>) = client.messagesAsync.getChatUsers(chatId, callback = callback)
+
+    fun getChatInfoAsync(callback: Callback<List<Chat>?>) = client.messagesAsync.getChat(listOf(chatId), callback = callback)
 }

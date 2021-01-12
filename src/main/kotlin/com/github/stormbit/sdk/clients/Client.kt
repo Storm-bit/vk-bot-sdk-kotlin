@@ -5,46 +5,45 @@ import com.github.stormbit.sdk.events.Event
 import com.github.stormbit.sdk.longpoll.LongPoll
 import com.github.stormbit.sdk.objects.Chat
 import com.github.stormbit.sdk.objects.Message
-import com.github.stormbit.sdk.utils.Utils
-import com.github.stormbit.sdk.utils.vkapi.API
-import com.github.stormbit.sdk.utils.vkapi.Auth
-import com.github.stormbit.sdk.utils.vkapi.Session
-import com.github.stormbit.sdk.utils.vkapi.apis.APIGroup
-import com.github.stormbit.sdk.utils.vkapi.apis.APIUser
-import com.github.stormbit.sdk.utils.vkapi.apis.APIVkUser
-import com.github.stormbit.sdk.utils.vkapi.methods.likes.LikesApi
-import com.github.stormbit.sdk.utils.vkapi.methods.docs.DocsApi
-import com.github.stormbit.sdk.utils.vkapi.methods.docs.DocsApiAsync
-import com.github.stormbit.sdk.utils.vkapi.methods.friends.FriendsApi
-import com.github.stormbit.sdk.utils.vkapi.methods.friends.FriendsApiAsync
-import com.github.stormbit.sdk.utils.vkapi.methods.groups.GroupsApi
-import com.github.stormbit.sdk.utils.vkapi.methods.groups.GroupsApiAsync
-import com.github.stormbit.sdk.utils.vkapi.methods.likes.LikesApiAsync
-import com.github.stormbit.sdk.utils.vkapi.methods.messages.MessagesApi
-import com.github.stormbit.sdk.utils.vkapi.methods.messages.MessagesApiAsync
-import com.github.stormbit.sdk.utils.vkapi.methods.photos.PhotosApi
-import com.github.stormbit.sdk.utils.vkapi.methods.photos.PhotosApiAsync
-import com.github.stormbit.sdk.utils.vkapi.methods.users.UsersApi
-import com.github.stormbit.sdk.utils.vkapi.methods.users.UsersApiAsync
-import com.github.stormbit.sdk.utils.vkapi.methods.video.VideoApi
-import com.github.stormbit.sdk.utils.vkapi.methods.video.VideoApiAsync
-import com.github.stormbit.sdk.utils.vkapi.methods.wall.WallApi
-import com.github.stormbit.sdk.utils.vkapi.methods.wall.WallApiAsync
-import com.google.gson.JsonObject
+import com.github.stormbit.sdk.objects.Upload
+import com.github.stormbit.sdk.vkapi.API
+import com.github.stormbit.sdk.vkapi.Auth
+import com.github.stormbit.sdk.vkapi.methods.docs.DocsApi
+import com.github.stormbit.sdk.vkapi.methods.docs.DocsApiAsync
+import com.github.stormbit.sdk.vkapi.methods.friends.FriendsApi
+import com.github.stormbit.sdk.vkapi.methods.friends.FriendsApiAsync
+import com.github.stormbit.sdk.vkapi.methods.groups.GroupsApi
+import com.github.stormbit.sdk.vkapi.methods.groups.GroupsApiAsync
+import com.github.stormbit.sdk.vkapi.methods.likes.LikesApi
+import com.github.stormbit.sdk.vkapi.methods.likes.LikesApiAsync
+import com.github.stormbit.sdk.vkapi.methods.messages.MessagesApi
+import com.github.stormbit.sdk.vkapi.methods.messages.MessagesApiAsync
+import com.github.stormbit.sdk.vkapi.methods.photos.PhotosApi
+import com.github.stormbit.sdk.vkapi.methods.photos.PhotosApiAsync
+import com.github.stormbit.sdk.vkapi.methods.users.UsersApi
+import com.github.stormbit.sdk.vkapi.methods.users.UsersApiAsync
+import com.github.stormbit.sdk.vkapi.methods.video.VideoApi
+import com.github.stormbit.sdk.vkapi.methods.video.VideoApiAsync
+import com.github.stormbit.sdk.vkapi.methods.wall.WallApi
+import com.github.stormbit.sdk.vkapi.methods.wall.WallApiAsync
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.util.concurrent.*
 
 @Suppress("unused", "LeakingThis")
 abstract class Client {
+    internal val log: Logger = LoggerFactory.getLogger(Client::class.java)
 
     /**
      * Main params
      */
-    var id: Int
-    val api: API
-    val http: Session
-    val longPoll: LongPoll
-    val auth: Auth
+    var id: Int = 0
+    lateinit var api: API
+    lateinit var longPoll: LongPoll
+    internal lateinit var auth: Auth
     var token: String? = null
+    var values: Map<String, Any> = mapOf()
+    var headers: Map<String, String> = mapOf()
 
     val commands = CopyOnWriteArrayList<Command>()
     private val chats = ConcurrentHashMap<String, Chat>()
@@ -74,49 +73,25 @@ abstract class Client {
 
     companion object {
         /**
-         * Executor services for threadsafing and fast work
+         * Executor services for thread safing and fast work
          */
-        val service: ExecutorService = Executors.newCachedThreadPool()
-        val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
+        internal val service: ExecutorService = Executors.newCachedThreadPool()
+        internal val scheduler: ScheduledExecutorService = Executors.newSingleThreadScheduledExecutor()
     }
 
-    constructor(login: String, password: String, saveCookie: Boolean = false, loadFromCookie: Boolean = false, twoFactorListener: Auth.TwoFactorListener? = null, captchaListener: Auth.CaptchaListener? = null) {
-        this.auth = Auth(login, password, saveCookie, loadFromCookie, twoFactorListener, captchaListener)
-        this.auth.auth()
-        this.http = this.auth.session
+    abstract fun auth()
 
-        this.api = APIUser(this)
-        this.id = Utils.getId(this)
-        this.longPoll = LongPoll(this)
-    }
-
-    constructor(login: String, password: String, twoFactorListener: Auth.TwoFactorListener? = null, captchaListener: Auth.CaptchaListener? = null) {
-        this.auth = Auth(login, password, twoFactorListener, captchaListener)
-        this.token = this.auth.authViaVK()
-        this.http = this.auth.session
-
-        this.api = APIVkUser(this)
-        this.id = Utils.getId(this)
-        this.longPoll = LongPoll(this)
-    }
-
-    constructor(accessToken: String, id: Int) {
-        this.auth = Auth()
-        this.http = this.auth.session
-
-        this.id = id
-        this.token = accessToken
-        this.api = APIGroup(this)
-        this.longPoll = LongPoll(this)
-    }
-
-    fun sendMessage(block: Message.() -> Unit): JsonObject? {
+    fun sendMessage(block: Message.() -> Unit): Int? {
         val message = Message()
         message.from(this)
 
         block(message)
 
-        return message.sendAsync()
+        return message.send()
+    }
+
+    fun startLongPoll() {
+        this.longPoll.start()
     }
 
     /**
@@ -138,14 +113,6 @@ abstract class Client {
 
     inline fun <reified T : Event> on(noinline callback: T.() -> Unit) = this.longPoll.registerEvent(callback)
 
-    /**
-     * If true, all updates from longpoll server
-     * will be logged to level 'INFO'
-     *
-     * @param enable true or false
-     */
-    fun enableLoggingUpdates(enable: Boolean) = this.longPoll.enableLoggingUpdates(enable)
-
     class Command {
         val commands: Array<String>
         val callback: CommandEvent.() -> Unit
@@ -164,6 +131,20 @@ abstract class Client {
             this.commands = command.toTypedArray()
             this.callback = callback
         }
+    }
+
+    fun chat(chatId: Int): Chat {
+        return Chat(this, chatId)
+    }
+
+    fun upload(): Upload {
+        return Upload(this)
+    }
+
+    internal fun getClientId(): Int {
+        val user = users.get()!![0]
+
+        return user.id
     }
 
     override fun toString(): String = "{\"id\": $id}"

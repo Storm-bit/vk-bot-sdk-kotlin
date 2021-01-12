@@ -1,7 +1,7 @@
 package com.github.stormbit.sdk.longpoll
 
-import com.google.gson.JsonArray
-import com.google.gson.JsonObject
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
@@ -20,8 +20,7 @@ class Queue {
     var updatesGroup = CopyOnWriteArrayList<JsonObject>()
 
     /**
-     * We add all of updates from longpoll server
-     * to queue
+     * We add all of updates from longpoll server to queue
      *
      * @param elements Array of updates
      */

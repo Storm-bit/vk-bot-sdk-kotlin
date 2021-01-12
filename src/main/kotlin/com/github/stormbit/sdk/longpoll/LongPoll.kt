@@ -3,14 +3,13 @@ package com.github.stormbit.sdk.longpoll
 import com.github.stormbit.sdk.clients.Client
 import com.github.stormbit.sdk.clients.Group
 import com.github.stormbit.sdk.events.Event
-import com.github.stormbit.sdk.longpoll.responses.GetLongpollServerResponse
-import com.github.stormbit.sdk.utils.Utils
-import com.github.stormbit.sdk.utils.Utils.Companion.toJsonObject
-import com.github.stormbit.sdk.utils.getInt
-import com.github.stormbit.sdk.utils.getString
-import com.github.stormbit.sdk.utils.vkapi.methods.messages.MessagesApi
-import com.google.gson.JsonObject
-import com.google.gson.JsonParseException
+import com.github.stormbit.sdk.longpoll.updateshandlers.UpdatesHandler
+import com.github.stormbit.sdk.longpoll.updateshandlers.UpdatesHandlerGroup
+import com.github.stormbit.sdk.longpoll.updateshandlers.UpdatesHandlerUser
+import com.github.stormbit.sdk.objects.models.LongPollServerResponse
+import com.github.stormbit.sdk.utils.*
+import kotlinx.serialization.SerializationException
+import kotlinx.serialization.json.JsonObject
 import net.dongliu.requests.Header
 import net.dongliu.requests.Requests
 import net.dongliu.requests.exception.RequestsException
@@ -29,31 +28,24 @@ class LongPoll(private val client: Client) {
 
     /**
      * 2 + 32 + 128
-     * attachments + pts + random_id
+     * items + pts + random_id
      */
     private val mode = 162
 
     private var version = 3
     private val isNeedPts = true
-    private val apiVersion = Utils.VK_API_VERSION
+    private val apiVersion = VK_API_VERSION
 
     @Volatile
-    private var longpollIsOn = false
+    private var isLongPollStarted = false
 
     val updatesHandler: UpdatesHandler = if (client is Group) UpdatesHandlerGroup(client) else UpdatesHandlerUser(client)
 
-    /**
-     * If true, all updates from longpoll server
-     * will be logged to level 'INFO'
-     */
-    @Volatile
-    private var logUpdates = false
-
-    init {
+    fun start() {
         updatesHandler.start()
-        val dataSetted = setData()
+        val isDataSet = setData()
 
-        if (!dataSetted) {
+        if (!isDataSet) {
             log.error("Some error occurred when trying to get longpoll settings, aborting. Trying again in 1 sec.")
 
             try {
@@ -61,20 +53,21 @@ class LongPoll(private val client: Client) {
             } catch (ignored: InterruptedException) { }
         }
 
-        if (!longpollIsOn) {
-            longpollIsOn = true
-            val threadLongpollListener = Thread(this::startListening)
-            threadLongpollListener.name = "threadLongpollListener"
-            threadLongpollListener.start()
+        if (!isLongPollStarted) {
+            isLongPollStarted = true
+
+            val longPollThread = Thread(this::startListening)
+            longPollThread.name = "LongPoll Listener"
+            longPollThread.start()
         }
     }
 
     /**
      * If you need to set new longpoll server, or restart listening
-     * off old before.
+     * stop old before.
      */
-    fun off() {
-        longpollIsOn = false
+    fun stop() {
+        isLongPollStarted = false
     }
 
     inline fun <reified T : Event> registerEvent(noinline consumer: T.() -> Unit) {
@@ -82,19 +75,13 @@ class LongPoll(private val client: Client) {
     }
 
     private fun setData(): Boolean {
+        val serverResponse = when (client) {
+            is Group -> getLongpollServerGroup(client.id)
 
-        val serverResponse = if (client is Group) {
-            getLongpollServerGroup(client.id)
-        } else {
-            getLongPollServer()
+            else -> getLongPollServer()
         }
 
-        if (serverResponse == null) {
-            log.error("Some error occurred, bad response returned from getting LongPoll server settings (server, key, ts, pts).")
-            return false
-        }
-
-        var serv: String = serverResponse.server
+        var serv: String = serverResponse.server!!
 
         if (!serv.startsWith("https://")) {
             serv = "https://$serv"
@@ -108,69 +95,26 @@ class LongPoll(private val client: Client) {
         return true
     }
 
-    private fun getLongPollServer(): GetLongpollServerResponse? {
-        val method = MessagesApi.Companion.Methods.getLongPollServer
+    private fun getLongPollServer(): LongPollServerResponse {
+        val result = client.messages.getLongPollServer(isNeedPts, version)!!
 
-        if (!Utils.hashes.has(method)) {
-            Utils.getHash(client.auth, method)
-        }
+        log.info("LongPollServerResponse: \n$result\n")
 
-        val result = client.messages.getLongPollServer(isNeedPts, version)
-
-        val response: JsonObject
-
-        if (!result.has("response") || !result.getAsJsonObject("response").has("key") || !result.getAsJsonObject("response").has("server") || !result.getAsJsonObject("response").has("ts")) {
-            log.error("Bad response of getting longpoll server!\nQuery: {\"need_pts\": \"$isNeedPts\", \"lp_version\": \"$version\"}\n Response: {}", result)
-            return null
-        }
-
-        response = try {
-            result.getAsJsonObject("response")
-        } catch (e: JsonParseException) {
-            log.error("Bad response of getting longpoll server.")
-            return null
-        }
-
-        log.info("GetLongPollServerResponse: \n{}\n", response)
-
-        return GetLongpollServerResponse(
-                response.getString("key"),
-                response.getString("server"),
-                response.getInt("ts"),
-                response.getInt("pts")
-        )
+        return result
     }
 
-    private fun getLongpollServerGroup(groupId: Int): GetLongpollServerResponse? {
-        val result = client.groups.getLongPollServer(groupId)
+    private fun getLongpollServerGroup(groupId: Int): LongPollServerResponse {
+        val result = client.groups.getLongPollServer(groupId)!!
 
-        val response: JsonObject
+        log.info("LongPollServerResponse: \n$result\n")
 
-        if (!result.has("response") || !result.getAsJsonObject("response").has("key") || !result.getAsJsonObject("response").has("server") || !result.getAsJsonObject("response").has("ts")) {
-            log.error("Bad response of getting longpoll server!\nQuery: {groupId: $groupId}\n Response: {}", result)
-            return null
-        }
-
-        response = try {
-            result.getAsJsonObject("response")
-        } catch (e: JsonParseException) {
-            log.error("Bad response of getting longpoll server.")
-            return null
-        }
-
-        log.info("GetLongPollServerResponse: \n{}\n", response)
-
-        return GetLongpollServerResponse(
-                response.getString("key"),
-                response.getString("server"),
-                response.getInt("ts")
-        )
+        return result
     }
 
     private fun startListening() {
         log.info("Started listening to events from VK LongPoll server...")
 
-        while (longpollIsOn) {
+        while (isLongPollStarted) {
             var response: JsonObject?
             var responseString = "{}"
 
@@ -184,48 +128,44 @@ class LongPoll(private val client: Client) {
                             .send().readToText()
                 } catch (ignored: RequestsException) { continue }
 
-                response = toJsonObject(responseString)
+                response = responseString.toJsonObject()
 
-            } catch (ignored: JsonParseException) {
-                log.error("Some error occurred, no updates got from longpoll server: {}", responseString)
+            } catch (ignored: SerializationException) {
+                log.error("Some error occurred, no updates got from longpoll server: $responseString")
 
                 try {
                     Thread.sleep(1000)
-                } catch (ignored: InterruptedException) {
-                }
+                } catch (ignored: InterruptedException) { }
 
                 continue
             }
 
-            if (logUpdates) log.info("Response of getting updates: \n{}\n", response)
-
-            if (response.has("failed")) {
+            if (response.containsKey("failed")) {
                 val code = response.getInt("failed")
 
-                log.error("Response of VK LongPoll fallen with error code {}", code)
+                log.error("Response of VK LongPoll fallen with error code $code")
 
                 if (code == 4) {
-                    version = response.getInt("max_version")
+                    version = response.getInt("max_version")!!
                 } else {
-                    if (response.has("ts")) {
+                    if (response.containsKey("ts")) {
                         ts = response.getInt("ts")
                     }
                 }
                 setData()
             } else {
-                if (response.has("ts")) ts = response.getInt("ts")
+                if (response.containsKey("ts")) ts = response.getInt("ts")
 
-                if (response.has("pts")) pts = response.getInt("pts")
+                if (response.containsKey("pts")) pts = response.getInt("pts")
 
                 if (this.updatesHandler.eventsCount() > 0 || this.updatesHandler.commandsCount() > 0) {
-                    if (response.has("ts") && response.has("updates")) {
-                        this.updatesHandler.handle(response.getAsJsonArray("updates"))
+                    if (response.containsKey("ts") && response.containsKey("updates")) {
+                        this.updatesHandler.handle(response.getJsonArray("updates")!!)
                     } else {
-                        log.error("Bad response from VK LongPoll server: no `ts` or `updates` array: {}", response)
+                        log.error("Bad response from VK LongPoll server: no `ts` or `updates` array: $response")
                         try {
                             Thread.sleep(1000)
-                        } catch (ignored: InterruptedException) {
-                        }
+                        } catch (ignored: InterruptedException) { }
                     }
                 }
             }
@@ -240,9 +180,5 @@ class LongPoll(private val client: Client) {
      */
     fun enableTyping(enable: Boolean) {
         updatesHandler.sendTyping = enable
-    }
-
-    fun enableLoggingUpdates(enable: Boolean) {
-        logUpdates = enable
     }
 }
