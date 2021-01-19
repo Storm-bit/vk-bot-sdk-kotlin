@@ -17,7 +17,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.version>1.4.21</kotlin.version>
         <serialization.version>1.0.1</serialization.version>
-        <dokka.version>1.4.20</dokka.version>
+        <dokka.version>1.4.10</dokka.version>
         <ktor.version>1.5.0</ktor.version>
     </properties>
 
