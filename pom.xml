@@ -17,17 +17,18 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.version>1.4.21</kotlin.version>
         <serialization.version>1.0.1</serialization.version>
-        <dokka.version>1.4.10.2</dokka.version>
+        <dokka.version>1.4.10</dokka.version>
         <ktor.version>1.5.0</ktor.version>
     </properties>
 
-    <repositories>
-        <repository>
+    <pluginRepositories>
+        <pluginRepository>
             <id>jcenter</id>
             <url>https://jcenter.bintray.com</url>
-            <releases><enabled>true</enabled></releases>
-            <snapshots><enabled>true</enabled></snapshots>
-        </repository>
+        </pluginRepository>
+    </pluginRepositories>
+
+    <repositories>
         <repository>
             <id>ktor</id>
             <url>https://kotlin.bintray.com/ktor</url>
