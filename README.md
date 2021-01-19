@@ -6,7 +6,7 @@
 <dependency>
     <groupId>com.github.storm-bit</groupId>
     <artifactId>vk-bot-sdk-kotlin</artifactId>
-    <version>1.1.7</version>
+    <version>1.1.8</version>
 </dependency>
 ```
 
