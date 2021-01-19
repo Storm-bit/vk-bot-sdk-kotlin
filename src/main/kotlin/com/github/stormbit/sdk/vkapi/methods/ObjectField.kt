@@ -175,13 +175,6 @@ enum class CounterFilter(internal val value: String) {
     APP_REQUESTS("app_requests") // уведомления от приложений
 }
 
-enum class ConversationFilter(internal val value: String) {
-    ALL("all"),
-    UNREAD("unread"),
-    IMPORTANT("important"),
-    UNANSWERED("unanswered")
-}
-
 enum class GroupsFilter(internal val value: String) {
     ADMIN("admin"),
     EDITOR("editor"),

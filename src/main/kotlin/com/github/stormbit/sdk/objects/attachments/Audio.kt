@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Audio(
-    @SerialName("access_key") override val accessKey: String?,
+    @SerialName("access_key") override val accessKey: String? = null,
     @SerialName("artist") val artist: String,
     @SerialName("date") val date: Int,
     @SerialName("duration") val duration: Int,
@@ -24,6 +24,7 @@ data class Audio(
 
     override val typeAttachment: AttachmentType get() = AttachmentType.AUDIO
 
+    @Suppress("unused")
     val mp3Url: String get() {
         val url = url.replace("/index.m3u8", ".mp3")
 

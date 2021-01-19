@@ -1,19 +1,21 @@
 package com.github.stormbit.sdk.longpoll
 
 import com.github.stormbit.sdk.clients.Client
-import com.github.stormbit.sdk.clients.Group
+import com.github.stormbit.sdk.clients.GroupClient
 import com.github.stormbit.sdk.events.Event
 import com.github.stormbit.sdk.longpoll.updateshandlers.UpdatesHandler
 import com.github.stormbit.sdk.longpoll.updateshandlers.UpdatesHandlerGroup
-import com.github.stormbit.sdk.longpoll.updateshandlers.UpdatesHandlerUser
 import com.github.stormbit.sdk.objects.models.LongPollServerResponse
 import com.github.stormbit.sdk.utils.*
+import com.github.stormbit.sdk.vkapi.execute
+import io.ktor.client.features.*
+import io.ktor.client.request.*
+import kotlinx.coroutines.*
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.JsonObject
-import net.dongliu.requests.Header
-import net.dongliu.requests.Requests
-import net.dongliu.requests.exception.RequestsException
+import kotlinx.serialization.json.jsonObject
 import org.slf4j.LoggerFactory
+import kotlin.reflect.KClass
 
 @Suppress("unused")
 class LongPoll(private val client: Client) {
@@ -39,103 +41,98 @@ class LongPoll(private val client: Client) {
     @Volatile
     private var isLongPollStarted = false
 
-    val updatesHandler: UpdatesHandler = if (client is Group) UpdatesHandlerGroup(client) else UpdatesHandlerUser(client)
+    private val updatesHandler: UpdatesHandler<JsonObject> = UpdatesHandlerGroup(client)
 
-    fun start() {
-        updatesHandler.start()
+    fun start() = runBlocking {
         val isDataSet = setData()
 
         if (!isDataSet) {
-            log.error("Some error occurred when trying to get longpoll settings, aborting. Trying again in 1 sec.")
+            log.error("Some error occurred when trying to get LongPoll settings, aborting. Trying again in 1 sec.")
 
-            try {
-                Thread.sleep(1000)
-            } catch (ignored: InterruptedException) { }
+            delay(1000)
+        }
+
+        GlobalScope.launch {
+            updatesHandler.start()
         }
 
         if (!isLongPollStarted) {
             isLongPollStarted = true
 
-            val longPollThread = Thread(this::startListening)
-            longPollThread.name = "LongPoll Listener"
-            longPollThread.start()
+            launch {
+                startListening()
+            }
         }
     }
 
     /**
-     * If you need to set new longpoll server, or restart listening
+     * If you need to set new LongPoll server, or restart listening
      * stop old before.
      */
     fun stop() {
         isLongPollStarted = false
     }
 
-    inline fun <reified T : Event> registerEvent(noinline consumer: T.() -> Unit) {
-        updatesHandler.registerEvent(consumer)
+    fun <T : Event> registerEvent(callback: suspend T.() -> Unit, type: KClass<T>) {
+        updatesHandler.registerEvent(callback, type)
     }
 
-    private fun setData(): Boolean {
+    private suspend fun setData(): Boolean {
         val serverResponse = when (client) {
-            is Group -> getLongpollServerGroup(client.id)
+            is GroupClient -> getLongPollServerGroup(client.id)
 
             else -> getLongPollServer()
         }
 
         var serv: String = serverResponse.server!!
 
+        val (key, pts, _, ts) = serverResponse
+
         if (!serv.startsWith("https://")) {
             serv = "https://$serv"
         }
 
-        server = serv
-        key = serverResponse.key
-        ts = serverResponse.ts
-        pts = serverResponse.pts
+        this.server = serv
+        this.key = key
+        this.ts = ts
+        this.pts = pts
 
         return true
     }
 
-    private fun getLongPollServer(): LongPollServerResponse {
-        val result = client.messages.getLongPollServer(isNeedPts, version)!!
+    private suspend fun getLongPollServer(): LongPollServerResponse {
+        val result = client.messages.getLongPollServer(isNeedPts, version).execute()
 
         log.info("LongPollServerResponse: \n$result\n")
 
         return result
     }
 
-    private fun getLongpollServerGroup(groupId: Int): LongPollServerResponse {
-        val result = client.groups.getLongPollServer(groupId)!!
+    private suspend fun getLongPollServerGroup(groupId: Int): LongPollServerResponse {
+        val result = client.groups.getLongPollServer(groupId).execute()
 
         log.info("LongPollServerResponse: \n$result\n")
 
         return result
     }
 
-    private fun startListening() {
-        log.info("Started listening to events from VK LongPoll server...")
+    private suspend fun startListening() {
+        log.info("Started listening to events senderType VK LongPoll server...")
 
         while (isLongPollStarted) {
             var response: JsonObject?
-            var responseString = "{}"
 
             try {
                 val url = "$server?act=a_check&key=$key&ts=$ts&wait=$wait&mode=$mode&version=$version&msgs_limit=100000"
 
-                responseString = try {
-                    Requests.get(url)
-                            .timeout(30000)
-                            .headers(Header("Accept-Charset", "utf-8"))
-                            .send().readToText()
-                } catch (ignored: RequestsException) { continue }
+                val responseString = longPollRequest(url) ?: continue
 
                 response = responseString.toJsonObject()
 
-            } catch (ignored: SerializationException) {
-                log.error("Some error occurred, no updates got from longpoll server: $responseString")
+            } catch (e: SerializationException) {
+                log.error("Some error occurred, no updates got senderType LongPoll server: ", e)
 
-                try {
-                    Thread.sleep(1000)
-                } catch (ignored: InterruptedException) { }
+                delay(1000)
 
                 continue
             }
@@ -152,23 +149,37 @@ class LongPoll(private val client: Client) {
                         ts = response.getInt("ts")
                     }
                 }
+
                 setData()
             } else {
                 if (response.containsKey("ts")) ts = response.getInt("ts")
 
                 if (response.containsKey("pts")) pts = response.getInt("pts")
 
-                if (this.updatesHandler.eventsCount() > 0 || this.updatesHandler.commandsCount() > 0) {
-                    if (response.containsKey("ts") && response.containsKey("updates")) {
-                        this.updatesHandler.handle(response.getJsonArray("updates")!!)
-                    } else {
-                        log.error("Bad response from VK LongPoll server: no `ts` or `updates` array: $response")
-                        try {
-                            Thread.sleep(1000)
-                        } catch (ignored: InterruptedException) { }
+                if (response.containsKey("ts") && response.containsKey("updates")) {
+                    if (response.getJsonArray("updates")!!.isNotEmpty()) {
+                        updatesHandler.send(response.getJsonArray("updates")!![0].jsonObject)
                     }
+                } else {
+                    log.error("Bad response senderType VK LongPoll server: no 'ts' or 'updates' array: $response")
+
+                    delay(1000)
                 }
             }
+        }
+    }
+
+    private suspend fun longPollRequest(url: String): String? {
+        return try {
+            client.httpClient.get<String>(url) {
+                header("Accept-Charset", "utf-8")
+                timeout {
+                    connectTimeoutMillis = 30000
+                    requestTimeoutMillis = 30000
+                }
+            }
+        } catch (e: TimeoutCancellationException) {
+            null
         }
     }
 

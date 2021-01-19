@@ -1,5 +1,12 @@
 package com.github.stormbit.sdk.events.chat
 
-import com.github.stormbit.sdk.events.Event
+import com.github.stormbit.sdk.events.ServiceActionEvent
+import com.github.stormbit.sdk.events.message.ChatMessageEvent
+import com.github.stormbit.sdk.objects.Message
 
-data class ChatPinMessageEvent(val fromId: Int, val chatId: Int, val messageId: Int) : Event
+data class ChatPinMessageEvent(
+    val fromId: Int,
+    val chatId: Int,
+    val messageId: Int,
+    override val message: Message
+) : ChatMessageEvent(message), ServiceActionEvent

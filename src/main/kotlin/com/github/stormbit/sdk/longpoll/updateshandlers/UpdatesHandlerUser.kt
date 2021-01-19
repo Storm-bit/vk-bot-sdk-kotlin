@@ -1,37 +1,32 @@
 package com.github.stormbit.sdk.longpoll.updateshandlers
 
 import com.github.stormbit.sdk.clients.Client
-import com.github.stormbit.sdk.events.CommandEvent
 import com.github.stormbit.sdk.events.EveryEvent
 import com.github.stormbit.sdk.events.TypingEvent
 import com.github.stormbit.sdk.events.chat.*
 import com.github.stormbit.sdk.events.friend.FriendOfflineEvent
 import com.github.stormbit.sdk.events.friend.FriendOnlineEvent
 import com.github.stormbit.sdk.events.message.*
-import com.github.stormbit.sdk.longpoll.Events
-import com.github.stormbit.sdk.longpoll.MessageEvents
+import com.github.stormbit.sdk.longpoll.events.Events
 import com.github.stormbit.sdk.objects.Chat
 import com.github.stormbit.sdk.objects.Message
 import com.github.stormbit.sdk.objects.models.MessagePayload
+import com.github.stormbit.sdk.objects.models.ServiceAction
 import com.github.stormbit.sdk.utils.*
-import com.github.stormbit.sdk.objects.models.Message.ServiceAction.Type
+import com.github.stormbit.sdk.vkapi.RoutePath
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.*
 
-class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
+class UpdatesHandlerUser(private val client: Client) : UpdatesHandler<JsonArray>(client) {
 
-    override fun handleCurrentUpdate() {
-        val currentUpdate = if (this.queue.updatesUser.isEmpty()) {
-            return
-        } else {
-            this.queue.updatesUser.shift()!!
-        }
-
+    override suspend fun handleCurrentUpdate(currentUpdate: JsonArray) {
         when (currentUpdate.getInt(0)) {
             4 -> {
                 val messageFlags = currentUpdate.getInt(2)
 
                 if ((messageFlags and 2) == 0) {
-                    Client.service.submit { handleMessageUpdate(currentUpdate) }
+                    GlobalScope.launch { handleMessageUpdate(currentUpdate) }
                 }
             }
 
@@ -60,7 +55,7 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
     /**
      * Handle chat events
      */
-    private fun handleChatEvents(updateObject: JsonArray): Boolean {
+    private suspend fun handleChatEvents(updateObject: JsonArray, message: Message): Boolean {
         try {
             val chatId = updateObject.getInt(3)
 
@@ -76,62 +71,63 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
             // and because simple chat messages will be handled
             if (attachments!!.containsKey("source_act")) {
                 val sourceAct = attachments.getString("source_act")!!
-                val fromId = attachments.getString("from")!!.toInt()
+                val fromId = attachments.getString("senderType")!!.toInt()
 
                 when (sourceAct) {
-                    Type.CHAT_CREATE.value -> {
+                    ServiceAction.Type.CHAT_CREATE.value -> {
                         val title = attachments.getString("source_text")!!
-                        events[Events.CHAT_CREATE.value]?.invoke(ChatCreateEvent(title, fromId, chatId))
+                        events[Events.CHAT_CREATE.value]?.invoke(ChatCreateEvent(title, fromId, chatId, Message()))
                     }
 
-                    Type.CHAT_TITLE_UPDATE.value -> {
+                    ServiceAction.Type.CHAT_TITLE_UPDATE.value -> {
                         val oldTitle = attachments.getString("source_old_text")!!
                         val newTitle = attachments.getString("source_text")!!
 
                         events[Events.CHAT_TITLE_CHANGE.value]?.invoke(
-                            ChatTitleChangeEvent(
+                            ChatTitleUpdateEvent(
                                 oldTitle,
                                 newTitle,
                                 fromId,
-                                chatId
+                                chatId,
+                                Message()
                             )
                         )
                     }
 
-                    Type.CHAT_PHOTO_UPDATE.value -> {
+                    ServiceAction.Type.CHAT_PHOTO_UPDATE.value -> {
                         val attachmentsObject = findAttachments(updateObject.getJsonObject(7))
 
-                        events[Events.CHAT_PHOTO_UPDATE.value]?.invoke(
-                            ChatPhotoUpdateEvent(attachmentsObject.items[0].attach, fromId, chatId)
+                        events[Events.CHAT_PHOTO_CHANGE.value]?.invoke(
+                            ChatPhotoUpdateEvent(attachmentsObject.items[0].attach, fromId, chatId, message)
                         )
                     }
 
-                    Type.CHAT_INVITE_USER.value -> {
+                    ServiceAction.Type.CHAT_INVITE_USER.value -> {
                         val user = attachments.getString("source_mid")!!.toInt()
 
-                        events[Events.CHAT_JOIN.value]?.invoke(ChatJoinEvent(fromId, user, chatId))
+                        events[Events.CHAT_JOIN.value]?.invoke(ChatJoinEvent(fromId, user, chatId, message))
                     }
 
-                    Type.CHAT_KICK_USER.value -> {
+                    ServiceAction.Type.CHAT_KICK_USER.value -> {
                         val user = attachments.getString("source_mid")!!.toInt()
 
-                        events[Events.CHAT_LEAVE.value]?.invoke(ChatLeaveEvent(fromId, user, chatId))
+                        events[Events.CHAT_LEAVE.value]?.invoke(ChatLeaveEvent(fromId, user, chatId, message))
                     }
 
-                    Type.CHAT_PHOTO_REMOVE.value -> {
-                        events[Events.CHAT_PHOTO_REMOVE.value]?.invoke(ChatPhotoRemoveEvent(fromId, chatId))
+                    ServiceAction.Type.CHAT_PHOTO_REMOVE.value -> {
+                        events[Events.CHAT_PHOTO_REMOVE.value]?.invoke(ChatPhotoRemoveEvent(fromId, chatId, message))
                     }
 
-                    Type.CHAT_PIN_MESSAGE.value -> {
+                    ServiceAction.Type.CHAT_PIN_MESSAGE.value -> {
                         val messageId = attachments.getInt("source_chat_local_id")!!
 
-                        events[Events.CHAT_PIN_MESSAGE.value]?.invoke(ChatPinMessageEvent(fromId, chatId, messageId))
+                        events[Events.CHAT_PIN_MESSAGE.value]?.invoke(ChatPinMessageEvent(fromId, chatId, messageId, message))
                     }
 
-                    Type.CHAT_UNPIN_MESSAGE.value -> {
+                    ServiceAction.Type.CHAT_UNPIN_MESSAGE.value -> {
                         val messageId = attachments.getInt("source_chat_local_id")!!
 
-                        events[Events.CHAT_UNPIN_MESSAGE.value]?.invoke(ChatUnpinMessageEvent(fromId, chatId, messageId))
+                        events[Events.CHAT_UNPIN_MESSAGE.value]?.invoke(ChatUnpinMessageEvent(fromId, chatId, messageId, message))
                     }
                 }
             }
@@ -145,7 +141,7 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
     /**
      * Handle every longpoll event
      */
-    private fun handleEveryLongPollUpdate(updateObject: JsonArray) {
+    private suspend fun handleEveryLongPollUpdate(updateObject: JsonArray) {
         events[Events.EVERY.value]?.invoke(EveryEvent(
             buildJsonObject {
                 put("response", updateObject)
@@ -153,10 +149,8 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
         ))
     }
 
-    private fun handleMessageUpdate(updateObject: JsonArray) {
+    private suspend fun handleMessageUpdate(updateObject: JsonArray) {
         try {
-            var messageIsAlreadyHandled = false
-
             val messageId = updateObject.getInt(1)
             var peerId = updateObject.getInt(3)
             val timestamp = updateObject.getInt(4)
@@ -176,7 +170,7 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
             if (peerId > Chat.CHAT_PREFIX) {
                 chatId = peerId - Chat.CHAT_PREFIX
 
-                peerId = updateObject.getJsonObject(6).getInt("from")!!
+                peerId = updateObject.getJsonObject(6).getInt("senderType")!!
             }
 
             val message = Message(
@@ -195,114 +189,27 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
                 message.chatIdLong = Chat.CHAT_PREFIX + chatId
 
                 // handle chat events
-                messageIsAlreadyHandled = handleChatEvents(updateObject)
+                if (handleChatEvents(updateObject, message)) return
             }
 
-            // check for commands
-            if (client.commands.size > 0) {
-                messageIsAlreadyHandled = handleCommands(message)
+            when (message.senderType) {
+                Message.SenderType.COMMUNITY ->
+                    client.messageHandler?.pass(CommunityMessageEvent(message), RoutePath(String(), message.text))
+
+                Message.SenderType.USER ->
+                    client.messageHandler?.pass(UserMessageEvent(message), RoutePath(String(), message.text))
+
+                Message.SenderType.CHAT ->
+                    client.messageHandler?.pass(ChatMessageEvent(message), RoutePath(String(), message.text))
             }
 
-            if (message.hasFwds) {
-                events[MessageEvents.MESSAGE_WITH_FORWARDS.value]?.invoke(MessageWithForwardsEvent(message))
-                messageIsAlreadyHandled = true
-
-                handleSendTyping(message)
-            }
-
-            if (!messageIsAlreadyHandled) {
-                when (message.messageType()) {
-                    Message.MessageType.VOICE -> {
-                        if (events.containsKey(MessageEvents.VOICE_MESSAGE.value)) {
-                            events[MessageEvents.VOICE_MESSAGE.value]?.invoke(VoiceMessageEvent(message))
-                            messageIsAlreadyHandled = true
-                            handleSendTyping(message)
-                        }
-                    }
-
-                    Message.MessageType.STICKER -> {
-                        if (events.containsKey(MessageEvents.STICKER_MESSAGE.value)) {
-                            events[MessageEvents.STICKER_MESSAGE.value]?.invoke(StickerMessageEvent(message))
-                            messageIsAlreadyHandled = true
-                            handleSendTyping(message)
-                        }
-                    }
-
-                    Message.MessageType.AUDIO -> {
-                        if (events.containsKey(MessageEvents.AUDIO_MESSAGE.value)) {
-                            events[MessageEvents.AUDIO_MESSAGE.value]?.invoke(AudioMessageEvent(message))
-                            messageIsAlreadyHandled = true
-                            handleSendTyping(message)
-                        }
-                    }
-
-                    Message.MessageType.VIDEO -> {
-                        if (events.containsKey(MessageEvents.VIDEO_MESSAGE.value)) {
-                            events[MessageEvents.VIDEO_MESSAGE.value]?.invoke(VideoMessageEvent(message))
-                            messageIsAlreadyHandled = true
-                            handleSendTyping(message)
-                        }
-                    }
-
-                    Message.MessageType.DOC -> {
-                        if (events.containsKey(MessageEvents.DOC_MESSAGE.value)) {
-                            events[MessageEvents.DOC_MESSAGE.value]?.invoke(DocMessageEvent(message))
-                            messageIsAlreadyHandled = true
-                            handleSendTyping(message)
-                        }
-                    }
-
-                    Message.MessageType.WALL -> {
-                        if (events.containsKey(MessageEvents.WALL_MESSAGE.value)) {
-                            events[MessageEvents.WALL_MESSAGE.value]?.invoke(WallMessageEvent(message))
-                            messageIsAlreadyHandled = true
-                            handleSendTyping(message)
-                        }
-                    }
-
-                    Message.MessageType.PHOTO -> {
-                        if (events.containsKey(MessageEvents.PHOTO_MESSAGE.value)) {
-                            events[MessageEvents.PHOTO_MESSAGE.value]?.invoke(PhotoMessageEvent(message))
-                            messageIsAlreadyHandled = true
-                            handleSendTyping(message)
-                        }
-                    }
-
-                    Message.MessageType.LINK -> {
-                        if (events.containsKey(MessageEvents.LINK_MESSAGE.value)) {
-                            events[MessageEvents.LINK_MESSAGE.value]?.invoke(LinkMessageEvent(message))
-                            messageIsAlreadyHandled = true
-                            handleSendTyping(message)
-                        }
-                    }
-
-                    Message.MessageType.SIMPLE_TEXT -> {
-                        if (events.containsKey(MessageEvents.SIMPLE_TEXT_MESSAGE.value)) {
-                            events[MessageEvents.SIMPLE_TEXT_MESSAGE.value]?.invoke(SimpleTextMessage(message))
-                            messageIsAlreadyHandled = true
-                            handleSendTyping(message)
-                        }
-                    }
-                }
-            }
-
-            if (events.containsKey(MessageEvents.MESSAGE.value) && !messageIsAlreadyHandled) {
-                events[MessageEvents.MESSAGE.value]?.invoke(MessageNewEvent(message))
-                handleSendTyping(message)
-            }
-
-            if (message.isMessageFromChat) {
-                if (events.containsKey(MessageEvents.CHAT_MESSAGE.value) && !messageIsAlreadyHandled) {
-                    events[MessageEvents.CHAT_MESSAGE.value]?.invoke(ChatMessageEvent(message))
-                    handleSendTyping(message)
-                }
-            }
+            handleSendTyping(message)
         } catch (e: Exception) {
             log.error("Some error occurred when parsing message, error is: ", e)
         }
     }
 
-    private fun handleOnline(updateObject: JsonArray) {
+    private suspend fun handleOnline(updateObject: JsonArray) {
         val userId = updateObject.getInt(1)
         val timestamp = updateObject.getInt(3)
 
@@ -312,7 +219,7 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
         }
     }
 
-    private fun handleOffline(updateObject: JsonArray) {
+    private suspend fun handleOffline(updateObject: JsonArray) {
         val userId = updateObject.getInt(1)
         val timestamp = updateObject.getInt(3)
 
@@ -324,33 +231,10 @@ class UpdatesHandlerUser(private val client: Client) : UpdatesHandler(client) {
     /**
      * Handle dialog with typing user
      */
-    private fun handleTypingUpdate(updateObject: JsonArray) {
+    private suspend fun handleTypingUpdate(updateObject: JsonArray) {
         if (events.containsKey(Events.TYPING.value)) {
             events[Events.TYPING.value]?.invoke(TypingEvent(updateObject.getInt(1)))
         }
-    }
-
-    /**
-     * Handle message and call back if it contains any command
-     *
-     * @param message received message
-     */
-    private fun handleCommands(message: Message): Boolean {
-        var isDone = false
-
-        val words = message.text.split(" ")
-
-        for (command in client.commands) {
-            for (element in command.commands) {
-                if (words[0].toLowerCase().contains(element.toLowerCase())) {
-                    command.callback.invoke(CommandEvent(words.subList(1, words.size), message))
-                    isDone = true
-                    handleSendTyping(message)
-                }
-            }
-        }
-
-        return isDone
     }
 
     /**

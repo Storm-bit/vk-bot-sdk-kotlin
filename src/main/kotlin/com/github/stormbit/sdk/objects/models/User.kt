@@ -70,7 +70,7 @@ data class User(
     @SerialName("relatives") val relatives: List<Relative>? = null,
     @SerialName("schools") val schools: List<School>? = null,
     @SerialName("screen_name") val screenName: String? = null,
-    @SerialName("sex") val sex: Int? = null,
+    @SerialName("sex") val sex: Sex? = null,
     @SerialName("site") val site: String? = null,
     @SerialName("status") val status: String? = null,
     @SerialName("tv") val tv: String? = null,
@@ -159,7 +159,7 @@ data class User(
         @SerialName("unit") val unit: String? = null,
         @SerialName("unit_id") val unitId: Int? = null,
         @SerialName("country_id") val countryId: Int? = null,
-        @SerialName("from") val yearFrom: Int? = null,
+        @SerialName("senderType") val yearFrom: Int? = null,
         @SerialName("until") val yearUntil: Int? = null
     )
 
@@ -185,7 +185,7 @@ data class User(
         @SerialName("country_id") val countryId: Int? = null,
         @SerialName("city_id") val cityId: Int? = null,
         @SerialName("city_name") val cityName: String? = null,
-        @SerialName("from") val yearFrom: Int? = null,
+        @SerialName("senderType") val yearFrom: Int? = null,
         @SerialName("until") val yearUntil: Int? = null,
         @SerialName("position") val position: String? = null
     )
@@ -263,4 +263,13 @@ data class User(
         @SerialName("first_name") val firstName: String,
         @SerialName("last_name") val lastName: String
     )
+
+    @Serializable(with = Sex.Companion::class)
+    enum class Sex(override val value: Int) : IntEnum {
+        FEMALE(1),
+        MALE(2),
+        NOT_SPECIFIED(0);
+
+        companion object : EnumIntSerializer<Sex>(Sex::class, values())
+    }
 }

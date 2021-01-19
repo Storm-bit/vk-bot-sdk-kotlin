@@ -1,10 +1,11 @@
 package com.github.stormbit.sdk.vkapi
 
-import com.github.stormbit.sdk.clients.VkUser
+import com.github.stormbit.sdk.clients.CaptchaHandler
+import com.github.stormbit.sdk.clients.TwoFactorHandler
+import com.github.stormbit.sdk.clients.VkUserClient
 import com.github.stormbit.sdk.exceptions.*
 import com.github.stormbit.sdk.objects.Captcha
 import com.github.stormbit.sdk.utils.*
-import com.github.stormbit.sdk.utils.Utils.Companion.regexSearch
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import net.dongliu.requests.Header
@@ -23,26 +24,28 @@ class Auth {
     private lateinit var password: String
 
     private var appId: Int = 6222115
-    private var scope: Int = DEFAULT_USER_SCOPES
+    private var scope: Int = DEFAULT_USER_SCOPES.mask
     private var redirectUrl: String = ""
 
     companion object {
         private const val STRING_USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36"
         private val USER_AGENT = Header("User-Agent", STRING_USER_AGENT)
-        private val DEFAULT_USER_SCOPES = VkUserPermissions.values().sumBy { it.value }
+        private val DEFAULT_USER_SCOPES = VkUserPermissions().apply {
+            allPermissions = true
+        }
     }
 
-    var session: Session = Session()
-    private var twoFactorListener: TwoFactorListener? = null
-    private var captchaListener: CaptchaListener? = null
+    private var session: Session = Session()
+    private var twoFactorHandler: TwoFactorHandler? = null
+    private var captchaHandler: CaptchaHandler? = null
 
-    constructor(login: String, password: String, appId: Int = 6222115, scope: Int = DEFAULT_USER_SCOPES, twoFactorListener: TwoFactorListener? = null, captchaListener: CaptchaListener? = null, redirectUrl: String = "") {
+    constructor(login: String, password: String, appId: Int = 6222115, scope: VkUserPermissions = DEFAULT_USER_SCOPES, twoFactorHandler: TwoFactorHandler? = null, captchaHandler: CaptchaHandler? = null, redirectUrl: String = "") {
         this.login = login
         this.password = password
         this.appId = appId
-        this.scope = scope
-        this.twoFactorListener = twoFactorListener
-        this.captchaListener = captchaListener
+        this.scope = scope.mask
+        this.twoFactorHandler = twoFactorHandler
+        this.captchaHandler = captchaHandler
         this.redirectUrl = redirectUrl
     }
 
@@ -62,8 +65,8 @@ class Auth {
 
         val prms = hashMapOf<String, Any>(
             "grant_type" to "password",
-            "client_id" to VkUser.CLIENT_ID,
-            "client_secret" to VkUser.CLIENT_SECRET,
+            "client_id" to VkUserClient.CLIENT_ID,
+            "client_secret" to VkUserClient.CLIENT_SECRET,
             "username" to login,
             "password" to password,
             "v" to VK_API_VERSION,
@@ -72,10 +75,9 @@ class Auth {
 
         prms.putAll(parameters)
 
-        val responseString = Requests.get(VkUser.BASE_PROXY_OAUTH_URL + "token")
+        val responseString = Requests.get(VkUserClient.BASE_PROXY_OAUTH_URL + "token")
             .body(prms)
-            .headers(VkUser.HEADER)
-            .timeout(TIME_OUT)
+            .headers(VkUserClient.HEADER)
             .send().readToText()
 
         val response = json.parseToJsonElement(responseString).jsonObject
@@ -87,14 +89,14 @@ class Auth {
                 val captchaSid = response.getString("captcha_sid")!!
                 val captcha = Captcha(captchaSid)
 
-                val code = captchaListener?.onCaptcha(captcha) ?: throw CaptchaException("Captcha listener is required")
+                val code = captchaHandler?.handle(captcha) ?: throw CaptchaException("Captcha listener is required")
                 return oauth(mapOf(
                     "captcha_sid" to captchaSid,
                     "captcha_key" to code
                 ))
             } else if ("need_validation" == response.getString("error")) {
                 if ("2fa_sms" in response.toString()) {
-                    val (code, rememberDevice) = twoFactorListener?.twoFactor() ?: throw TwoFactorException("Two Factor listener is not initialized")
+                    val (code, rememberDevice) = twoFactorHandler?.handle() ?: throw TwoFactorException("Two Factor listener is not initialized")
 
                     return oauth(mapOf(
                         "code" to code,
@@ -105,7 +107,7 @@ class Auth {
                 }
             } else if ("invalid_request" == response.getString("error")) {
                 if ("wrong_otp" in response.toString()) {
-                    val (code, rememberDevice) = twoFactorListener?.twoFactor() ?: throw TwoFactorException("Two Factor listener is not initialized")
+                    val (code, rememberDevice) = twoFactorHandler?.handle() ?: throw TwoFactorException("Two Factor listener is not initialized")
 
                     return oauth(mapOf(
                         "code" to code,
@@ -125,14 +127,13 @@ class Auth {
     private fun refreshToken(access_token: String): JsonObject {
         val params = mapOf(
             "access_token" to access_token,
-            "receipt" to VkUser.RECEIPT,
+            "receipt" to VkUserClient.RECEIPT,
             "v" to VK_API_VERSION
         )
 
         val response = json.parseToJsonElement(Requests.get(BASE_API_URL + "auth.refreshToken")
             .body(params)
-            .headers(VkUser.HEADER)
-            .timeout(TIME_OUT)
+            .headers(VkUserClient.HEADER)
             .send().readToText()).jsonObject
 
         if ("error" in response.toString()) {
@@ -143,17 +144,17 @@ class Auth {
     }
 
     private fun passTwoFactor(response: String): String {
-        val (code, rememberDevice) = twoFactorListener?.twoFactor() ?: throw TwoFactorException("Two Factor listener is not initialized")
+        val (code, rememberDevice) = twoFactorHandler?.handle() ?: throw TwoFactorException("Two Factor listener is not initialized")
 
         val authHash = regexSearch(RE_AUTH_HASH, response, 1)!!
 
-        val values = HashMap<String, Any>()
-
-        values["act"] = "a_authcheck_code"
-        values["al"] = "1"
-        values["code"] = code
-        values["remember"] = rememberDevice.toInt()
-        values["hash"] = authHash
+        val values = mapOf(
+            "act" to "a_authcheck_code",
+            "al" to "1",
+            "code" to code,
+            "remember" to rememberDevice.toInt(),
+            "hash" to authHash
+        )
 
         val resp = session.post("https://vk.com/al_login.php")
             .headers(USER_AGENT)
@@ -177,19 +178,11 @@ class Auth {
         throw TwoFactorException("Two factor authentication failed")
     }
 
-    fun interface TwoFactorListener {
-        fun twoFactor(): Pair<String, Boolean>
-    }
-
-    fun interface CaptchaListener {
-        fun onCaptcha(captcha: Captcha): String
-    }
-
     /**
-     * Авторизация ВКонтакте с получением cookies remixsid
+     * VK Authentication with getting cookies remixsid
 
-     * @param captcha_sid id капчи
-     * @param captcha_key ответ капчи
+     * @param captcha_sid id of captcha
+     * @param captcha_key response of captcha
      * @return token
      */
     fun vkLogin(captcha_sid: String? = null, captcha_key: String? = null): String {
@@ -234,7 +227,7 @@ class Auth {
                 val captchaSid = regexSearch(RE_CAPTCHA_ID, response)!!
                 val captcha = Captcha(captchaSid)
 
-                val code = captchaListener?.onCaptcha(captcha) ?: throw CaptchaException("Captcha listener is required")
+                val code = captchaHandler?.handle(captcha) ?: throw CaptchaException("Captcha listener is required")
                 vkLogin(captchaSid, code)
             }
 
@@ -244,7 +237,7 @@ class Auth {
                 val captchaSid = System.currentTimeMillis().toString()
                 val captcha = Captcha(captchaSid)
 
-                val code = captchaListener?.onCaptcha(captcha) ?: throw CaptchaException("Captcha listener is required")
+                val code = captchaHandler?.handle(captcha) ?: throw CaptchaException("Captcha listener is required")
                 vkLogin(captchaSid, code)
             }
 
@@ -255,7 +248,7 @@ class Auth {
             else -> {
                 if (checkSid()) log.info("Got remixsid")
 
-                else throw AuthException("Unknown error.")
+                else throw AuthException("Unknown error")
             }
         }
 
@@ -325,7 +318,7 @@ class Auth {
                 throw AuthException("VK auth error: $errorText")
             }
 
-            else -> throw AuthException("Unknown api auth error")
+            else -> throw AuthException("Unknown auth error")
         }
     }
 

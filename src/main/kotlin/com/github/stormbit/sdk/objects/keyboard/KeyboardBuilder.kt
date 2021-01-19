@@ -6,18 +6,13 @@ import com.github.stormbit.sdk.objects.models.Keyboard.*
 import com.github.stormbit.sdk.objects.models.MessagePayload
 
 @Suppress("unused", "MemberVisibilityCanBePrivate")
-class KeyboardBuilder(builder: KeyboardBuilder.() -> Unit) {
+class KeyboardBuilder {
     private val buttons = ArrayList<List<Button>>()
 
     var isOneTime = false
     var isInline = false
-    var authorId: Int? = null
 
-    init {
-        builder()
-    }
-
-    fun buttons(block: ButtonsBuilder.() -> Unit): KeyboardBuilder {
+    fun row(block: ButtonsBuilder.() -> Unit): KeyboardBuilder {
         val rowBuilder = ButtonsBuilder()
         block(rowBuilder)
 
@@ -78,6 +73,6 @@ class KeyboardBuilder(builder: KeyboardBuilder.() -> Unit) {
     }
 
     fun build(): Keyboard {
-        return Keyboard(isOneTime, isInline, buttons, authorId)
+        return Keyboard(isOneTime, isInline, buttons)
     }
 }

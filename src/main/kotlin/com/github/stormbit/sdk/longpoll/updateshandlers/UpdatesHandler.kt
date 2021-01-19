@@ -1,52 +1,52 @@
 package com.github.stormbit.sdk.longpoll.updateshandlers
 
 import com.github.stormbit.sdk.clients.Client
-import com.github.stormbit.sdk.clients.Client.Companion.scheduler
 import com.github.stormbit.sdk.events.Event
-import com.github.stormbit.sdk.longpoll.Queue
-import kotlinx.serialization.json.JsonArray
+import kotlinx.coroutines.channels.*
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeUnit
+import kotlin.reflect.KClass
 
 @Suppress("unused")
-abstract class UpdatesHandler(private val client: Client) : Thread() {
+abstract class UpdatesHandler<T>(private val client: Client) {
     internal val log: Logger = LoggerFactory.getLogger(UpdatesHandler::class.java)
 
-    @Volatile protected var queue = Queue()
-
-    var sendTyping = false
+    internal var sendTyping = false
 
     /**
      * Maps with callbacks
      */
-    val events = ConcurrentHashMap<String, Event.() -> Unit>()
+    internal val events = ConcurrentHashMap<String, suspend Event.() -> Unit>()
 
-    fun handle(updates: JsonArray) {
-        this.queue.putAll(updates)
+    suspend fun start() {
+        eventAllocator.consumeEach {
+            handleCurrentUpdate(it)
+        }
     }
 
-    override fun run() {
-        scheduler.scheduleWithFixedDelay(this::handleCurrentUpdate, 0, 1, TimeUnit.MILLISECONDS)
-    }
+    fun <T : Event> registerEvent(callback: suspend T.() -> Unit, type: KClass<T>) {
+        var parts = Regex("[A-Z][^A-Z]*").findAll(type.simpleName!!).map { it.value.toLowerCase() }.toList()
 
-    inline fun <reified T : Event> registerEvent(noinline callback: T.() -> Unit) {
-        var parts = Regex("[A-Z][^A-Z]*").findAll(T::class.simpleName!!).map { it.value.toLowerCase() }.toList()
-
-        parts = parts.subList(0, parts.size-1)
+        if (parts.size != 2) {
+            parts = parts.dropLast(1)
+        }
 
         val eventName = parts.joinToString("_")
 
-        events[eventName] = callback as Event.() -> Unit
+        events[eventName] = callback as suspend Event.() -> Unit
+    }
+
+    private val eventAllocator: Channel<T> = Channel()
+
+    internal suspend fun send(obj: T) {
+        eventAllocator.send(obj)
     }
 
     /**
-     * Handle one event from longpoll server
+     * Handle one event senderType LongPoll server
      */
-    abstract fun handleCurrentUpdate()
+    abstract suspend fun handleCurrentUpdate(currentUpdate: T)
 
-    fun eventsCount(): Int = this.events.size
-
-    fun commandsCount(): Int = this.client.commands.size
+    val eventsCount: Int get() = this.events.size
 }

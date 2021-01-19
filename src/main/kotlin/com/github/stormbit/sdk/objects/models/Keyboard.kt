@@ -1,5 +1,6 @@
 package com.github.stormbit.sdk.objects.models
 
+import com.github.stormbit.sdk.objects.keyboard.KeyboardBuilder
 import com.github.stormbit.sdk.utils.json
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -7,11 +8,19 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class Keyboard(
-    @SerialName("one_time") val isOneTime: Boolean = false,
-    @SerialName("inline") val isInline: Boolean = false,
-    @SerialName("buttons") val buttons: List<List<Button>> = emptyList(),
-    @SerialName("author_id") val authorId: Int? = null
+    @SerialName("one_time") val isOneTime: Boolean,
+    @SerialName("inline") val isInline: Boolean,
+    @SerialName("buttons") val buttons: List<List<Button>>
 ) {
+    companion object {
+        fun build(block: KeyboardBuilder.() -> Unit): Keyboard {
+            val keyboardBuilder = KeyboardBuilder()
+
+            block(keyboardBuilder)
+
+            return keyboardBuilder.build()
+        }
+    }
 
     @Serializable
     class Button(
@@ -37,7 +46,8 @@ data class Keyboard(
                 @SerialName("vkpay") VK_PAY("vkpay"),
                 @SerialName("open_app") VK_APP("open_app"),
                 @SerialName("open_link") OPEN_LINK("open_link"),
-                @SerialName("open_photo") OPEN_PHOTO("open_photo")
+                @SerialName("open_photo") OPEN_PHOTO("open_photo"),
+                @SerialName("callback") CALLBACK("callback")
             }
 
         }

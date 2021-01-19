@@ -3,131 +3,25 @@
 package com.github.stormbit.sdk.utils
 
 import com.github.stormbit.sdk.objects.Chat
+import com.github.stormbit.sdk.objects.Message
 import com.github.stormbit.sdk.objects.models.Address
+import com.github.stormbit.sdk.vkapi.UploadableFile
 import com.github.stormbit.sdk.vkapi.methods.Attachment
 import com.github.stormbit.sdk.vkapi.methods.Media
+import io.ktor.client.request.forms.*
+import io.ktor.http.*
+import io.ktor.util.date.*
+import io.ktor.utils.io.core.*
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.MapSerializer
 import kotlinx.serialization.json.*
-import org.overviewproject.mime_types.MimeTypeDetector
-import java.io.*
-import java.net.*
-import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.math.pow
 
-class Utils {
-    companion object {
-        fun regexSearch(pattern: Regex, string: String, group: Int = 0): String? {
-            return pattern.find(string)?.groups?.get(group)?.value
-        }
-
-        internal fun guessFileNameByContentType(contentType: String): String {
-            var parsedContentType = contentType
-                .replace("mpeg", "mp3")
-                .replace("svg+xml", "svg")
-                .replace("javascript", "js")
-                .replace("plain", "txt")
-                .replace("markdown", "md")
-
-            val mainType = parsedContentType.substring(0, parsedContentType.indexOf('/'))
-
-            if (parsedContentType.contains(" ")) {
-                parsedContentType = parsedContentType.substring(0, parsedContentType.indexOf(' '))
-            }
-
-            var subType = parsedContentType.substring(parsedContentType.lastIndexOf('/') + 1)
-
-            if (subType.contains("-") || subType.contains(".") || subType.contains("+")) subType = "unknown"
-
-            return "$mainType.$subType"
-        }
-
-        internal fun getMimeType(bytes: ByteArray?): String {
-            val inputStream = BufferedInputStream(ByteArrayInputStream(bytes))
-
-            val contentType = MimeTypeDetector().detectMimeType("file", inputStream)
-
-            return contentType.substring(contentType.lastIndexOf('/') + 1).replace("jpeg", "jpg")
-        }
-    }
-}
-
-class ParametersBuilder : HashMap<String, Any>() {
-    fun append(key: String, value: Any?) {
-        if (value != null) this[key] = value
-    }
-}
-
-fun parametersOf(builder: ParametersBuilder.() -> Unit): Map<String, Any> {
-    val parametersBuilder = ParametersBuilder()
-    builder(parametersBuilder)
-
-    return parametersBuilder
-}
-
-internal val json = Json {
-    encodeDefaults = false
-    ignoreUnknownKeys = true
-    isLenient = false
-    allowStructuredMapKeys = true
-    prettyPrint = false
-    useArrayPolymorphism = false
-}
-
-const val VK_API_VERSION = 5.122
-internal const val TIME_OUT = 10000
-internal const val BASE_API_URL = "https://api.vk.com/method/"
-
-/**
- * Analog method of 'shift()' method from javascript
- *
- * @return First element of list, and then remove it
- */
-internal fun <T> CopyOnWriteArrayList<T>.shift(): T? {
-    if (this.size > 0) {
-        val item = this[0]
-        this.removeAt(0)
-        return item
-    }
-
-    return null
-}
-
-internal fun URLConnection.close() {
-    if (this is HttpURLConnection) {
-        this.disconnect()
-    }
-}
-
-internal fun URL.toByteArray(): ByteArray {
-    val conn = this.openConnection()
-    return try {
-        conn.toByteArray()
-    } finally {
-        conn.close()
-    }
-}
-
-internal fun URLConnection.toByteArray(): ByteArray {
-    val inputStream = this.getInputStream()
-
-    return inputStream.readAllBytes()
+internal fun regexSearch(pattern: Regex, string: String, group: Int = 0): String? {
+    return pattern.find(string)?.groups?.get(group)?.value
 }
 
 fun String.toJsonObject(): JsonObject = Json.parseToJsonElement(this).jsonObject
-
-internal fun Address.Timetable.serialize(): String = json.encodeToString(Address.Timetable.serializer(), this)
-
-inline val Media.mediaString: String
-    get() = buildString {
-        append(ownerId)
-        append("_").append(id)
-        if (accessKey != null) append("_").append(accessKey!!)
-    }
-
-inline val Attachment.attachmentString: String
-    get() = buildString {
-        append(typeAttachment.value)
-        append(mediaString)
-    }
 
 fun Map<*, *>.toJsonObject(): JsonObject = JsonObject(map {
     it.key.toString() to it.value.toJsonElement()
@@ -144,7 +38,54 @@ fun Any?.toJsonElement(): JsonElement = when (this) {
     else -> JsonPrimitive(this.toString())
 }
 
-infix fun Int.`**`(component: Int): Int = toDouble().pow(component.toDouble()).toInt()
+internal val json = Json {
+    encodeDefaults = false
+    ignoreUnknownKeys = true
+    isLenient = false
+    allowStructuredMapKeys = true
+    prettyPrint = false
+    useArrayPolymorphism = false
+}
+
+const val VK_API_VERSION = 5.122
+internal const val TIME_OUT = 10000
+internal const val BASE_API_URL = "https://api.vk.com/method/"
+
+internal fun Address.Timetable.serialize(): String = json.encodeToString(Address.Timetable.serializer(), this)
+
+inline val Media.mediaString: String
+    get() = buildString {
+        append(ownerId)
+        append("_").append(id)
+        if (accessKey != null) append("_").append(accessKey!!)
+    }
+
+inline val Attachment.attachmentString: String
+    get() = buildString {
+        append(typeAttachment.value)
+        append(mediaString)
+    }
+
+internal inline val GMTDate.unixtime: Int
+    get() = (GMTDate(seconds, minutes, hours, dayOfMonth, month, year).timestamp / 1000).toInt()
+
+fun GMTDate.toDMYString(): String = buildString {
+    append(dayOfMonth.toString().padStart(2, '0'))
+    append((month.ordinal + 1).toString().padStart(2, '0'))
+    append(year.toString().padStart(4, '0'))
+}
+
+internal inline val Pair<String, String>.formPart: FormPart<String>
+    get() = FormPart(first, second, Headers.Empty)
+
+internal inline val UploadableFile.formPart: FormPart<ByteReadPacket>
+    get() = FormPart(key, ByteReadPacket(content.bytes), content.filename.filenameHeader)
+
+private inline val String.filenameHeader: Headers
+    get() = headersOf(HttpHeaders.ContentDisposition, "filename=$this")
+
+
+infix fun Int.pow(component: Int): Int = toDouble().pow(component.toDouble()).toInt()
 
 fun JsonObject.getString(key: String): String? = this[key]?.jsonPrimitive?.content
 fun JsonObject.getInt(key: String): Int? = this[key]?.jsonPrimitive?.int
@@ -172,3 +113,17 @@ inline val Int.isUserPeerId: Boolean get() = !isGroupId && !isChatPeerId && !isE
 
 fun Boolean.toInt() = if (this) 1 else 0
 fun Int.toBoolean() = this > 0
+
+fun getSenderType(peerId: Int): Message.SenderType = when {
+    peerId > 2000000000 -> Message.SenderType.CHAT
+    peerId < 0 -> Message.SenderType.COMMUNITY
+    else -> Message.SenderType.USER
+}
+
+@Suppress("NOTHING_TO_INLINE")
+internal inline fun ParametersBuilder.append(first: String, second: Any?) {
+    if (second != null && second.toString().isNotEmpty()) append(first, second.toString())
+}
+
+@Suppress("NOTHING_TO_INLINE")
+inline fun <K : Any, V : Any> map(key: KSerializer<K>, value: KSerializer<V>) = MapSerializer(key, value)

@@ -1,6 +1,6 @@
 package com.github.stormbit.sdk.events.message
 
-import com.github.stormbit.sdk.events.Event
+import com.github.stormbit.sdk.events.AttachmentEvent
 import com.github.stormbit.sdk.objects.Message
 
-class VoiceMessageEvent(val message: Message) : Event
+data class VoiceMessageEvent(override val message: Message) : AttachmentEvent

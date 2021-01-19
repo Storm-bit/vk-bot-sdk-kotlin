@@ -3,6 +3,7 @@ package com.github.stormbit.sdk.objects.models
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@Suppress("unused")
 @Serializable
 data class Conversation(
     @SerialName("peer") val peer: Peer,

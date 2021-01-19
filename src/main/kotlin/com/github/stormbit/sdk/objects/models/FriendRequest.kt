@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class FriendRequest(
     @SerialName("user_id") val userId: Int,
-    @SerialName("from") val from: Int? = null,
+    @SerialName("senderType") val from: Int? = null,
     @SerialName("message") val message: String? = null,
     @SerialName("mutual") val mutual: Mutual? = null
 ) {

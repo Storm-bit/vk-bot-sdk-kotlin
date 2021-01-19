@@ -12,7 +12,7 @@ import kotlin.reflect.KClass
 
 @Serializable
 data class BooleanInt(val value: Boolean) {
-    @ExperimentalSerializationApi
+
     @Serializer(forClass = BooleanInt::class)
     companion object : KSerializer<BooleanInt> {
         override fun serialize(encoder: Encoder, value: BooleanInt) = encoder.encodeInt(if (value.value) 1 else 0)

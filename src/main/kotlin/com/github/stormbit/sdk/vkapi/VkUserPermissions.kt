@@ -1,71 +1,74 @@
 package com.github.stormbit.sdk.vkapi
 
-import com.github.stormbit.sdk.utils.`**`
+import com.github.stormbit.sdk.utils.pow
 
 /**
  * Перечисление прав пользователя.
  * Список прав получается побитовым сложением (x | y) каждого права.
  * Подробнее в документации VK API: https://vk.com/dev/permissions
  */
-enum class VkUserPermissions(val value: Int) {
-    NOTIFY(1),
+@Suppress("unused")
+class VkUserPermissions(override var mask: Int = 0) : Bitmask(mask) {
+    var notify by bitmask(1)
 
     // Доступ к друзьям.
-    FRIEND(2),
+    var friend by bitmask(2)
 
     // Доступ к фотографиям.
-    PHOTOS(2 `**` 2),
+    var photos by bitmask(2 pow  2)
 
     // Доступ к аудиозаписям.
     // При отсутствии доступа к закрытому API аудиозаписей это право позволяет
     // только загрузку аудио.
-    AUDIO(2 `**` 3),
+    var audio by bitmask(2 pow 3)
 
     // Доступ к видеозаписям.
-    VIDEO(2 `**` 4),
+    var video by bitmask(2 pow 4)
 
     // Доступ к историям.
-    STORIES(2 `**` 6),
+    var stories by bitmask(2 pow 6)
 
     // Доступ к wiki-страницам.
-    PAGES(2 `**` 7),
+    var pages by bitmask(2 pow 7)
 
     // Добавление ссылки на приложение в меню слева.
-    ADD_LINK(2 `**` 8),
+    var addLink by bitmask(2 pow 8)
 
     // Доступ к статусу пользователя.
-    STATUS(2 `**` 10),
+    var status by bitmask(2 pow 10)
 
     // Доступ к заметкам пользователя.
-    NOTES(2 `**` 11),
+    var notes by bitmask(2 pow 11)
 
     // Доступ к расширенным методам работы с сообщениями.
-    MESSAGES(2 `**` 12),
+    var messages by bitmask(2 pow 12)
 
     // Доступ к обычным и расширенным методам работы со стеной.
-    WALL(2 `**` 13),
+    var wall by bitmask(2 pow 13)
 
     // Доступ к расширенным методам работы с рекламным API.
-    ADS(2 `**` 15),
+    var ads by bitmask(2 pow 15)
 
     // Доступ к API в любое время. Рекомендуется при работе с этой библиотекой.
-    OFFLINE(2 `**` 16),
+    var offline by bitmask(2 pow 16)
 
     // Доступ к документам.
-    DOCS(2 `**` 17),
+    var docs by bitmask(2 pow 17)
 
     // Доступ к группам пользователя.
-    GROUPS(2 `**` 18),
+    var groups by bitmask(2 pow 18)
 
     // Доступ к оповещениям об ответах пользователю.
-    NOTIFICATIONS(2 `**` 19),
+    var notifications by bitmask(2 pow 19)
 
     // Доступ к статистике групп и приложений пользователя, администратором которых он является.
-    STATS(2 `**` 20),
+    var stats by bitmask(2 pow 20)
 
     // Доступ к email пользователя.
-    EMAIL(2 `**` 22),
+    var email by bitmask(2 pow 22)
 
     // Доступ к товарам.
-    MARKET(2 `**` 27);
+    var market by bitmask(2 pow 27)
+
+    var allPermissions by bitmask(140488159)
 }

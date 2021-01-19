@@ -38,6 +38,6 @@ data class Video(
         @SerialName("height") val height: Int,
         @SerialName("url") val url: String,
         @SerialName("width") val width: Int,
-        @SerialName("with_padding") val withPadding: Int
+        @SerialName("with_padding") val withPadding: Int? = null
     )
 }

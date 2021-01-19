@@ -4,6 +4,7 @@ import com.github.stormbit.sdk.utils.BooleanInt
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
+@Suppress("unused")
 @Serializable
 data class Chat(
     @SerialName("id") val id: Int,
