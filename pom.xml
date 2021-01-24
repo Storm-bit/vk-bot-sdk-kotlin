@@ -23,6 +23,15 @@
         <ktor.version>1.5.0</ktor.version>
     </properties>
 
+    <pluginRepositories>
+        <pluginRepository>
+            <id>jcenter</id>
+            <url>https://jcenter.bintray.com</url>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>true</enabled></snapshots>
+        </pluginRepository>
+    </pluginRepositories>
+
     <repositories>
         <repository>
             <id>repo1</id>
